@@ -1,6 +1,5 @@
 /**
- * AI integratsiyasi (Gemini + Groq Fallback tizimi)
- * Avval Gemini-ga murojaat qiladi, xatolik bo'lsa Groq-ga o'tadi.
+ * AI integratsiyasi (Detailed Debug + Fallback)
  */
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
@@ -10,25 +9,35 @@ const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemi
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 /**
- * Gemini API-ga so'rov yuborish
+ * Gemini API
  */
 async function callGemini(payload: any) {
-  if (!GEMINI_KEY) throw new Error("Gemini Key topilmadi");
+  if (!GEMINI_KEY) throw new Error("Gemini Key Vercel-da topilmadi.");
+  
   const resp = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  if (!resp.ok) throw new Error("Gemini xatosi");
+
+  if (!resp.ok) {
+    const error = await resp.json();
+    throw new Error(`Gemini API Xatosi: ${error.error?.message || resp.statusText}`);
+  }
+  
   const data = await resp.json();
+  if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    throw new Error("Gemini bo'sh javob qaytardi.");
+  }
   return data.candidates[0].content.parts[0].text;
 }
 
 /**
- * Groq API-ga so'rov yuborish
+ * Groq API
  */
 async function callGroq(messages: any[], jsonMode = false) {
-  if (!GROQ_KEY) throw new Error("Groq Key topilmadi");
+  if (!GROQ_KEY) throw new Error("Groq Key Vercel-da topilmadi.");
+  
   const resp = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
@@ -36,107 +45,86 @@ async function callGroq(messages: any[], jsonMode = false) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant", // Barqarorroq model
       messages,
       response_format: jsonMode ? { type: "json_object" } : undefined
     })
   });
-  if (!resp.ok) throw new Error("Groq xatosi");
+
+  if (!resp.ok) {
+    const error = await resp.json();
+    throw new Error(`Groq API Xatosi: ${error.error?.message || resp.statusText}`);
+  }
+  
   const data = await resp.json();
   return data.choices[0].message.content;
 }
 
 /**
- * Smart Fallback AI so'rovi
+ * Smart Fallback
  */
 async function smartAIRequest(prompt: string, jsonMode = false, chatHistory: any[] = []) {
-  // 1. Avval Gemini-da urinib ko'ramiz
+  let lastError = "";
+
+  // 1. Urinish: Gemini
   try {
-    console.log("Gemini-ga so'rov yuborilmoqda...");
     const contents = chatHistory.length > 0 ? chatHistory : [{ parts: [{ text: prompt }] }];
     return await callGemini({ 
       contents,
       generationConfig: jsonMode ? { responseMimeType: "application/json" } : undefined
     });
-  } catch (e) {
-    console.warn("Gemini ishlamadi, Groq-ga o'tilmoqda...", e);
-    
-    // 2. Agar Gemini ishlamasa, Groq-da urinib ko'ramiz
+  } catch (e: any) {
+    console.error("Gemini failed:", e);
+    lastError = e.message;
+  }
+
+  // 2. Urinish: Groq (Fallback)
+  try {
+    console.log("Gemini xatosi sababli Groq-ga o'tildi...");
     const messages = chatHistory.length > 0 
       ? chatHistory.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.parts[0].text }))
       : [{ role: "user", content: prompt }];
     
-    if (jsonMode) messages.unshift({ role: "system", content: "Siz faqat JSON qaytaradigan yordamchisiz." } as any);
+    if (jsonMode) messages.unshift({ role: "system", content: "Siz faqat JSON qaytaradigan yordamchisiz." });
     
     return await callGroq(messages, jsonMode);
+  } catch (e: any) {
+    console.error("Groq failed:", e);
+    throw new Error(`Hamma tizimlar xato berdi. Gemini: ${lastError} | Groq: ${e.message}`);
   }
 }
 
-export interface SlideData {
-  title: string;
-  content: string;
-  speakerNotes: string;
-}
+export interface SlideData { title: string; content: string; speakerNotes: string; }
+export interface TestData { question: string; options: string[]; correctAnswer: string; }
 
-export interface TestData {
-  question: string;
-  options: string[];
-  correctAnswer: string;
-}
-
-/**
- * Chat funksiyasi
- */
 export async function generateEducationalChat(history: any[], message: string) {
   const chatHistory = [
-    { role: "user", parts: [{ text: "Sizning ismingiz Edu-Gen, ta'lim yordamchisiz. O'zbek tilida javob bering." }] },
+    { role: "user", parts: [{ text: "Siz Edu-Gen yordamchisiz. O'zbekcha javob bering." }] },
     ...history.map(h => ({ role: h.role === "user" ? "user" : "model", parts: [{ text: h.text }] })),
     { role: "user", parts: [{ text: message }] }
   ];
   return await smartAIRequest(message, false, chatHistory);
 }
 
-/**
- * Rasm generatsiya (Pollinations AI)
- */
 export async function generateEducationalImage(prompt: string) {
-  // Pollinations barqaror va bepul
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent("educational, high quality, " + prompt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent("educational, " + prompt)}?width=1024&height=1024&nologo=true&seed=${Math.random()}`;
 }
 
-/**
- * Test generatsiya
- */
 export async function generateEducationalTests(topic: string, difficulty: string, count: number = 10): Promise<TestData[]> {
-  const prompt = `Quyidagi mavzu uchun ${count} ta test savolini JSON formatda tayyorlang: "${topic}". 
-  Qiyinchilik darajasi: "${difficulty}". 
-  Format: {"tests": [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]}
-  O'zbek tilida bo'lsin. Faqat JSON qaytaring.`;
-
+  const prompt = `Topic: "${topic}", Difficulty: "${difficulty}", Count: ${count}. Create tests in JSON format: {"tests": [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]}. Language: Uzbek.`;
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
   return data.tests || data;
 }
 
-/**
- * Slayd generatsiya
- */
 export async function generateEducationalSlides(topic: string): Promise<SlideData[]> {
-  const prompt = `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". 
-  Format: {"slides": [{"title": "...", "content": "markdown formatda punktlar", "speakerNotes": "..."}]}
-  Har bir slayd kontenti oxiriga rasm linki qo'shing: ![img](https://image.pollinations.ai/prompt/{topic_keyword}?width=800&height=400)
-  O'zbek tilida bo'lsin. Faqat JSON qaytaring.`;
-
+  const prompt = `Topic: "${topic}". Create 10 slides in JSON: {"slides": [{"title": "...", "content": "markdown points", "speakerNotes": "..."}]}. Add image link to content: ![img](https://image.pollinations.ai/prompt/{keyword}?width=800&height=400). Language: Uzbek.`;
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
   return data.slides || data;
 }
 
-/**
- * Test tahlili
- */
 export async function analyzeTestResults(topic: string, difficulty: string, tests: TestData[], userAnswers: any): Promise<string> {
-  const results = tests.map((t, i) => `Savol: ${t.question}, To'g'ri: ${t.correctAnswer}, Tanlangan: ${userAnswers[i]}`).join("\n");
-  const prompt = `Mavzu: ${topic}, Daraja: ${difficulty}. Test natijalari:\n${results}\nIltimos tahlil qiling va o'zbek tilida maslahatlar bering.`;
-  return await smartAIRequest(prompt);
+  const results = tests.map((t, i) => `Q: ${t.question}, Correct: ${t.correctAnswer}, User: ${userAnswers[i]}`).join("\n");
+  return await smartAIRequest(`Analyze results and give advice in Uzbek for: ${topic}\n${results}`);
 }
