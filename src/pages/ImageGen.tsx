@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ImageIcon, Wand2, Share2, Loader2, Download } from "lucide-react";
 import { generateEducationalImage } from "../lib/gemini";
-import { db, handleFirestoreError, OperationType, auth } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../lib/firebase";
+// import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Removed
 import { useAppContext } from "../lib/AppContext";
 
 export default function ImageGen() {
@@ -27,45 +27,8 @@ export default function ImageGen() {
     }
   };
 
-  const handleShare = async () => {
-    if (!image) return;
-    setSharing(true);
-    try {
-      const user = auth.currentUser;
-      const ref = collection(db, "resources");
-      
-      const compressedImage = await new Promise<string>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 500;
-          const scale = Math.min(MAX_WIDTH / img.width, 1);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return resolve(image);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
-        };
-        img.onerror = () => resolve(image);
-        img.src = image;
-      });
-
-      await addDoc(ref, {
-        authorId: user?.uid,
-        authorName: user?.displayName || "Foydalanuvchi",
-        type: "image",
-        title: (prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt),
-        prompt: prompt,
-        content: compressedImage,
-        createdAt: serverTimestamp()
-      });
-      alert(t.shareSuccess);
-    } catch(e) {
-      handleFirestoreError(e, OperationType.CREATE, "resources");
-    } finally {
-      setSharing(false);
-    }
+  const handleShare = () => {
+    alert("Firebase o'chirilgan.");
   };
 
   return (
@@ -124,14 +87,7 @@ export default function ImageGen() {
                <div className="w-full relative group">
                  <img src={image} alt="Generated" referrerPolicy="no-referrer" className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700" />
                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={handleShare}
-                      disabled={sharing}
-                      className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 font-medium rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 flex items-center gap-2 transition-colors"
-                    >
-                      {sharing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} className="text-blue-600 dark:text-blue-400" />}
-                      {t.share}
-                    </button>
+                    {/* Share button removed */}
                     <a 
                       href={image} 
                       download="edugen-rasm.jpg"

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { generateEducationalChat } from "../lib/gemini";
 import Markdown from "react-markdown";
-import { Send, Share2, Loader2, Sparkles } from "lucide-react";
-import { db, handleFirestoreError, OperationType, auth } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { Send, Sparkles } from "lucide-react"; // Removed Share2, Loader2
+import { auth } from "../lib/firebase";
+// import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Removed
 import { useAppContext } from "../lib/AppContext";
 
 interface Message {
@@ -48,33 +48,8 @@ export default function Chat() {
     }
   };
 
-  const handleShare = async () => {
-    if (messages.length < 3) {
-      alert(t.enterPrompt);
-      return;
-    }
-    const lastUserPrompt = messages.filter(m => m.role === 'user').pop()?.text || "";
-    const lastModelResp = messages.filter(m => m.role === 'model').pop()?.text || "";
-    
-    setSharing(true);
-    try {
-      const user = auth.currentUser;
-      const ref = collection(db, "resources");
-      await addDoc(ref, {
-        authorId: user?.uid,
-        authorName: user?.displayName || "Foydalanuvchi",
-        type: "chat",
-        title: "Ta'lim bo'yicha savol-javob",
-        prompt: lastUserPrompt.substring(0, 50),
-        content: `**Savol**: ${lastUserPrompt}\n\n**Javob**: ${lastModelResp}`,
-        createdAt: serverTimestamp()
-      });
-      alert(t.shareSuccess);
-    } catch(e) {
-      handleFirestoreError(e, OperationType.CREATE, "resources");
-    } finally {
-      setSharing(false);
-    }
+  const handleShare = () => {
+    alert("Firebase o'chirilgan. Ulashish funksiyasi mavjud emas.");
   };
 
   return (
@@ -84,14 +59,7 @@ export default function Chat() {
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{t.chatTitle}</span>
         </div>
         <div className="flex items-center gap-4">
-          <button 
-            onClick={handleShare}
-            disabled={sharing || messages.length < 3}
-            className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
-          >
-            {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
-            <span className="hidden sm:inline">{t.share}</span>
-          </button>
+          {/* Share button removed */}
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-400 dark:bg-red-500/80"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 dark:bg-yellow-500/80"></div>

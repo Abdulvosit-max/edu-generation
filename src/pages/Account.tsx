@@ -1,14 +1,14 @@
 import { Settings, User, Mail, Shield, LogOut } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { auth } from "../lib/firebase";
-import { signOut } from "firebase/auth";
+// import { signOut } from "firebase/auth"; // Removed
 
 export default function Account() {
   const { t, theme, language, setTheme, setLanguage } = useAppContext();
   const user = auth.currentUser;
 
   const handleLogout = () => {
-    signOut(auth);
+    alert("Loginsiz rejimda chiqish imkonsiz.");
   };
 
   return (
@@ -41,13 +41,7 @@ export default function Account() {
             </div>
           </div>
           
-          <button 
-             onClick={handleLogout}
-             className="w-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2 border border-red-100 dark:border-red-900/30"
-          >
-             <LogOut size={18} />
-             {t.logout}
-          </button>
+          {/* Logout button removed in no-login mode */}
         </div>
 
         {/* Settings Card */}

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { FileText, Loader2, Share2, Download, Search, CheckCircle, XCircle, Award } from "lucide-react";
 import { generateEducationalTests, analyzeTestResults, TestData } from "../lib/gemini";
-import { db, handleFirestoreError, OperationType, auth } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../lib/firebase";
+// import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Removed
 import { useAppContext } from "../lib/AppContext";
 import jsPDF from "jspdf";
 import { useSearchParams } from "react-router-dom";
@@ -67,30 +67,8 @@ export default function TestGen() {
     }
   };
 
-  const handleShare = async () => {
-    if (!tests || tests.length === 0) return;
-    setSharing(true);
-    try {
-      const user = auth.currentUser;
-      const ref = collection(db, "resources");
-      
-      const content = tests.map((t, i) => `${i+1}. ${t.question}\n${t.options.map(opt => `- ${opt}`).join('\n')}\nJavob: ${t.correctAnswer}`).join('\n\n');
-      
-      await addDoc(ref, {
-        authorId: user?.uid,
-        authorName: user?.displayName || "Foydalanuvchi",
-        type: "test",
-        title: (topic.length > 50 ? topic.substring(0, 50) + "..." : topic) + " [Test]",
-        prompt: topic,
-        content: content,
-        createdAt: serverTimestamp()
-      });
-      alert("Testlar hamjamiyatga muvaffaqiyatli ulashildi!");
-    } catch(e) {
-      handleFirestoreError(e, OperationType.CREATE, "resources");
-    } finally {
-      setSharing(false);
-    }
+  const handleShare = () => {
+    alert("Firebase o'chirilgan.");
   };
 
   const downloadPDF = () => {
@@ -199,14 +177,7 @@ export default function TestGen() {
                  <Download size={16} /> 
                  {t.downloadPDF}
                </button>
-               <button 
-                  onClick={handleShare}
-                  disabled={sharing}
-                  className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
-               >
-                 {sharing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />} 
-                 {t.share}
-               </button>
+               {/* Share button removed */}
              </div>
           )}
         </div>

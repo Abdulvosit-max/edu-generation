@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Presentation, Save, Loader2, FileText, ChevronLeft, ChevronRight, Share2, Download } from "lucide-react";
 import { generateEducationalSlides, SlideData } from "../lib/gemini";
 import Markdown from "react-markdown";
-import { db, handleFirestoreError, OperationType, auth } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../lib/firebase";
+// import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Removed
 import { useAppContext } from "../lib/AppContext";
 import pptxgen from "pptxgenjs";
 import { useSearchParams } from "react-router-dom";
@@ -63,27 +63,8 @@ export default function SlideGen() {
     }
   };
 
-  const handleShare = async () => {
-    if (!slides || slides.length === 0) return;
-    setSharing(true);
-    try {
-      const user = auth.currentUser;
-      const ref = collection(db, "resources");
-      await addDoc(ref, {
-        authorId: user?.uid,
-        authorName: user?.displayName || "Foydalanuvchi",
-        type: "slide",
-        title: (topic.length > 50 ? topic.substring(0, 50) + "..." : topic),
-        prompt: topic,
-        content: JSON.stringify(slides),
-        createdAt: serverTimestamp()
-      });
-      alert(t.shareSuccess);
-    } catch(e) {
-      handleFirestoreError(e, OperationType.CREATE, "resources");
-    } finally {
-      setSharing(false);
-    }
+  const handleShare = () => {
+    alert("Firebase o'chirilgan.");
   };
 
   return (
@@ -132,14 +113,7 @@ export default function SlideGen() {
                  <Download size={16} /> 
                  {t.downloadPPT}
                </button>
-               <button 
-                  onClick={handleShare}
-                  disabled={sharing}
-                  className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
-               >
-                 {sharing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />} 
-                 {t.share}
-               </button>
+               {/* Share button removed */}
              </div>
           )}
         </div>

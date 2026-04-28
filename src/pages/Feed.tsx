@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, getDocs, limit, deleteDoc, doc } from "firebase/firestore";
-import { db, handleFirestoreError, OperationType, auth } from "../lib/firebase";
+import { auth } from "../lib/firebase";
+// import { collection, query, orderBy, getDocs, limit, deleteDoc, doc } from "firebase/firestore"; // Removed
 import Markdown from "react-markdown";
 import { ImageIcon, Presentation, MessageSquare, ExternalLink, FileText, Download, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,19 +15,8 @@ export default function Feed() {
   const { t } = useAppContext();
 
   useEffect(() => {
-    async function loadFeed() {
-      try {
-        const q = query(collection(db, "resources"), orderBy("createdAt", "desc"), limit(50));
-        const snp = await getDocs(q);
-        const list = snp.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setResources(list);
-      } catch (e) {
-        handleFirestoreError(e, OperationType.GET, "resources");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadFeed();
+    // Firebase o'chirilgan, shuning uchun yuklash ham o'chirildi
+    setLoading(false);
   }, []);
 
   const filtered = activeType === "all" ? resources.filter(r => r.type !== 'chat') : resources.filter(r => r.type === activeType);
