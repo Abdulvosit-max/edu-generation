@@ -33,17 +33,66 @@ export default function SlideGen() {
     }
   }, [searchParams]);
 
-  const downloadPPT = () => {
+  const downloadPPT = async () => {
     if (!slides) return;
     const pptx = new pptxgen();
     
-    slides.forEach(slide => {
-      let slideObj = pptx.addSlide();
-      slideObj.addText(slide.title, { x: 0.5, y: 0.5, w: '90%', h: 1, fontSize: 32, bold: true, color: '363636' });
-      slideObj.addText(slide.content.replace(/\*/g, '').replace(/#/g, ''), { x: 0.5, y: 1.5, w: '90%', h: 4, fontSize: 18, color: '666666', valign: 'top' });
-      slideObj.addNotes(slide.speakerNotes);
-    });
+    setLoading(true); // Re-use loading to show progress
     
+    for (const slide of slides) {
+      let slideObj = pptx.addSlide();
+      
+      // Title
+      slideObj.addText(slide.title, { 
+        x: 0.5, y: 0.3, w: '90%', h: 0.8, 
+        fontSize: 28, bold: true, color: '2D3748', 
+        align: 'center', fontFace: 'Arial' 
+      });
+
+      // Clean content (remove markdown images for text box)
+      const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, '').replace(/\*/g, '').replace(/#/g, '');
+      
+      // Extract image URL
+      const imgMatch = slide.content.match(/!\[.*?\]\((.*?)\)/);
+      const imageUrl = imgMatch ? imgMatch[1] : null;
+
+      if (imageUrl) {
+        // Layout with image
+        slideObj.addText(textContent, { 
+          x: 0.5, y: 1.2, w: '55%', h: 4.5, 
+          fontSize: 16, color: '4A5568', valign: 'top', fontFace: 'Arial' 
+        });
+
+        try {
+          // Fetch image and convert to Base64
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          const base64Data = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          
+          slideObj.addImage({ 
+            data: base64Data, 
+            x: 6.2, y: 1.2, w: 3.3, h: 4.0,
+            rounding: true
+          });
+        } catch (e) {
+          console.error("Image fetch failed", e);
+        }
+      } else {
+        // Full width text layout
+        slideObj.addText(textContent, { 
+          x: 0.5, y: 1.2, w: '90%', h: 4.5, 
+          fontSize: 18, color: '4A5568', valign: 'top', fontFace: 'Arial' 
+        });
+      }
+
+      slideObj.addNotes(slide.speakerNotes);
+    }
+    
+    setLoading(false);
     pptx.writeFile({ fileName: `${topic}_EduGen.pptx` });
   };
 

@@ -12,14 +12,9 @@ export default function TestGen() {
   const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
-  const [tests, setTests] = useState<TestData[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  
-  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [analysis, setAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [testCount, setTestCount] = useState(10);
+  const [teacherName, setTeacherName] = useState("");
   const { t } = useAppContext();
 
   useEffect(() => {
@@ -37,7 +32,7 @@ export default function TestGen() {
     setIsSubmitted(false);
     setAnalysis(null);
     try {
-      const resp = await generateEducationalTests(topic, difficulty);
+      const resp = await generateEducationalTests(topic, difficulty, testCount);
       setTests(resp);
     } catch (e: any) {
       console.error(e);
@@ -74,42 +69,68 @@ export default function TestGen() {
   const downloadPDF = () => {
     if (!tests) return;
     const doc = new jsPDF();
-    doc.addFont("Helvetica", "Helvetica", "normal");
-    doc.setFont("Helvetica");
     
-    let yPos = 20;
-    doc.setFontSize(16);
-    doc.text(`Test: ${topic}`, 10, yPos);
-    yPos += 15;
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("EDUGEN TEST TIZIMI", 105, 20, { align: "center" });
     
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Mavzu: ${topic}`, 20, 35);
+    doc.text(`Daraja: ${difficulty === 'easy' ? 'Oson' : difficulty === 'medium' ? 'O\'rta' : 'Qiyin'}`, 20, 42);
+    if (teacherName) doc.text(`Tuzuvchi ustoz: ${teacherName}`, 20, 49);
+    doc.text(`Sana: ${new Date().toLocaleDateString()}`, 150, 35);
+    
+    doc.setLineWidth(0.5);
+    doc.line(20, 55, 190, 55);
+    
+    let yPos = 65;
     doc.setFontSize(12);
+    
+    // Savollar
     tests.forEach((test, index) => {
-      if (yPos > 270) {
+      if (yPos > 260) {
         doc.addPage();
         yPos = 20;
       }
       
-      const questionLines = doc.splitTextToSize(`${index + 1}. ${test.question}`, 190);
-      doc.text(questionLines, 10, yPos);
-      yPos += (questionLines.length * 6);
+      doc.setFont("helvetica", "bold");
+      const questionLines = doc.splitTextToSize(`${index + 1}. ${test.question}`, 170);
+      doc.text(questionLines, 20, yPos);
+      yPos += (questionLines.length * 6) + 2;
       
-      test.options.forEach(opt => {
-        const optLines = doc.splitTextToSize(`   • ${opt}`, 190);
-        doc.text(optLines, 10, yPos);
+      doc.setFont("helvetica", "normal");
+      test.options.forEach((opt, oIdx) => {
+        const prefix = String.fromCharCode(65 + oIdx) + ") "; // A), B), C), D)
+        const optLines = doc.splitTextToSize(`${prefix}${opt}`, 160);
+        doc.text(optLines, 30, yPos);
         yPos += (optLines.length * 6);
       });
       
-      yPos += 2;
-      doc.setFontSize(10);
-      doc.setTextColor(0, 128, 0);
-      doc.text(`Tog'ri javob: ${test.correctAnswer}`, 10, yPos);
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      
-      yPos += 10;
+      yPos += 8;
     });
     
-    doc.save(`${topic}_Test.pdf`);
+    // Javoblar kaliti (Yangi sahifada)
+    doc.addPage();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("JAVOBLAR KALITI", 105, 30, { align: "center" });
+    
+    doc.setFontSize(12);
+    let kyPos = 50;
+    let kxPos = 40;
+    
+    tests.forEach((test, index) => {
+      if (kyPos > 270) {
+        kyPos = 50;
+        kxPos += 60;
+      }
+      doc.text(`${index + 1}. ${test.correctAnswer}`, kxPos, kyPos);
+      kyPos += 10;
+    });
+    
+    doc.save(`${topic}_Testlar.pdf`);
   };
 
   return (
@@ -137,6 +158,30 @@ export default function TestGen() {
               onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               className="w-full px-4 py-3 mb-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 transition-shadow text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Testlar soni</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={testCount}
+                  onChange={e => setTestCount(parseInt(e.target.value) || 10)}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-slate-700 dark:text-slate-200"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Ustoz ismi</label>
+                <input
+                  type="text"
+                  value={teacherName}
+                  onChange={e => setTeacherName(e.target.value)}
+                  placeholder="Ism sharifingiz"
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-slate-700 dark:text-slate-200"
+                />
+              </div>
+            </div>
             
             <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2 mt-4">{t.testDifficulty}</label>
             <div className="flex gap-2">

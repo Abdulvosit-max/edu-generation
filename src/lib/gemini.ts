@@ -74,8 +74,8 @@ export async function generateEducationalImage(prompt: string) {
 /**
  * Test generatsiya
  */
-export async function generateEducationalTests(topic: string, difficulty: string): Promise<TestData[]> {
-  const prompt = `Quyidagi mavzu uchun 10 ta test savolini JSON formatda tayyorlang: "${topic}". 
+export async function generateEducationalTests(topic: string, difficulty: string, count: number = 10): Promise<TestData[]> {
+  const prompt = `Quyidagi mavzu uchun ${count} ta test savolini JSON formatda tayyorlang: "${topic}". 
   Qiyinchilik darajasi: "${difficulty}". 
   Format: {"tests": [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]}
   O'zbek tilida bo'lsin. Faqat JSON qaytaring.`;
