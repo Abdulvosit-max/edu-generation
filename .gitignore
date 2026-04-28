@@ -1,0 +1,25 @@
+# Paketlar
+node_modules/
+
+# Build chiqishi
+build/
+dist/
+
+# Test qoplamasi
+coverage/
+
+# macOS tizim fayli
+.DS_Store
+
+# Log fayllar
+*.log
+
+# Muhit o'zgaruvchilari (maxfiy kalitlar)
+.env*
+!.env.example
+
+# Firebase maxfiy konfiguratsiya
+firebase-applet-config.json
+
+# Vite cache
+.vite/
