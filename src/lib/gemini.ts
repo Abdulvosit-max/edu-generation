@@ -13,9 +13,9 @@ let aiClient: GoogleGenAI | null = null;
  */
 export function getGemini() {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("GEMINI_API_KEY topilmadi! Vercel yoki .env sozlamalarini tekshiring.");
+      console.error("VITE_GEMINI_API_KEY topilmadi! Vercel sozlamalarida Environment Variables qismiga 'VITE_GEMINI_API_KEY' kalitini qo'shganingizga ishonch hosil qiling.");
       throw new Error("GEMINI_API_KEY sozlanmagan.");
     }
     aiClient = new GoogleGenAI({ apiKey });
@@ -55,7 +55,7 @@ export async function generateEducationalChat(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-1.5-flash",
       contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
       config: {
         systemInstruction: {
@@ -88,7 +88,7 @@ export async function generateEducationalImage(prompt: string) {
   const enhancedPrompt = `Educational context, high quality, flat vector illustration or 3D render style, clean background: ${prompt}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-1.5-flash",
     contents: [{ role: "user", parts: [{ text: enhancedPrompt }] }],
     config: {
       imageConfig: {
@@ -128,7 +128,7 @@ export async function generateEducationalTests(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-1.5-flash",
     contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 10 ta test savolini tayyorlang: "${topic}". Qiyinchilik darajasi: "${difficulty}". Har bir savol 4 ta variantdan iborat bo'lsin va to'g'ri javobni alohida ajratib ko'rsating. Barcha o'zbek tilida bo'lsin.` }] }],
     config: {
       responseMimeType: "application/json",
@@ -166,7 +166,7 @@ export async function generateEducationalSlides(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-1.5-flash",
     contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". Har bir slaydning sarlavhasi, qisqacha mazmuni (tafsilotli kontent, markdown formatida) va so'zlovchi uchun izohlari bo'lsin.
 Bundan tashqari, har bir slaydning mazmuni vizual jozibador bo'lishi uchun quyidagi formatda har bir slayd matnining oxirida bitta rasm qo'shing:
 ![tavsif](https://image.pollinations.ai/prompt/{mavzuga_oid_inglizcha_kalit_soz}?width=800&height=400&nologo=true)
@@ -222,7 +222,7 @@ export async function analyzeTestResults(
   const prompt = `Foydalanuvchi quyidagi mavzuda test ishladi: "${topic}" (${difficulty} daraja).\n\nNatijalar:\n${historyText}\n\nIltimos, foydalanuvchining natijasini tahlil qiling. 100 ballik tizimda reyting bering va qaysi mavzularda oqsayotganini yoki qanday yutuqlarga erishganini tushuntiring. Xatolarini to'g'rilash uchun qisqacha maslahat bering. Tahlil faqat o'zbek tilida (Markdown formatida) bo'lsin.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-1.5-flash",
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
