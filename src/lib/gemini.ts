@@ -1,18 +1,20 @@
 /**
- * AI integratsiyasi (Detailed Debug + Fallback)
+ * AI integratsiyasi (Gemini 1.5 Pro + Fallback)
+ * Eng so'nggi va kuchli modelga o'tildi.
  */
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
 
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+// Gemini 1.5 Pro barqaror endpoint
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 /**
  * Gemini API
  */
 async function callGemini(payload: any) {
-  if (!GEMINI_KEY) throw new Error("Gemini Key Vercel-da topilmadi.");
+  if (!GEMINI_KEY) throw new Error("Gemini Key topilmadi.");
   
   const resp = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
     method: "POST",
@@ -20,23 +22,22 @@ async function callGemini(payload: any) {
     body: JSON.stringify(payload)
   });
 
+  const data = await resp.json();
   if (!resp.ok) {
-    const error = await resp.json();
-    throw new Error(`Gemini API Xatosi: ${error.error?.message || resp.statusText}`);
+    throw new Error(`Gemini Xatosi: ${data.error?.message || resp.statusText}`);
   }
   
-  const data = await resp.json();
   if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-    throw new Error("Gemini bo'sh javob qaytardi.");
+    throw new Error("Gemini javob qaytara olmadi.");
   }
   return data.candidates[0].content.parts[0].text;
 }
 
 /**
- * Groq API
+ * Groq API (Fallback)
  */
 async function callGroq(messages: any[], jsonMode = false) {
-  if (!GROQ_KEY) throw new Error("Groq Key Vercel-da topilmadi.");
+  if (!GROQ_KEY) throw new Error("Groq Key topilmadi.");
   
   const resp = await fetch(GROQ_URL, {
     method: "POST",
@@ -45,18 +46,17 @@ async function callGroq(messages: any[], jsonMode = false) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant", // Barqarorroq model
+      model: "llama-3.1-8b-instant",
       messages,
       response_format: jsonMode ? { type: "json_object" } : undefined
     })
   });
 
+  const data = await resp.json();
   if (!resp.ok) {
-    const error = await resp.json();
-    throw new Error(`Groq API Xatosi: ${error.error?.message || resp.statusText}`);
+    throw new Error(`Groq Xatosi: ${data.error?.message || resp.statusText}`);
   }
   
-  const data = await resp.json();
   return data.choices[0].message.content;
 }
 
@@ -64,9 +64,9 @@ async function callGroq(messages: any[], jsonMode = false) {
  * Smart Fallback
  */
 async function smartAIRequest(prompt: string, jsonMode = false, chatHistory: any[] = []) {
-  let lastError = "";
+  let geminiError = "";
 
-  // 1. Urinish: Gemini
+  // 1. Gemini 1.5 Pro
   try {
     const contents = chatHistory.length > 0 ? chatHistory : [{ parts: [{ text: prompt }] }];
     return await callGemini({ 
@@ -75,12 +75,11 @@ async function smartAIRequest(prompt: string, jsonMode = false, chatHistory: any
     });
   } catch (e: any) {
     console.error("Gemini failed:", e);
-    lastError = e.message;
+    geminiError = e.message;
   }
 
-  // 2. Urinish: Groq (Fallback)
+  // 2. Groq (Zaxira)
   try {
-    console.log("Gemini xatosi sababli Groq-ga o'tildi...");
     const messages = chatHistory.length > 0 
       ? chatHistory.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.parts[0].text }))
       : [{ role: "user", content: prompt }];
@@ -90,7 +89,7 @@ async function smartAIRequest(prompt: string, jsonMode = false, chatHistory: any
     return await callGroq(messages, jsonMode);
   } catch (e: any) {
     console.error("Groq failed:", e);
-    throw new Error(`Hamma tizimlar xato berdi. Gemini: ${lastError} | Groq: ${e.message}`);
+    throw new Error(`Xatolik! Gemini Pro: ${geminiError} | Groq: ${e.message}`);
   }
 }
 
@@ -111,7 +110,7 @@ export async function generateEducationalImage(prompt: string) {
 }
 
 export async function generateEducationalTests(topic: string, difficulty: string, count: number = 10): Promise<TestData[]> {
-  const prompt = `Topic: "${topic}", Difficulty: "${difficulty}", Count: ${count}. Create tests in JSON format: {"tests": [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]}. Language: Uzbek.`;
+  const prompt = `Topic: "${topic}", Difficulty: "${difficulty}", Count: ${count}. Create tests in JSON: {"tests": [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]}. Language: Uzbek.`;
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
   return data.tests || data;
