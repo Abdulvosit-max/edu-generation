@@ -11,6 +11,8 @@ const DEFAULT_MODEL = "llama-3.1-8b-instant";
  * Groq API so'rovi funksiyasi
  */
 async function callGroqAPI(messages: any[], jsonMode = false) {
+  console.log("Debug: API Key presence check:", GROQ_API_KEY ? `Mavjud (Boshi: ${GROQ_API_KEY.substring(0, 4)}...)` : "TOPILMADI!");
+  
   if (!GROQ_API_KEY) {
     throw new Error("VITE_GROQ_API_KEY topilmadi. Vercel sozlamalarini tekshiring.");
   }
