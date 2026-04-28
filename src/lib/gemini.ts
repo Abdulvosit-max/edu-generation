@@ -52,13 +52,16 @@ export async function generateEducationalChat(
     : `Foydalanuvchi: ${message}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: fullPrompt,
+    model: "gemini-1.5-flash",
+    contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
     config: {
-      systemInstruction:
-        "Siz ta'limga ixtisoslashgan yordamchisiz (Sizning ismingiz Edu-Gen). " +
-        "Foydalanuvchilarga do'stona va foydali ma'lumotlar bilan o'zbek tilida yordam bering. " +
-        "Siz faqat javobni o'zini qaytaring.",
+      systemInstruction: {
+        parts: [{
+          text: "Siz ta'limga ixtisoslashgan yordamchisiz (Sizning ismingiz Edu-Gen). " +
+                "Foydalanuvchilarga do'stona va foydali ma'lumotlar bilan o'zbek tilida yordam bering. " +
+                "Siz faqat javobni o'zini qaytaring."
+        }]
+      }
     },
   });
 
@@ -79,8 +82,8 @@ export async function generateEducationalImage(prompt: string) {
   const enhancedPrompt = `Educational context, high quality, flat vector illustration or 3D render style, clean background: ${prompt}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: { parts: [{ text: enhancedPrompt }] },
+    model: "gemini-1.5-flash",
+    contents: [{ role: "user", parts: [{ text: enhancedPrompt }] }],
     config: {
       imageConfig: {
         aspectRatio: "16:9",
@@ -119,8 +122,8 @@ export async function generateEducationalTests(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
-    contents: `Quyidagi mavzu uchun 10 ta test savolini tayyorlang: "${topic}". Qiyinchilik darajasi: "${difficulty}". Har bir savol 4 ta variantdan iborat bo'lsin va to'g'ri javobni alohida ajratib ko'rsating. Barcha o'zbek tilida bo'lsin.`,
+    model: "gemini-1.5-flash",
+    contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 10 ta test savolini tayyorlang: "${topic}". Qiyinchilik darajasi: "${difficulty}". Har bir savol 4 ta variantdan iborat bo'lsin va to'g'ri javobni alohida ajratib ko'rsating. Barcha o'zbek tilida bo'lsin.` }] }],
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -157,11 +160,11 @@ export async function generateEducationalSlides(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
-    contents: `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". Har bir slaydning sarlavhasi, qisqacha mazmuni (tafsilotli kontent, markdown formatida) va so'zlovchi uchun izohlari bo'lsin.
+    model: "gemini-1.5-flash",
+    contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". Har bir slaydning sarlavhasi, qisqacha mazmuni (tafsilotli kontent, markdown formatida) va so'zlovchi uchun izohlari bo'lsin.
 Bundan tashqari, har bir slaydning mazmuni vizual jozibador bo'lishi uchun quyidagi formatda har bir slayd matnining oxirida bitta rasm qo'shing:
 ![tavsif](https://image.pollinations.ai/prompt/{mavzuga_oid_inglizcha_kalit_soz}?width=800&height=400&nologo=true)
-Barcha ma'lumotlar o'zbek tilida bo'lsin va aynan 12 ta qismdan iborat bo'lsin.`,
+Barcha ma'lumotlar o'zbek tilida bo'lsin va aynan 12 ta qismdan iborat bo'lsin.` }] }],
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -213,8 +216,8 @@ export async function analyzeTestResults(
   const prompt = `Foydalanuvchi quyidagi mavzuda test ishladi: "${topic}" (${difficulty} daraja).\n\nNatijalar:\n${historyText}\n\nIltimos, foydalanuvchining natijasini tahlil qiling. 100 ballik tizimda reyting bering va qaysi mavzularda oqsayotganini yoki qanday yutuqlarga erishganini tushuntiring. Xatolarini to'g'rilash uchun qisqacha maslahat bering. Tahlil faqat o'zbek tilida (Markdown formatida) bo'lsin.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
-    contents: prompt,
+    model: "gemini-1.5-flash",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
   return response.text || "Kechirasiz, tahlil qilib bo'lmadi.";
