@@ -79,7 +79,7 @@ export async function generateEducationalImage(prompt: string) {
   const enhancedPrompt = `Educational context, high quality, flat vector illustration or 3D render style, clean background: ${prompt}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp-image-generation",
+    model: "gemini-2.0-flash",
     contents: { parts: [{ text: enhancedPrompt }] },
     config: {
       imageConfig: {
