@@ -10,15 +10,17 @@ export default function ImageGen() {
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { t } = useAppContext();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
     setImage(null);
+    setImgError(false);
     try {
-       const b64 = await generateEducationalImage(prompt);
-       setImage(b64);
+       const url = await generateEducationalImage(prompt);
+       setImage(url);
     } catch (e: any) {
        console.error(e);
        alert(e.message || t.errorOccurred);
@@ -83,14 +85,25 @@ export default function ImageGen() {
                  <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
                  <p className="font-medium animate-pulse text-blue-600 dark:text-blue-400">{t.generating}</p>
                </div>
+            ) : imgError ? (
+               <div className="flex flex-col items-center gap-4 text-red-500">
+                 <p className="font-semibold text-center">Rasm yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.</p>
+                 <button onClick={handleGenerate} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Qayta urinish</button>
+               </div>
             ) : image ? (
                <div className="w-full relative group">
-                 <img src={image} alt="Generated" referrerPolicy="no-referrer" className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700" />
+                 <img 
+                    src={image} 
+                    alt="Generated" 
+                    referrerPolicy="no-referrer" 
+                    onError={() => setImgError(true)}
+                    className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700" 
+                 />
                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {/* Share button removed */}
                     <a 
                       href={image} 
-                      download="edugen-rasm.jpg"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 font-medium rounded-xl shadow-sm flex items-center gap-2 transition-colors"
                     >
                       <Download size={16} /> {t.save}
