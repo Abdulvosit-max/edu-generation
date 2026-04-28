@@ -13,10 +13,12 @@ let aiClient: GoogleGenAI | null = null;
  */
 export function getGemini() {
   if (!aiClient) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY sozlanmagan. .env.local faylini tekshiring.");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY topilmadi! Vercel yoki .env sozlamalarini tekshiring.");
+      throw new Error("GEMINI_API_KEY sozlanmagan.");
     }
-    aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
 }
@@ -51,21 +53,25 @@ export async function generateEducationalChat(
     ? `${historyText}\n\nFoydalanuvchi: ${message}`
     : `Foydalanuvchi: ${message}`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
-    config: {
-      systemInstruction: {
-        parts: [{
-          text: "Siz ta'limga ixtisoslashgan yordamchisiz (Sizning ismingiz Edu-Gen). " +
-                "Foydalanuvchilarga do'stona va foydali ma'lumotlar bilan o'zbek tilida yordam bering. " +
-                "Siz faqat javobni o'zini qaytaring."
-        }]
-      }
-    },
-  });
-
-  return response.text || "Kechirasiz, xatolik yuz berdi.";
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash-latest",
+      contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+      config: {
+        systemInstruction: {
+          parts: [{
+            text: "Siz ta'limga ixtisoslashgan yordamchisiz (Sizning ismingiz Edu-Gen). " +
+                  "Foydalanuvchilarga do'stona va foydali ma'lumotlar bilan o'zbek tilida yordam bering. " +
+                  "Siz faqat javobni o'zini qaytaring."
+          }]
+        }
+      },
+    });
+    return response.text || "Kechirasiz, xatolik yuz berdi.";
+  } catch (err: any) {
+    console.error("Chat xatosi:", err);
+    throw err;
+  }
 }
 
 /**
@@ -82,7 +88,7 @@ export async function generateEducationalImage(prompt: string) {
   const enhancedPrompt = `Educational context, high quality, flat vector illustration or 3D render style, clean background: ${prompt}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash-latest",
     contents: [{ role: "user", parts: [{ text: enhancedPrompt }] }],
     config: {
       imageConfig: {
@@ -122,7 +128,7 @@ export async function generateEducationalTests(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash-latest",
     contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 10 ta test savolini tayyorlang: "${topic}". Qiyinchilik darajasi: "${difficulty}". Har bir savol 4 ta variantdan iborat bo'lsin va to'g'ri javobni alohida ajratib ko'rsating. Barcha o'zbek tilida bo'lsin.` }] }],
     config: {
       responseMimeType: "application/json",
@@ -160,7 +166,7 @@ export async function generateEducationalSlides(
   const ai = getGemini();
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash-latest",
     contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". Har bir slaydning sarlavhasi, qisqacha mazmuni (tafsilotli kontent, markdown formatida) va so'zlovchi uchun izohlari bo'lsin.
 Bundan tashqari, har bir slaydning mazmuni vizual jozibador bo'lishi uchun quyidagi formatda har bir slayd matnining oxirida bitta rasm qo'shing:
 ![tavsif](https://image.pollinations.ai/prompt/{mavzuga_oid_inglizcha_kalit_soz}?width=800&height=400&nologo=true)
@@ -216,7 +222,7 @@ export async function analyzeTestResults(
   const prompt = `Foydalanuvchi quyidagi mavzuda test ishladi: "${topic}" (${difficulty} daraja).\n\nNatijalar:\n${historyText}\n\nIltimos, foydalanuvchining natijasini tahlil qiling. 100 ballik tizimda reyting bering va qaysi mavzularda oqsayotganini yoki qanday yutuqlarga erishganini tushuntiring. Xatolarini to'g'rilash uchun qisqacha maslahat bering. Tahlil faqat o'zbek tilida (Markdown formatida) bo'lsin.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash-latest",
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
