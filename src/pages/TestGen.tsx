@@ -12,6 +12,11 @@ export default function TestGen() {
   const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
+  const [tests, setTests] = useState<TestData[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [testCount, setTestCount] = useState(10);
   const [teacherName, setTeacherName] = useState("");
