@@ -1,230 +1,126 @@
-// Google Gemini AI integratsiyasi
-// Barcha AI generatsiya funksiyalari shu faylda
+/**
+ * Gemini AI integratsiyasi (To'g'ridan-to'g'ri API so'rovlari orqali)
+ * SDK-lardagi muammolarni chetlab o'tish uchun fetch usulidan foydalaniladi.
+ */
 
-import { GoogleGenAI, Type } from "@google/genai";
-
-// Singleton pattern — bitta AI client instansiyasi
-let aiClient: GoogleGenAI | null = null;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 /**
- * Gemini AI client ni qaytaradi.
- * Birinchi marta chaqirilganda yaratiladi (lazy initialization).
- * GEMINI_API_KEY vite.config.ts orqali process.env ga inject qilinadi.
+ * Umumiy Gemini API so'rovi funksiyasi
  */
-export function getGemini() {
-  if (!aiClient) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("VITE_GEMINI_API_KEY topilmadi! Vercel sozlamalarida Environment Variables qismiga 'VITE_GEMINI_API_KEY' kalitini qo'shganingizga ishonch hosil qiling.");
-      throw new Error("GEMINI_API_KEY sozlanmagan.");
-    }
-    aiClient = new GoogleGenAI({ apiKey });
+async function callGeminiAPI(model: string, payload: any) {
+  if (!API_KEY) {
+    throw new Error("VITE_GEMINI_API_KEY topilmadi. Vercel sozlamalarini tekshiring.");
   }
-  return aiClient;
+
+  const response = await fetch(`${BASE_URL}/${model}:generateContent?key=${API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json();
+    console.error("Gemini API Xatosi:", errData);
+    throw new Error(errData.error?.message || "API so'rovida xatolik yuz berdi.");
+  }
+
+  return await response.json();
 }
 
-// Slayd ma'lumotlari interfeysi
 export interface SlideData {
-  title: string;        // Slayd sarlavhasi
-  content: string;      // Slayd asosiy matni (markdown formatida)
-  speakerNotes: string; // So'zlovchi uchun izohlar
+  title: string;
+  content: string;
+  speakerNotes: string;
+}
+
+export interface TestData {
+  question: string;
+  options: string[];
+  correctAnswer: string;
 }
 
 /**
- * Ta'limiy suhbat javobini generatsiya qiladi.
- * Ko'p turli suhbat tarixini saqlash uchun xabarlar ketma-ketligi uzatilib,
- * to'liq matn sifatida Gemini ga yuboriladi.
- *
- * @param history  - Oldingi suhbat xabarlari
- * @param message  - Yangi foydalanuvchi xabari
- * @returns AI javob matni
+ * Chat funksiyasi
  */
-export async function generateEducationalChat(
-  history: { role: "user" | "model"; text: string }[],
-  message: string
-) {
-  const ai = getGemini();
-
-  // Suhbat tarixini matn ko'rinishiga o'tkazish
+export async function generateEducationalChat(history: any[], message: string) {
   const historyText = history
     .map(h => `${h.role === "user" ? "Foydalanuvchi" : "Edu-Gen"}: ${h.text}`)
     .join("\n\n");
-  const fullPrompt = historyText
+  
+  const prompt = historyText 
     ? `${historyText}\n\nFoydalanuvchi: ${message}`
-    : `Foydalanuvchi: ${message}`;
+    : `Sizning ismingiz Edu-Gen, ta'lim yordamchisiz. O'zbek tilida javob bering.\n\nFoydalanuvchi: ${message}`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
-      config: {
-        systemInstruction: {
-          parts: [{
-            text: "Siz ta'limga ixtisoslashgan yordamchisiz (Sizning ismingiz Edu-Gen). " +
-                  "Foydalanuvchilarga do'stona va foydali ma'lumotlar bilan o'zbek tilida yordam bering. " +
-                  "Siz faqat javobni o'zini qaytaring."
-          }]
-        }
-      },
-    });
-    return response.text || "Kechirasiz, xatolik yuz berdi.";
-  } catch (err: any) {
-    console.error("Chat xatosi:", err);
-    throw err;
-  }
+  const data = await callGeminiAPI("gemini-1.5-flash", {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    }
+  });
+
+  return data.candidates[0].content.parts[0].text;
 }
 
 /**
- * Ta'limiy rasm generatsiya qiladi.
- * Foydalanuvchi so'roviga asoslanib yuqori sifatli ta'lim rasmi yaratadi.
- *
- * @param prompt - Rasm tavsifi (o'zbek yoki ingliz tilida)
- * @returns Base64 formatida JPEG rasm (data URL)
+ * Rasm generatsiya (Pollinations orqali zaxira usuli)
+ * Gemini rasm yaratishda ba'zi hududlarda muammo berishi mumkin, 
+ * shuning uchun Pollinations ishonchliroq.
  */
 export async function generateEducationalImage(prompt: string) {
-  const ai = getGemini();
-
-  // So'rovni ta'lim konteksti uchun kengaytirish
-  const enhancedPrompt = `Educational context, high quality, flat vector illustration or 3D render style, clean background: ${prompt}`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: [{ role: "user", parts: [{ text: enhancedPrompt }] }],
-    config: {
-      imageConfig: {
-        aspectRatio: "16:9",
-      },
-    },
-  });
-
-  // Javobdan inline rasm ma'lumotlarini ajratib olish
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData) {
-      return `data:image/jpeg;base64,${part.inlineData.data}`;
-    }
-  }
-  throw new Error("Rasm yaratilmadi. Yana urinib ko'ring.");
-}
-
-// Test savoli ma'lumotlari interfeysi
-export interface TestData {
-  question: string;      // Savol matni
-  options: string[];     // 4 ta variant
-  correctAnswer: string; // To'g'ri javob matni
+  // Pollinations AI - bepul va tezkor rasm generatsiya
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent("educational, " + prompt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 1000)}`;
+  return imageUrl;
 }
 
 /**
- * Ta'limiy test savollarini generatsiya qiladi.
- * Structured output (JSON schema) yordamida aniq formatda 10 ta savol yaratadi.
- *
- * @param topic      - Test mavzusi
- * @param difficulty - Qiyinchilik darajasi: "easy" | "medium" | "hard"
- * @returns TestData massivi
+ * Test generatsiya
  */
-export async function generateEducationalTests(
-  topic: string,
-  difficulty: string
-): Promise<TestData[]> {
-  const ai = getGemini();
+export async function generateEducationalTests(topic: string, difficulty: string): Promise<TestData[]> {
+  const prompt = `Quyidagi mavzu uchun 10 ta test savolini JSON formatda tayyorlang: "${topic}". 
+  Qiyinchilik darajasi: "${difficulty}". 
+  Format: [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]
+  Faqat JSON qaytaring, boshqa matn kerak emas. O'zbek tilida bo'lsin.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 10 ta test savolini tayyorlang: "${topic}". Qiyinchilik darajasi: "${difficulty}". Har bir savol 4 ta variantdan iborat bo'lsin va to'g'ri javobni alohida ajratib ko'rsating. Barcha o'zbek tilida bo'lsin.` }] }],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            question:      { type: Type.STRING, description: "Test savoli" },
-            options:       { type: Type.ARRAY, items: { type: Type.STRING }, description: "4 ta variant (faqat matn, harf belgisisiz)" },
-            correctAnswer: { type: Type.STRING, description: "To'g'ri variant matni" },
-          },
-          required: ["question", "options", "correctAnswer"],
-        },
-      },
-    },
+  const data = await callGeminiAPI("gemini-1.5-flash", {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  const text = response.text;
-  if (!text) throw new Error("Javob bo'sh keldi.");
-  return JSON.parse(text) as TestData[];
+  const text = data.candidates[0].content.parts[0].text;
+  return JSON.parse(text);
 }
 
 /**
- * Ta'limiy taqdimot slaydlarini generatsiya qiladi.
- * 12 ta slayd, markdown content va so'zlovchi izohlari bilan.
- * Har bir slaydda Pollinations.ai orqali rasm ham qo'shiladi.
- *
- * @param topic - Taqdimot mavzusi
- * @returns SlideData massivi (12 ta)
+ * Slayd generatsiya
  */
-export async function generateEducationalSlides(
-  topic: string
-): Promise<SlideData[]> {
-  const ai = getGemini();
+export async function generateEducationalSlides(topic: string): Promise<SlideData[]> {
+  const prompt = `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". 
+  JSON formatda: [{"title": "...", "content": "markdown formatda punktlar", "speakerNotes": "..."}]
+  Har bir slayd oxiriga rasm linki qo'shing: ![img](https://image.pollinations.ai/prompt/{topic_keyword}?width=800&height=400)
+  Faqat JSON qaytaring. O'zbek tilida bo'lsin.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: [{ role: "user", parts: [{ text: `Quyidagi mavzu uchun 12 ta slayd tayyorlang: "${topic}". Har bir slaydning sarlavhasi, qisqacha mazmuni (tafsilotli kontent, markdown formatida) va so'zlovchi uchun izohlari bo'lsin.
-Bundan tashqari, har bir slaydning mazmuni vizual jozibador bo'lishi uchun quyidagi formatda har bir slayd matnining oxirida bitta rasm qo'shing:
-![tavsif](https://image.pollinations.ai/prompt/{mavzuga_oid_inglizcha_kalit_soz}?width=800&height=400&nologo=true)
-Barcha ma'lumotlar o'zbek tilida bo'lsin va aynan 12 ta qismdan iborat bo'lsin.` }] }],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            title:        { type: Type.STRING, description: "Slayd sarlavhasi" },
-            content:      { type: Type.STRING, description: "Slaydning asosiy qismi (markdown formatida punktlar)" },
-            speakerNotes: { type: Type.STRING, description: "So'zlovchi uchun qo'shimcha ma'lumotlar" },
-          },
-          required: ["title", "content", "speakerNotes"],
-        },
-      },
-    },
+  const data = await callGeminiAPI("gemini-1.5-flash", {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  const text = response.text;
-  if (!text) throw new Error("Javob bo'sh keldi.");
-  return JSON.parse(text) as SlideData[];
+  const text = data.candidates[0].content.parts[0].text;
+  return JSON.parse(text);
 }
 
 /**
- * Foydalanuvchi test natijalarini AI yordamida tahlil qiladi.
- * 100 ballik tizimda reyting beradi va qaysi mavzularda kamchilik borligini ko'rsatadi.
- *
- * @param topic       - Test mavzusi
- * @param difficulty  - Qiyinchilik darajasi
- * @param tests       - Test savollari
- * @param userAnswers - Foydalanuvchi javoblari (savol indeksi → tanlangan variant)
- * @returns Markdown formatida tahlil matni
+ * Test tahlili
  */
-export async function analyzeTestResults(
-  topic: string,
-  difficulty: string,
-  tests: TestData[],
-  userAnswers: Record<number, string>
-): Promise<string> {
-  const ai = getGemini();
+export async function analyzeTestResults(topic: string, difficulty: string, tests: TestData[], userAnswers: any): Promise<string> {
+  const results = tests.map((t, i) => `Savol: ${t.question}, To'g'ri: ${t.correctAnswer}, Tanlangan: ${userAnswers[i]}`).join("\n");
+  const prompt = `Mavzu: ${topic}, Daraja: ${difficulty}. Test natijalari:\n${results}\nIltimos tahlil qiling va o'zbek tilida maslahatlar bering.`;
 
-  // Natijalarni matn ko'rinishiga o'tkazish
-  const historyText = tests
-    .map((t, i) => {
-      const userAns = userAnswers[i] || "Javob berilmagan";
-      return `${i + 1}. Savol: ${t.question}\nTo'g'ri javob: ${t.correctAnswer}\nFoydalanuvchi javobi: ${userAns}`;
-    })
-    .join("\n\n");
-
-  const prompt = `Foydalanuvchi quyidagi mavzuda test ishladi: "${topic}" (${difficulty} daraja).\n\nNatijalar:\n${historyText}\n\nIltimos, foydalanuvchining natijasini tahlil qiling. 100 ballik tizimda reyting bering va qaysi mavzularda oqsayotganini yoki qanday yutuqlarga erishganini tushuntiring. Xatolarini to'g'rilash uchun qisqacha maslahat bering. Tahlil faqat o'zbek tilida (Markdown formatida) bo'lsin.`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  const data = await callGeminiAPI("gemini-1.5-flash", {
+    contents: [{ parts: [{ text: prompt }] }]
   });
 
-  return response.text || "Kechirasiz, tahlil qilib bo'lmadi.";
+  return data.candidates[0].content.parts[0].text;
 }
