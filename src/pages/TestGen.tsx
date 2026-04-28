@@ -36,7 +36,7 @@ export default function TestGen() {
       setTests(resp);
     } catch (e: any) {
       console.error(e);
-      alert("Xatolik: Testlarni generatsiya qilib bo'lmadi.");
+      alert(`Xatolik: ${e.message || t.errorOccurred}`);
     } finally {
       setLoading(false);
     }

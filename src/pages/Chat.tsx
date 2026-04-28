@@ -40,9 +40,9 @@ export default function Chat() {
         userMsg.text
       );
       setMessages(prev => [...prev, { id: Date.now().toString(), role: "model", text: resp }]);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: "model", text: t.errorOccurred }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: "model", text: `Xatolik: ${e.message || "Xabar yuborib bo'lmadi."}` }]);
     } finally {
       setLoading(false);
     }

@@ -106,7 +106,7 @@ export default function SlideGen() {
       setSlides(resp);
     } catch(e: any) {
       console.error(e);
-      alert(t.errorOccurred);
+      alert(`Xatolik: ${e.message || t.errorOccurred}`);
     } finally {
       setLoading(false);
     }
