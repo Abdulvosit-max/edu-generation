@@ -1,4 +1,4 @@
-import { Video, Loader2, PlaySquare } from "lucide-react";
+import { Loader2, PlaySquare } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 
 export default function VideoGen() {

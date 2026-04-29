@@ -1,15 +1,10 @@
-import { Settings, User, Mail, Shield, LogOut } from "lucide-react";
+import { Settings, Mail, Shield } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { auth } from "../lib/firebase";
-// import { signOut } from "firebase/auth"; // Removed
 
 export default function Account() {
   const { t, theme, language, setTheme, setLanguage } = useAppContext();
   const user = auth.currentUser;
-
-  const handleLogout = () => {
-    alert("Loginsiz rejimda chiqish imkonsiz.");
-  };
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto h-full flex flex-col">

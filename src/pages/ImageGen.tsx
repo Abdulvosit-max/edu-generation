@@ -1,15 +1,12 @@
 import { useState } from "react";
-import { ImageIcon, Wand2, Share2, Loader2, Download } from "lucide-react";
+import { ImageIcon, Wand2, Loader2, Download } from "lucide-react";
 import { generateEducationalImage } from "../lib/gemini";
-import { auth } from "../lib/firebase";
-// import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Removed
 import { useAppContext } from "../lib/AppContext";
 
 export default function ImageGen() {
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sharing, setSharing] = useState(false);
   const [imgError, setImgError] = useState(false);
   const { t } = useAppContext();
 
@@ -19,31 +16,25 @@ export default function ImageGen() {
     setImage(null);
     setImgError(false);
     try {
-       const url = await generateEducationalImage(prompt);
-       setImage(url);
+      const url = await generateEducationalImage(prompt);
+      setImage(url);
     } catch (e: any) {
-       console.error(e);
-       alert(e.message || t.errorOccurred);
+      alert(e.message || t.errorOccurred);
     } finally {
-       setLoading(false);
+      setLoading(false);
     }
-  };
-
-  const handleShare = () => {
-    alert("Firebase o'chirilgan.");
   };
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto">
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
-           <ImageIcon className="text-blue-600 dark:text-blue-400" /> {t.imageTitle}
+          <ImageIcon className="text-blue-600 dark:text-blue-400" /> {t.imageTitle}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2">{t.imageDesc}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
         {/* Left Control Panel */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -55,8 +46,7 @@ export default function ImageGen() {
               placeholder={t.imagePlaceholder}
               className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 ring-blue-500 transition-shadow resize-none text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
-            
-            <button 
+            <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
               className="mt-6 w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-md shadow-blue-600/20"
@@ -81,47 +71,46 @@ export default function ImageGen() {
         <div className="lg:col-span-8 flex flex-col">
           <div className="flex-1 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:20px_20px] bg-white dark:bg-slate-800 border text-center border-slate-200 dark:border-slate-700 rounded-3xl p-4 sm:p-8 min-h-[400px] flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
             {loading ? (
-               <div className="flex flex-col items-center gap-4 text-slate-400 dark:text-slate-500">
-                 <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
-                 <p className="font-medium animate-pulse text-blue-600 dark:text-blue-400">{t.generating}</p>
-               </div>
+              <div className="flex flex-col items-center gap-4 text-slate-400 dark:text-slate-500">
+                <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
+                <p className="font-medium animate-pulse text-blue-600 dark:text-blue-400">{t.generating}</p>
+              </div>
             ) : imgError ? (
-               <div className="flex flex-col items-center gap-4 text-red-500">
-                 <p className="font-semibold text-center">Rasm yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.</p>
-                 <button onClick={handleGenerate} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Qayta urinish</button>
-               </div>
+              <div className="flex flex-col items-center gap-4 text-red-500">
+                <p className="font-semibold text-center">Rasm yuklashda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.</p>
+                <button onClick={handleGenerate} className="px-6 py-2 bg-blue-600 text-white rounded-xl">Qayta urinish</button>
+              </div>
             ) : image ? (
-               <div className="w-full relative group">
-                 <img 
-                    src={image} 
-                    alt="Generated" 
-                    referrerPolicy="no-referrer" 
-                    onError={() => setImgError(true)}
-                    className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700" 
-                 />
-                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a 
-                      href={image} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 font-medium rounded-xl shadow-sm flex items-center gap-2 transition-colors"
-                    >
-                      <Download size={16} /> {t.save}
-                    </a>
-                 </div>
-               </div>
+              <div className="w-full relative group">
+                <img
+                  src={image}
+                  alt="Generated"
+                  referrerPolicy="no-referrer"
+                  onError={() => setImgError(true)}
+                  className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700"
+                />
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <a
+                    href={image}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 font-medium rounded-xl shadow-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Download size={16} /> {t.save}
+                  </a>
+                </div>
+              </div>
             ) : (
-               <div className="text-slate-400 dark:text-slate-500 max-w-sm flex flex-col items-center">
-                 <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 shadow-inner ring-1 ring-slate-100 dark:ring-slate-800">
-                   <ImageIcon size={40} className="text-slate-300 dark:text-slate-600" />
-                 </div>
-                 <p className="font-medium text-lg text-slate-600 dark:text-slate-400">{t.noImage}</p>
-                 <p className="text-sm mt-2 opacity-80">{t.noImageDesc}</p>
-               </div>
+              <div className="text-slate-400 dark:text-slate-500 max-w-sm flex flex-col items-center">
+                <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 shadow-inner ring-1 ring-slate-100 dark:ring-slate-800">
+                  <ImageIcon size={40} className="text-slate-300 dark:text-slate-600" />
+                </div>
+                <p className="font-medium text-lg text-slate-600 dark:text-slate-400">{t.noImage}</p>
+                <p className="text-sm mt-2 opacity-80">{t.noImageDesc}</p>
+              </div>
             )}
           </div>
         </div>
-
       </div>
     </div>
   );

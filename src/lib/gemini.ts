@@ -1,12 +1,15 @@
-/**
- * AI integratsiyasi (Triple-Check System)
- * Gemini-ning 3 xil modelini tekshiradi, ishlamasa Groq-ga o'tadi.
- */
-
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
 
 const MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+
+// Simple in-memory cache with 30-minute TTL
+const cache = new Map<string, { result: string; expires: number }>();
+const CACHE_TTL = 30 * 60 * 1000;
+
+function getCacheKey(prompt: string, jsonMode: boolean) {
+  return `${jsonMode ? "json:" : ""}${prompt}`;
+}
 
 async function callGemini(payload: any, modelName: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_KEY}`;
@@ -21,44 +24,64 @@ async function callGemini(payload: any, modelName: string) {
 }
 
 async function smartAIRequest(prompt: string, jsonMode = false, chatHistory: any[] = []) {
-  const contents = chatHistory.length > 0 ? chatHistory : [{ parts: [{ text: prompt }] }];
-  const payload = { 
+  const isConversation = chatHistory.length > 0;
+
+  // Cache faqat oddiy (chat tarixsiz) so'rovlar uchun
+  if (!isConversation) {
+    const key = getCacheKey(prompt, jsonMode);
+    const cached = cache.get(key);
+    if (cached && cached.expires > Date.now()) {
+      return cached.result;
+    }
+  }
+
+  const contents = isConversation ? chatHistory : [{ parts: [{ text: prompt }] }];
+  const payload = {
     contents,
     generationConfig: jsonMode ? { responseMimeType: "application/json" } : undefined
   };
 
-  // 1. Gemini modellarini ketma-ket tekshiramiz
+  let result: string | null = null;
+
   for (const model of MODELS) {
     try {
-      console.log(`Checking ${model}...`);
-      return await callGemini(payload, model);
-    } catch (e) {
-      console.warn(`${model} failed, trying next...`);
+      result = await callGemini(payload, model);
+      break;
+    } catch {
+      // keyingisiga o'tamiz
     }
   }
 
-  // 2. Agar hech qaysi Gemini ishlamasa, Groq (Llama)
-  try {
-    const messages = chatHistory.length > 0 
-      ? chatHistory.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.parts[0].text }))
-      : [{ role: "user", content: prompt }];
-    if (jsonMode) messages.unshift({ role: "system", content: "Siz faqat JSON qaytaradigan yordamchisiz." });
-    
-    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages,
-        response_format: jsonMode ? { type: "json_object" } : undefined
-      })
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message || "Groq fail");
-    return data.choices[0].message.content;
-  } catch (e: any) {
-    throw new Error("Barcha AI tizimlari (Gemini va Groq) ishlamayapti. Iltimos API kalitlarni tekshiring.");
+  if (!result) {
+    try {
+      const messages = isConversation
+        ? chatHistory.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.parts[0].text }))
+        : [{ role: "user", content: prompt }];
+      if (jsonMode) messages.unshift({ role: "system", content: "Siz faqat JSON qaytaradigan yordamchisiz." });
+
+      const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages,
+          response_format: jsonMode ? { type: "json_object" } : undefined
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error?.message || "Groq fail");
+      result = data.choices[0].message.content;
+    } catch (e: any) {
+      throw new Error("Barcha AI tizimlari (Gemini va Groq) ishlamayapti. Iltimos API kalitlarni tekshiring.");
+    }
   }
+
+  if (!isConversation && result) {
+    const key = getCacheKey(prompt, jsonMode);
+    cache.set(key, { result, expires: Date.now() + CACHE_TTL });
+  }
+
+  return result!;
 }
 
 export interface SlideData { title: string; content: string; speakerNotes: string; }
@@ -74,7 +97,6 @@ export async function generateEducationalChat(history: any[], message: string) {
 }
 
 export async function generateEducationalImage(prompt: string) {
-  // Eng barqaror rasm generatori
   return `https://image.pollinations.ai/prompt/${encodeURIComponent("educational, " + prompt)}?width=1024&height=1024&nologo=true&seed=${Math.random()}`;
 }
 
