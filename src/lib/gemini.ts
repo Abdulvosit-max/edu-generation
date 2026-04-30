@@ -142,8 +142,8 @@ export interface SlideData {
   title: string;
   content: string;
   speakerNotes: string;
-  imagePrompt: string;
-  imageSearchTerm: string;
+  iconName: string;
+  colorScheme: string;
 }
 
 export interface TestData {
@@ -189,13 +189,23 @@ Quyidagi JSON formatida qaytaring:
   return data.tests || data;
 }
 
-export async function generateEducationalSlides(topic: string): Promise<SlideData[]> {
+export async function generateEducationalSlides(topic: string, theme: string): Promise<SlideData[]> {
+  let themeInstruction = "";
+  if (theme === "tech") {
+    themeInstruction = "Foydalanuvchi 'Tech/Minimal' uslubini tanladi. Barcha 'colorScheme' lar uchun quyuq, sovuq ranglarni tanlang: 'blue', 'indigo', 'slate', 'zinc'.";
+  } else if (theme === "edu") {
+    themeInstruction = "Foydalanuvchi 'Edu/Bright' uslubini tanladi. 'colorScheme' lar uchun yorqin, iliq va jozibali pastel ranglarni tanlang: 'emerald', 'amber', 'rose', 'fuchsia', 'cyan'.";
+  } else {
+    themeInstruction = "Foydalanuvchi 'Corporate' uslubini tanladi. 'colorScheme' lar uchun rasmiy va jiddiy ranglarni tanlang: 'sky', 'gray', 'teal', 'navy'.";
+  }
+
   const prompt = `Siz professional prezentatsiya dizaynerisiz.
 Mavzu: "${topic}".
-Vazifa: Ushbu mavzu bo'yicha 12 ta slayddan iborat dars ishlanmasi yarating.
+Vazifa: Ushbu mavzu bo'yicha 8-12 ta slayddan iborat dars ishlanmasi yarating.
+
 Struktura:
 1. Kirish
-2. Asosiy tushunchalar (3-4 slayd)
+2. Asosiy tushunchalar
 3. Amaliy misollar
 4. Qiziqarli faktlar
 5. Xulosa va savol-javob
@@ -204,10 +214,14 @@ Har bir slayd uchun:
 - title: Slayd sarlavhasi (O'zbekcha)
 - content: 3-5 ta qisqa va mazmunli bandlar (O'zbekcha, Markdown formatida)
 - speakerNotes: O'qituvchi uchun nutq matni (O'zbekcha)
-- imageSearchTerm: Slaydga mos professional rasm qidirish uchun 3-5 ta inglizcha kalit so'z.
+- iconName: Lucide React kutubxonasidan mavzuga mos bitta icon nomi (Inglizcha, masalan: "Globe", "Cpu", "Leaf", "Rocket", "Microscope", "BookOpen", "Brain", "Lightbulb"). Faqat aniq mavjud icon nomini yozing.
+- colorScheme: Slayd uchun bitta rang palitrasi nomi (Inglizcha). Masalan: "blue", "emerald", "rose", "amber", "indigo", "purple", "cyan".
+
+Muhim Yo'riqnoma: ${themeInstruction}
 
 Quyidagi JSON formatida qaytaring:
-{"slides":[{"title":"...","content":"...","speakerNotes":"...","imageSearchTerm":"..."}]}`;
+{"slides":[{"title":"...","content":"...","speakerNotes":"...","iconName":"...","colorScheme":"..."}]}`;
+  
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
   return data.slides || data;
