@@ -146,8 +146,8 @@ export default function TestGen() {
             />
             
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <input type="number" value={testCount} onChange={e => setTestCount(parseInt(e.target.value))} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 rounded-xl" />
-              <input type="text" placeholder="Ustoz ismi" value={teacherName} onChange={e => setTeacherName(e.target.value)} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 rounded-xl" />
+              <input type="number" value={testCount} onChange={e => setTestCount(parseInt(e.target.value))} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500" />
+              <input type="text" placeholder="Ustoz ismi" value={teacherName} onChange={e => setTeacherName(e.target.value)} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500" />
             </div>
 
             <button
@@ -161,18 +161,18 @@ export default function TestGen() {
 
           {tests && (
             <div className="flex flex-col gap-3">
-              <button onClick={downloadPDF} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
+              <button onClick={downloadPDF} className="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
                 <Download size={18} /> PDF yuklash
               </button>
               
               {resourceId && !isShared && (
-                <button onClick={handleShare} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                <button onClick={handleShare} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-colors">
                   <Share2 size={18} /> Hamjamiyatga chiqarish
                 </button>
               )}
               
               {isShared && (
-                <div className="w-full bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
+                <div className="w-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800 font-bold py-4 rounded-xl flex items-center justify-center gap-2">
                   <CheckCircle size={18} /> Hamjamiyatga qo'shildi
                 </div>
               )}
@@ -184,8 +184,8 @@ export default function TestGen() {
           <div className="bg-white dark:bg-slate-800 flex-1 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-10 overflow-y-auto">
             {!tests ? (
               <div className="m-auto text-center py-20">
-                <FileText size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500">Hali test yaratilmadi.</p>
+                <FileText size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+                <p className="text-slate-500 dark:text-slate-400">Hali test yaratilmadi.</p>
               </div>
             ) : (
               <div className="space-y-8">
@@ -194,18 +194,30 @@ export default function TestGen() {
                      <h3 className="font-bold mb-4">{index + 1}. {test.question}</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                        {test.options.map(opt => (
-                         <button key={opt} onClick={() => handleOptionClick(index, opt)} className={`p-4 text-left rounded-xl border ${userAnswers[index] === opt ? "bg-blue-50 border-blue-500" : "bg-slate-50 border-slate-100"}`}>{opt}</button>
+                         <button 
+                           key={opt} 
+                           onClick={() => handleOptionClick(index, opt)} 
+                           className={`p-4 text-left rounded-xl border transition-colors font-medium ${
+                             userAnswers[index] === opt 
+                               ? "bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-700 dark:text-blue-300" 
+                               : "bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                           }`}
+                         >
+                           {opt}
+                         </button>
                        ))}
                      </div>
                    </div>
                 ))}
                 {!isSubmitted && (
-                   <button onClick={submitTest} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl">Yakunlash va Tahlil qilish</button>
+                   <button onClick={submitTest} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-bold rounded-2xl">Yakunlash va Tahlil qilish</button>
                 )}
                 {analysis && (
-                   <div className="mt-8 p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100">
-                     <h3 className="font-bold mb-4 flex items-center gap-2"><Award /> AI Tahlili</h3>
-                     <Markdown>{String(analysis)}</Markdown>
+                   <div className="mt-8 p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800">
+                     <h3 className="font-bold mb-4 flex items-center gap-2 text-indigo-900 dark:text-indigo-300"><Award /> AI Tahlili</h3>
+                     <div className="prose prose-indigo dark:prose-invert max-w-none text-indigo-900 dark:text-indigo-200">
+                       <Markdown>{String(analysis)}</Markdown>
+                     </div>
                    </div>
                 )}
               </div>
