@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
-import { Presentation, Loader2, FileText, ChevronLeft, ChevronRight, Download, Maximize2, Share2, CheckCircle, Palette } from "lucide-react";
+import { Presentation, Loader2, FileText, ChevronLeft, ChevronRight, Download, Maximize2, Share2, CheckCircle, Palette, ImageIcon } from "lucide-react";
 import { generateEducationalSlides, SlideData } from "../lib/gemini";
 import { saveResource, togglePublic } from "../lib/db";
 import Markdown from "react-markdown";
 import { useAppContext } from "../lib/AppContext";
 import pptxgen from "pptxgenjs";
 import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 
 const colorGradients: Record<string, string> = {
   blue: "from-blue-600 to-blue-800",
@@ -30,6 +29,28 @@ const hexColors: Record<string, string> = {
   indigo: "4338CA", purple: "7E22CE", cyan: "0891B2", slate: "334155",
   zinc: "3F3F46", gray: "4B5563", teal: "0F766E", sky: "0284C7", navy: "0F172A"
 };
+
+function SlideImage({ src, alt }: { src: string; alt: string }) {
+  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  return (
+    <div className="w-full h-full min-h-[160px] rounded-3xl overflow-hidden bg-white/10 flex items-center justify-center relative border border-white/20">
+      {status === "error" ? (
+        <div className="flex flex-col items-center gap-2 text-white/50 p-4"><ImageIcon size={32} /></div>
+      ) : (
+        <>
+          {status === "loading" && <Loader2 size={32} className="animate-spin text-white absolute" />}
+          <img
+            src={src}
+            alt={alt}
+            onLoad={() => setStatus("ok")}
+            onError={() => setStatus("error")}
+            className={`w-full h-full object-cover shadow-2xl transition-opacity duration-700 ${status === "ok" ? "opacity-100" : "opacity-0"}`}
+          />
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function SlideGen() {
   const [searchParams] = useSearchParams();
@@ -92,7 +113,7 @@ export default function SlideGen() {
       setResourceId(id);
     } catch (e: any) {
       console.error(e);
-      alert(`Xatolik: ${e.message || "Birozdan so'ng qayta urining."}`);
+      alert(`Xatolik: AI tizimi band. Birozdan so'ng qayta urining.`);
     } finally {
       setLoading(false);
     }
@@ -121,20 +142,61 @@ export default function SlideGen() {
       const bgColor = hexColors[slide.colorScheme] || "1E293B";
       slideObj.background = { color: bgColor };
       
-      // Decorative top bar
+      // Top bar & Line
       slideObj.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 1.2, fill: { color: "FFFFFF", transparency: 90 } });
-      
-      // Slide Title
       slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
-      
-      // Decorative line
       slideObj.addShape(pptx.ShapeType.line, { x: 0.5, y: 1.1, w: "90%", h: 0, line: { color: "FFFFFF", width: 2, transparency: 50 } });
 
-      // Slide Content
       const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
-      slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "80%", h: 4.5, fontSize: 20, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
+
+      if (slide.layoutType === "process_diagram" && slide.diagramSteps) {
+        // Diagramma tuzish
+        const stepCount = slide.diagramSteps.length;
+        const boxWidth = 8.0 / stepCount;
+        for(let j=0; j<stepCount; j++) {
+          const xPos = 0.5 + (j * boxWidth);
+          slideObj.addShape(pptx.ShapeType.roundRect, { x: xPos, y: 1.5, w: boxWidth - 0.2, h: 1.2, fill: { color: "FFFFFF", transparency: 20 }, line: { color: "FFFFFF", width: 1 } });
+          slideObj.addText(slide.diagramSteps[j], { x: xPos, y: 1.5, w: boxWidth - 0.2, h: 1.2, fontSize: 16, bold: true, color: "FFFFFF", align: "center", fontFace: "Arial" });
+          if (j < stepCount - 1) {
+             slideObj.addShape(pptx.ShapeType.rightArrow, { x: xPos + boxWidth - 0.2, y: 1.9, w: 0.2, h: 0.3, fill: { color: "FFFFFF" } });
+          }
+        }
+        slideObj.addText(textContent, { x: 0.5, y: 3.0, w: "90%", h: 3.5, fontSize: 20, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
+
+      } else if (slide.layoutType === "3d_illustration" && slide.imagePrompt) {
+        // 3D Rasm chapda, matn o'ngda
+        slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "50%", h: 4.5, fontSize: 18, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
+        const seed = Math.floor(Math.random() * 9999);
+        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=${seed}`;
+        try {
+          const resp = await fetch(imgUrl);
+          const blob = await resp.blob();
+          const base64 = await new Promise<string>((res) => { const r = new FileReader(); r.onloadend = () => res(r.result as string); r.readAsDataURL(blob); });
+          slideObj.addImage({ data: base64, x: 5.8, y: 1.5, w: 4.0, h: 4.0, rounding: true });
+        } catch (e) {
+          slideObj.addShape(pptx.ShapeType.ellipse, { x: 6.2, y: 1.5, w: 3.5, h: 3.5, fill: { color: "FFFFFF", transparency: 80 }});
+        }
+      } else {
+        // Standart "text_icon" qolipi - bezaklar bilan
+        slideObj.addShape(pptx.ShapeType.donut, { x: 8.0, y: -1.0, w: 4, h: 4, fill: { color: "FFFFFF", transparency: 90 } });
+        slideObj.addShape(pptx.ShapeType.rtTriangle, { x: 7.5, y: 4.0, w: 3, h: 3, fill: { color: "FFFFFF", transparency: 85 }, flipH: true });
+        
+        slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "70%", h: 4.5, fontSize: 22, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
+        
+        if (slide.iconName) {
+           try {
+             const iconKebab = slide.iconName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+             const iconUrl = `https://unpkg.com/lucide-static@latest/icons/${iconKebab}.svg`;
+             const resp = await fetch(iconUrl);
+             if (resp.ok) {
+               const svgText = await resp.text();
+               const base64 = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgText)));
+               slideObj.addImage({ data: base64, x: 8.0, y: 1.5, w: 1.5, h: 1.5 });
+             }
+           } catch (e) {}
+        }
+      }
       
-      // Speaker Notes
       slideObj.addNotes(slide.speakerNotes);
     }
     
@@ -144,7 +206,7 @@ export default function SlideGen() {
 
   const currentSlide = slides?.[currentIdx];
   const gradient = currentSlide ? (colorGradients[currentSlide.colorScheme] || colorGradients.blue) : colorGradients.blue;
-  const IconComponent = currentSlide ? ((Icons as any)[currentSlide.iconName] || Presentation) : Presentation;
+  const IconComponent = currentSlide?.iconName ? ((Icons as any)[currentSlide.iconName] || Presentation) : Presentation;
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto min-h-screen flex flex-col overflow-x-hidden">
@@ -244,21 +306,38 @@ export default function SlideGen() {
                     {/* Background Decorative Shapes */}
                     <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
                     <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
-                    <div className="absolute top-[10%] right-[10%] w-32 h-32 border-4 border-white/5 rounded-full pointer-events-none"></div>
-                    <div className="absolute bottom-[20%] right-[20%] w-16 h-16 border-2 border-white/10 rotate-45 pointer-events-none"></div>
 
-                    <div className="relative z-10 flex flex-col md:flex-row gap-12 items-center h-full">
-                      <div className="flex-1 order-2 md:order-1">
-                         <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight drop-shadow-md">{currentSlide.title}</h2>
-                         <div className="prose prose-lg prose-invert max-w-none text-white/90">
-                           <Markdown>{Array.isArray(currentSlide.content) ? currentSlide.content.join("\n") : String(currentSlide.content)}</Markdown>
-                         </div>
-                      </div>
+                    <div className="relative z-10 h-full flex flex-col">
+                      <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight drop-shadow-md">{currentSlide.title}</h2>
                       
-                      <div className="w-full md:w-1/3 flex justify-center items-center order-1 md:order-2">
-                        <div className="w-40 h-40 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-[40px] flex items-center justify-center border border-white/20 shadow-2xl transform md:rotate-3 md:hover:rotate-0 transition-transform duration-500">
-                          <IconComponent size={80} className="text-white drop-shadow-lg" />
+                      {currentSlide.layoutType === "process_diagram" && currentSlide.diagramSteps && (
+                        <div className="mb-8 flex flex-wrap gap-4">
+                          {currentSlide.diagramSteps.map((step, idx) => (
+                            <div key={idx} className="flex-1 min-w-[120px] bg-white/20 backdrop-blur-md p-4 rounded-2xl flex items-center justify-center text-center font-bold text-white shadow-lg border border-white/30">
+                              {step}
+                            </div>
+                          ))}
                         </div>
+                      )}
+
+                      <div className="flex flex-col md:flex-row gap-8 flex-1">
+                        <div className="flex-1 prose prose-lg prose-invert max-w-none text-white/90">
+                           <Markdown>{Array.isArray(currentSlide.content) ? currentSlide.content.join("\n") : String(currentSlide.content)}</Markdown>
+                        </div>
+                        
+                        {currentSlide.layoutType === "3d_illustration" && currentSlide.imagePrompt && (
+                          <div className="w-full md:w-1/3 aspect-square">
+                            <SlideImage src={`https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=123`} alt="3D Illustration" />
+                          </div>
+                        )}
+
+                        {currentSlide.layoutType === "text_icon" && currentSlide.iconName && (
+                          <div className="w-full md:w-1/4 flex justify-center items-center">
+                            <div className="w-32 h-32 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-[40px] flex items-center justify-center border border-white/20 shadow-2xl">
+                              <IconComponent size={80} className="text-white drop-shadow-lg" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

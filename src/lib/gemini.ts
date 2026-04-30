@@ -142,8 +142,11 @@ export interface SlideData {
   title: string;
   content: string;
   speakerNotes: string;
-  iconName: string;
   colorScheme: string;
+  layoutType: "text_icon" | "process_diagram" | "3d_illustration";
+  iconName?: string;
+  diagramSteps?: string[];
+  imagePrompt?: string;
 }
 
 export interface TestData {
@@ -201,7 +204,7 @@ export async function generateEducationalSlides(topic: string, theme: string): P
 
   const prompt = `Siz professional prezentatsiya dizaynerisiz.
 Mavzu: "${topic}".
-Vazifa: Ushbu mavzu bo'yicha 8-12 ta slayddan iborat dars ishlanmasi yarating.
+Vazifa: Ushbu mavzu bo'yicha 8-10 ta slayddan iborat dars ishlanmasi yarating.
 
 Struktura:
 1. Kirish
@@ -210,17 +213,22 @@ Struktura:
 4. Qiziqarli faktlar
 5. Xulosa va savol-javob
 
-Har bir slayd uchun:
-- title: Slayd sarlavhasi (O'zbekcha)
-- content: 3-5 ta qisqa va mazmunli bandlar (O'zbekcha, Markdown formatida)
-- speakerNotes: O'qituvchi uchun nutq matni (O'zbekcha)
-- iconName: Lucide React kutubxonasidan mavzuga mos bitta icon nomi (Inglizcha, masalan: "Globe", "Cpu", "Leaf", "Rocket", "Microscope", "BookOpen", "Brain", "Lightbulb"). Faqat aniq mavjud icon nomini yozing.
-- colorScheme: Slayd uchun bitta rang palitrasi nomi (Inglizcha). Masalan: "blue", "emerald", "rose", "amber", "indigo", "purple", "cyan".
+Slaydlarning zerikarli bo'lmasligi uchun, har bir slayd uchun mos 'layoutType' (dizayn qolipi) tanlang. Layout turlari:
+- "text_icon": Oddiy matn va bitta tushuntiruvchi icon. (Buning uchun 'iconName' da Lucide React ikonka nomini bering, masalan "Globe", "Brain", "Rocket").
+- "process_diagram": Zanjir, jarayon yoki bosqichlarni tushuntirish uchun. (Buning uchun 'diagramSteps' ro'yxatida 3-4 ta qisqa qadam matnini bering).
+- "3d_illustration": Murakkab vizual yoki chizmalarni ko'rsatish uchun. (Buning uchun 'imagePrompt' ga inglizcha 3D izometrik illustratsiya promptini yozing, masalan "3d isometric minimalist brain structure").
 
-Muhim Yo'riqnoma: ${themeInstruction}
+Har bir slayd uchun majburiy maydonlar:
+- title: Slayd sarlavhasi (O'zbekcha)
+- content: Qisqa va mazmunli bandlar (O'zbekcha, Markdown)
+- speakerNotes: O'qituvchi uchun nutq matni
+- layoutType: Yuqoridagi 3 tadan bittasi
+- colorScheme: Slayd uchun bitta rang palitrasi nomi ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky")
+
+Muhim Yo'riqnoma: ${themeInstruction}. layoutTypelarni aralashtirib foydalaning, hammasi bir xil bo'lib qolmasin.
 
 Quyidagi JSON formatida qaytaring:
-{"slides":[{"title":"...","content":"...","speakerNotes":"...","iconName":"...","colorScheme":"..."}]}`;
+{"slides":[{"title":"...","content":"...","speakerNotes":"...","colorScheme":"...","layoutType":"text_icon|process_diagram|3d_illustration","iconName":"...","diagramSteps":["..."],"imagePrompt":"..."}]}`;
   
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
