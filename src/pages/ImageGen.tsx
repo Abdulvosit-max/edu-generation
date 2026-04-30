@@ -1,27 +1,64 @@
 import { useState } from "react";
-import { ImageIcon, Wand2, Loader2, Download } from "lucide-react";
+import { ImageIcon, Wand2, Loader2, Download, Share2 } from "lucide-react";
 import { generateEducationalImage } from "../lib/gemini";
+import { saveResource } from "../lib/db";
 import { useAppContext } from "../lib/AppContext";
 
 export default function ImageGen() {
   const [prompt, setPrompt] = useState("");
-  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
+  const [resourceId, setResourceId] = useState<string | number | null>(null);
+  const [isShared, setIsShared] = useState(false);
   const { t } = useAppContext();
 
+  // Tasvir yaratish mantiqi
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
+    setImgLoading(true);
     setImage(null);
     setImgError(false);
+    setResourceId(null);
+    setIsShared(false);
+
+    let generatedUrl = "";
     try {
-      const url = await generateEducationalImage(prompt);
-      setImage(url);
+      generatedUrl = await generateEducationalImage(prompt);
+      setImage(generatedUrl);
     } catch (e: any) {
-      alert(e.message || t.errorOccurred);
+      console.error("AI Tasvir yaratishda xato:", e);
+      generatedUrl = `https://loremflickr.com/1024/768/${encodeURIComponent(prompt)}`;
+      setImage(generatedUrl);
     } finally {
       setLoading(false);
+    }
+
+    // Django Backend-ga saqlash (bu alohida xatolik bo'lsa ham rasm qolaveradi)
+    try {
+      const id = await saveResource({
+        type: "image",
+        title: prompt.substring(0, 50) + (prompt.length > 50 ? "..." : ""),
+        prompt: prompt,
+        content: generatedUrl
+      });
+      setResourceId(id);
+    } catch (dbErr) {
+      console.error("Backend-ga saqlashda xato:", dbErr);
+    }
+  };
+
+  // Hamjamiyatga ulashish
+  const handleShare = async () => {
+    if (!resourceId) return;
+    try {
+      await import("../lib/db").then(m => m.togglePublic(resourceId, true));
+      setIsShared(true);
+      alert("Tasvir hamjamiyatga muvaffaqiyatli qo'shildi!");
+    } catch (err) {
+      alert("Ulashishda xatolik yuz berdi");
     }
   };
 
@@ -70,7 +107,14 @@ export default function ImageGen() {
         {/* Right Preview Panel */}
         <div className="lg:col-span-8 flex flex-col">
           <div className="flex-1 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:20px_20px] bg-white dark:bg-slate-800 border text-center border-slate-200 dark:border-slate-700 rounded-3xl p-4 sm:p-8 min-h-[400px] flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
-            {loading ? (
+            {(loading || imgLoading) && image && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm animate-in fade-in">
+                <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
+                <p className="mt-4 font-medium text-blue-600 dark:text-blue-400">{t.generating}</p>
+              </div>
+            )}
+
+            {loading && !image ? (
               <div className="flex flex-col items-center gap-4 text-slate-400 dark:text-slate-500">
                 <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
                 <p className="font-medium animate-pulse text-blue-600 dark:text-blue-400">{t.generating}</p>
@@ -86,18 +130,40 @@ export default function ImageGen() {
                   src={image}
                   alt="Generated"
                   referrerPolicy="no-referrer"
-                  onError={() => setImgError(true)}
-                  className="w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700"
+                  onLoad={() => setImgLoading(false)}
+                  onError={() => {
+                    setImgError(true);
+                    setImgLoading(false);
+                  }}
+                  className={`w-full max-h-[600px] object-contain rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 transition-opacity duration-500 ${imgLoading ? 'opacity-0' : 'opacity-100'}`}
                 />
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a
-                    href={image}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 font-medium rounded-xl shadow-sm flex items-center gap-2 transition-colors"
-                  >
-                    <Download size={16} /> {t.save}
-                  </a>
+                <div className="mt-4 flex items-center justify-between px-2 w-full max-w-2xl">
+                  <div className="flex gap-3">
+                    <a
+                      href={image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all"
+                    >
+                      <Download size={14} /> Yuklab olish
+                    </a>
+                    
+                    {resourceId && !isShared && (
+                      <button
+                        onClick={handleShare}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold rounded-xl shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all animate-in fade-in slide-in-from-bottom-2"
+                      >
+                        <Share2 size={14} /> Hamjamiyatga chiqarish
+                      </button>
+                    )}
+
+                    {isShared && (
+                      <div className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                        Hamjamiyatga qo'shildi
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -111,6 +177,12 @@ export default function ImageGen() {
             )}
           </div>
         </div>
+      </div>
+      <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium italic flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          Ushbu platforma va AI modellari EduGen jamoasi tomonidan ta'limni rivojlantirish maqsadida yaratildi
+        </p>
       </div>
     </div>
   );

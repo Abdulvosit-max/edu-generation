@@ -2,6 +2,9 @@ import { Settings, Mail, Shield } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { auth } from "../lib/firebase";
 
+/**
+ * Foydalanuvchi akkaunti va ilova sozlamalari sahifasi.
+ */
 export default function Account() {
   const { t, theme, language, setTheme, setLanguage } = useAppContext();
   const user = auth.currentUser;

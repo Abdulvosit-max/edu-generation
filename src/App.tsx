@@ -3,13 +3,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+import Account from "./pages/Account";
 const Feed = lazy(() => import("./pages/Feed"));
 const Chat = lazy(() => import("./pages/Chat"));
 const ImageGen = lazy(() => import("./pages/ImageGen"));
 const SlideGen = lazy(() => import("./pages/SlideGen"));
 const TestGen = lazy(() => import("./pages/TestGen"));
 const VideoGen = lazy(() => import("./pages/VideoGen"));
-const Account = lazy(() => import("./pages/Account"));
 
 function PageLoader() {
   return (

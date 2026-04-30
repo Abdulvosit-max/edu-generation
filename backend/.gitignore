@@ -1,0 +1,9 @@
+.vercel
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+staticfiles/
+*.log
