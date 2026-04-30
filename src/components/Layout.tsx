@@ -79,7 +79,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tighter text-slate-900 dark:text-white leading-none">EduGen</span>
-              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">AI Studio</span>
             </div>
           </div>
           <NavLinks />
