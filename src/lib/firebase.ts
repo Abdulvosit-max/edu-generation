@@ -3,16 +3,16 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, where } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "dummy-api-key",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "dummy-auth-domain.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "dummy-project-id",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "dummy-bucket.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "dummy-sender-id",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "dummy-app-id"
 };
 
-if (!firebaseConfig.apiKey) {
-  console.warn("VITE_FIREBASE_API_KEY topilmadi! Iltimos, Vercel sozlamalaridan Env Variables-ni qo'shing.");
+if (!import.meta.env.VITE_FIREBASE_API_KEY) {
+  console.warn("VITE_FIREBASE_API_KEY topilmadi! App xato bermasligi uchun 'dummy' rejimda ishga tushmoqda. Firebase login ishlamaydi.");
 }
 
 const app = initializeApp(firebaseConfig);
