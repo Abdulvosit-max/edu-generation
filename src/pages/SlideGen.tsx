@@ -287,11 +287,11 @@ export default function SlideGen() {
                 <div className="px-8 pb-6 flex items-center justify-between">
                   <div className="flex-1 pr-10">
                     <span className="text-[10px] font-black text-slate-400 uppercase">Nutq matni</span>
-                    <p className="text-xs text-slate-600 italic line-clamp-2">{currentSlide.speakerNotes}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic line-clamp-2">{currentSlide.speakerNotes}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setCurrentIdx(p => Math.max(0, p - 1))} className="p-3 bg-slate-100 rounded-full"><ChevronLeft /></button>
-                    <button onClick={() => setCurrentIdx(p => Math.min(slides.length - 1, p + 1))} className="p-3 bg-slate-100 rounded-full"><ChevronRight /></button>
+                    <button onClick={() => setCurrentIdx(p => Math.max(0, p - 1))} className="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"><ChevronLeft /></button>
+                    <button onClick={() => setCurrentIdx(p => Math.min(slides.length - 1, p + 1))} className="p-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"><ChevronRight /></button>
                   </div>
                 </div>
               </div>
