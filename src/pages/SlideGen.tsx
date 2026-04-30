@@ -142,29 +142,55 @@ export default function SlideGen() {
       const bgColor = hexColors[slide.colorScheme] || "1E293B";
       slideObj.background = { color: bgColor };
       
-      // Top bar & Line
-      slideObj.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 1.2, fill: { color: "FFFFFF", transparency: 90 } });
-      slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
-      slideObj.addShape(pptx.ShapeType.line, { x: 0.5, y: 1.1, w: "90%", h: 0, line: { color: "FFFFFF", width: 2, transparency: 50 } });
+      // Bezaklar (Standard for all)
+      slideObj.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: "100%", h: 1.2, fill: { color: "FFFFFF", transparency: 92 } });
 
-      const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
+      if (slide.layoutType === "intro_title") {
+        // MUQOVA SLAYDI
+        slideObj.addText(slide.title, { x: 0, y: 2.0, w: "100%", h: 1.5, fontSize: 44, bold: true, color: "FFFFFF", align: "center", fontFace: "Arial" });
+        slideObj.addShape(pptx.ShapeType.line, { x: 3.5, y: 3.6, w: 3.0, h: 0, line: { color: "FFFFFF", width: 4 } });
+        slideObj.addText("Edu-Gen Professional Taqdimot", { x: 0, y: 4.0, w: "100%", h: 0.5, fontSize: 18, color: "FFFFFF", align: "center", fontFace: "Arial", italic: true });
+        
+      } else if (slide.layoutType === "comparison" && slide.comparisonData) {
+        // SOLISHTIRISH SLAYDI
+        slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
+        
+        // Left Column
+        slideObj.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 1.5, w: 4.2, h: 4.0, fill: { color: "FFFFFF", transparency: 85 } });
+        slideObj.addText(slide.comparisonData.leftTitle, { x: 0.6, y: 1.6, w: 4.0, h: 0.5, fontSize: 20, bold: true, color: "1E293B", align: "center" });
+        const leftText = slide.comparisonData.left.map(t => "• " + t).join("\n");
+        slideObj.addText(leftText, { x: 0.7, y: 2.2, w: 3.8, h: 3.0, fontSize: 16, color: "334155", valign: "top" });
 
-      if (slide.layoutType === "process_diagram" && slide.diagramSteps) {
-        // Diagramma tuzish
+        // Right Column
+        slideObj.addShape(pptx.ShapeType.roundRect, { x: 5.3, y: 1.5, w: 4.2, h: 4.0, fill: { color: "FFFFFF", transparency: 85 } });
+        slideObj.addText(slide.comparisonData.rightTitle, { x: 5.4, y: 1.6, w: 4.0, h: 0.5, fontSize: 20, bold: true, color: "1E293B", align: "center" });
+        const rightText = slide.comparisonData.right.map(t => "• " + t).join("\n");
+        slideObj.addText(rightText, { x: 5.5, y: 2.2, w: 3.8, h: 3.0, fontSize: 16, color: "334155", valign: "top" });
+
+      } else if (slide.layoutType === "statistics_highlight" && slide.statValue) {
+        // STATISTIKA SLAYDI
+        slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
+        slideObj.addText(slide.statValue, { x: 0, y: 2.2, w: "100%", h: 1.5, fontSize: 96, bold: true, color: "FFFFFF", align: "center" });
+        slideObj.addText(slide.statDesc || "", { x: 0, y: 3.8, w: "100%", h: 0.8, fontSize: 24, color: "FFFFFF", align: "center", italic: true });
+        
+      } else if (slide.layoutType === "process_diagram" && slide.diagramSteps) {
+        // DIAGRAMMA SLAYDI
+        slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
         const stepCount = slide.diagramSteps.length;
         const boxWidth = 8.0 / stepCount;
         for(let j=0; j<stepCount; j++) {
           const xPos = 0.5 + (j * boxWidth);
           slideObj.addShape(pptx.ShapeType.roundRect, { x: xPos, y: 1.5, w: boxWidth - 0.2, h: 1.2, fill: { color: "FFFFFF", transparency: 20 }, line: { color: "FFFFFF", width: 1 } });
           slideObj.addText(slide.diagramSteps[j], { x: xPos, y: 1.5, w: boxWidth - 0.2, h: 1.2, fontSize: 16, bold: true, color: "FFFFFF", align: "center", fontFace: "Arial" });
-          if (j < stepCount - 1) {
-             slideObj.addShape(pptx.ShapeType.rightArrow, { x: xPos + boxWidth - 0.2, y: 1.9, w: 0.2, h: 0.3, fill: { color: "FFFFFF" } });
-          }
+          if (j < stepCount - 1) slideObj.addShape(pptx.ShapeType.rightArrow, { x: xPos + boxWidth - 0.2, y: 1.9, w: 0.2, h: 0.3, fill: { color: "FFFFFF" } });
         }
+        const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
         slideObj.addText(textContent, { x: 0.5, y: 3.0, w: "90%", h: 3.5, fontSize: 20, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
 
       } else if (slide.layoutType === "3d_illustration" && slide.imagePrompt) {
-        // 3D Rasm chapda, matn o'ngda
+        // 3D ILLYUSTRATSIYA
+        slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
+        const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
         slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "50%", h: 4.5, fontSize: 18, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
         const seed = Math.floor(Math.random() * 9999);
         const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=${seed}`;
@@ -177,12 +203,11 @@ export default function SlideGen() {
           slideObj.addShape(pptx.ShapeType.ellipse, { x: 6.2, y: 1.5, w: 3.5, h: 3.5, fill: { color: "FFFFFF", transparency: 80 }});
         }
       } else {
-        // Standart "text_icon" qolipi - bezaklar bilan
+        // STANDART (TEXT + ICON)
+        slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
         slideObj.addShape(pptx.ShapeType.donut, { x: 8.0, y: -1.0, w: 4, h: 4, fill: { color: "FFFFFF", transparency: 90 } });
-        slideObj.addShape(pptx.ShapeType.rtTriangle, { x: 7.5, y: 4.0, w: 3, h: 3, fill: { color: "FFFFFF", transparency: 85 }, flipH: true });
-        
+        const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
         slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "70%", h: 4.5, fontSize: 22, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
-        
         if (slide.iconName) {
            try {
              const iconKebab = slide.iconName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -308,37 +333,75 @@ export default function SlideGen() {
                     <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
 
                     <div className="relative z-10 h-full flex flex-col">
-                      <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight drop-shadow-md">{currentSlide.title}</h2>
-                      
-                      {currentSlide.layoutType === "process_diagram" && currentSlide.diagramSteps && (
-                        <div className="mb-8 flex flex-wrap gap-4">
-                          {currentSlide.diagramSteps.map((step, idx) => (
-                            <div key={idx} className="flex-1 min-w-[120px] bg-white/20 backdrop-blur-md p-4 rounded-2xl flex items-center justify-center text-center font-bold text-white shadow-lg border border-white/30">
-                              {step}
-                            </div>
-                          ))}
+                      {currentSlide.layoutType === "intro_title" ? (
+                        <div className="m-auto text-center">
+                          <h2 className="text-5xl md:text-7xl font-black text-white mb-8 drop-shadow-2xl">{currentSlide.title}</h2>
+                          <div className="w-24 h-1 bg-white mx-auto mb-6"></div>
+                          <p className="text-xl text-white/80 italic">Edu-Gen Professional Taqdimot</p>
                         </div>
-                      )}
-
-                      <div className="flex flex-col md:flex-row gap-8 flex-1">
-                        <div className="flex-1 prose prose-lg prose-invert max-w-none text-white/90">
-                           <Markdown>{Array.isArray(currentSlide.content) ? currentSlide.content.join("\n") : String(currentSlide.content)}</Markdown>
+                      ) : currentSlide.layoutType === "comparison" && currentSlide.comparisonData ? (
+                        <div className="h-full flex flex-col">
+                           <h2 className="text-3xl md:text-4xl font-black text-white mb-8 drop-shadow-md">{currentSlide.title}</h2>
+                           <div className="flex-1 grid grid-cols-2 gap-6">
+                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20">
+                                 <h3 className="text-xl font-bold text-white mb-4 text-center border-b border-white/10 pb-2">{currentSlide.comparisonData.leftTitle}</h3>
+                                 <ul className="space-y-2 text-white/90">
+                                    {currentSlide.comparisonData.left.map((item, idx) => (
+                                      <li key={idx} className="flex items-start gap-2 text-sm"><Icons.CheckCircle size={16} className="shrink-0 mt-1" /> {item}</li>
+                                    ))}
+                                 </ul>
+                              </div>
+                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20">
+                                 <h3 className="text-xl font-bold text-white mb-4 text-center border-b border-white/10 pb-2">{currentSlide.comparisonData.rightTitle}</h3>
+                                 <ul className="space-y-2 text-white/90">
+                                    {currentSlide.comparisonData.right.map((item, idx) => (
+                                      <li key={idx} className="flex items-start gap-2 text-sm"><Icons.CheckCircle size={16} className="shrink-0 mt-1" /> {item}</li>
+                                    ))}
+                                 </ul>
+                              </div>
+                           </div>
                         </div>
+                      ) : currentSlide.layoutType === "statistics_highlight" && currentSlide.statValue ? (
+                        <div className="m-auto text-center">
+                           <h2 className="text-3xl font-black text-white mb-12 opacity-80">{currentSlide.title}</h2>
+                           <div className="text-8xl md:text-[12rem] font-black text-white mb-6 drop-shadow-2xl leading-none">{currentSlide.statValue}</div>
+                           <p className="text-2xl md:text-3xl text-white/90 font-medium italic">{currentSlide.statDesc}</p>
+                        </div>
+                      ) : (
+                        <>
+                        <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight drop-shadow-md">{currentSlide.title}</h2>
                         
-                        {currentSlide.layoutType === "3d_illustration" && currentSlide.imagePrompt && (
-                          <div className="w-full md:w-1/3 aspect-square">
-                            <SlideImage src={`https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=123`} alt="3D Illustration" />
+                        {currentSlide.layoutType === "process_diagram" && currentSlide.diagramSteps && (
+                          <div className="mb-8 flex flex-wrap gap-4">
+                            {currentSlide.diagramSteps.map((step, idx) => (
+                              <div key={idx} className="flex-1 min-w-[120px] bg-white/20 backdrop-blur-md p-4 rounded-2xl flex items-center justify-center text-center font-bold text-white shadow-lg border border-white/30">
+                                {step}
+                              </div>
+                            ))}
                           </div>
                         )}
 
-                        {currentSlide.layoutType === "text_icon" && currentSlide.iconName && (
-                          <div className="w-full md:w-1/4 flex justify-center items-center">
-                            <div className="w-32 h-32 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-[40px] flex items-center justify-center border border-white/20 shadow-2xl">
-                              <IconComponent size={80} className="text-white drop-shadow-lg" />
-                            </div>
+                        <div className="flex flex-col md:flex-row gap-8 flex-1">
+                          <div className="flex-1 prose prose-lg prose-invert max-w-none text-white/90">
+                             <Markdown>{Array.isArray(currentSlide.content) ? currentSlide.content.join("\n") : String(currentSlide.content)}</Markdown>
                           </div>
-                        )}
-                      </div>
+                          
+                          {currentSlide.layoutType === "3d_illustration" && currentSlide.imagePrompt && (
+                            <div className="w-full md:w-1/3 aspect-square">
+                              <SlideImage src={`https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=123`} alt="3D Illustration" />
+                            </div>
+                          )}
+
+                          {currentSlide.layoutType === "text_icon" && currentSlide.iconName && (
+                            <div className="w-full md:w-1/4 flex justify-center items-center">
+                              <div className="w-32 h-32 md:w-48 md:h-48 bg-white/10 backdrop-blur-xl rounded-[40px] flex items-center justify-center border border-white/20 shadow-2xl">
+                                <IconComponent size={80} className="text-white drop-shadow-lg" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

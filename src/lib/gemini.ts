@@ -143,10 +143,13 @@ export interface SlideData {
   content: string;
   speakerNotes: string;
   colorScheme: string;
-  layoutType: "text_icon" | "process_diagram" | "3d_illustration";
+  layoutType: "intro_title" | "text_icon" | "process_diagram" | "3d_illustration" | "comparison" | "statistics_highlight";
   iconName?: string;
   diagramSteps?: string[];
   imagePrompt?: string;
+  comparisonData?: { left: string[]; right: string[]; leftTitle: string; rightTitle: string };
+  statValue?: string;
+  statDesc?: string;
 }
 
 export interface TestData {
@@ -195,40 +198,33 @@ Quyidagi JSON formatida qaytaring:
 export async function generateEducationalSlides(topic: string, theme: string): Promise<SlideData[]> {
   let themeInstruction = "";
   if (theme === "tech") {
-    themeInstruction = "Foydalanuvchi 'Tech/Minimal' uslubini tanladi. Barcha 'colorScheme' lar uchun quyuq, sovuq ranglarni tanlang: 'blue', 'indigo', 'slate', 'zinc'.";
+    themeInstruction = "Foydalanuvchi 'Tech/Minimal' uslubini tanladi. Quyuq va sovuq ranglar: 'blue', 'indigo', 'slate', 'zinc'.";
   } else if (theme === "edu") {
-    themeInstruction = "Foydalanuvchi 'Edu/Bright' uslubini tanladi. 'colorScheme' lar uchun yorqin, iliq va jozibali pastel ranglarni tanlang: 'emerald', 'amber', 'rose', 'fuchsia', 'cyan'.";
+    themeInstruction = "Foydalanuvchi 'Edu/Bright' uslubini tanladi. Yorqin va jozibali: 'emerald', 'amber', 'rose', 'cyan'.";
   } else {
-    themeInstruction = "Foydalanuvchi 'Corporate' uslubini tanladi. 'colorScheme' lar uchun rasmiy va jiddiy ranglarni tanlang: 'sky', 'gray', 'teal', 'navy'.";
+    themeInstruction = "Foydalanuvchi 'Corporate' uslubini tanladi. Rasmiy: 'sky', 'gray', 'teal', 'navy'.";
   }
 
   const prompt = `Siz professional prezentatsiya dizaynerisiz.
 Mavzu: "${topic}".
-Vazifa: Ushbu mavzu bo'yicha 8-10 ta slayddan iborat dars ishlanmasi yarating.
+Vazifa: 8-10 ta slayddan iborat mukammal dars ishlanmasi yarating.
 
-Struktura:
-1. Kirish
-2. Asosiy tushunchalar
-3. Amaliy misollar
-4. Qiziqarli faktlar
-5. Xulosa va savol-javob
+Har bir slayd uchun mos 'layoutType' tanlang:
+1. "intro_title": Faqat birinchi slayd uchun. Katta sarlavha.
+2. "text_icon": Matn va bitta Lucide iconName.
+3. "process_diagram": Jarayon yoki qadamlar. 'diagramSteps' (3-4 ta qisqa matn).
+4. "3d_illustration": Murakkab tushuncha uchun 'imagePrompt' (inglizcha 3d isometric prompt).
+5. "comparison": Ikki narsani solishtirish. 'comparisonData' ({leftTitle, rightTitle, left:[], right:[]}) bering.
+6. "statistics_highlight": Muhim raqamni ko'rsatish. 'statValue' (masalan: "90%") va 'statDesc' bering.
 
-Slaydlarning zerikarli bo'lmasligi uchun, har bir slayd uchun mos 'layoutType' (dizayn qolipi) tanlang. Layout turlari:
-- "text_icon": Oddiy matn va bitta tushuntiruvchi icon. (Buning uchun 'iconName' da Lucide React ikonka nomini bering, masalan "Globe", "Brain", "Rocket").
-- "process_diagram": Zanjir, jarayon yoki bosqichlarni tushuntirish uchun. (Buning uchun 'diagramSteps' ro'yxatida 3-4 ta qisqa qadam matnini bering).
-- "3d_illustration": Murakkab vizual yoki chizmalarni ko'rsatish uchun. (Buning uchun 'imagePrompt' ga inglizcha 3D izometrik illustratsiya promptini yozing, masalan "3d isometric minimalist brain structure").
+Har bir slayd uchun JSON maydonlari:
+- title, content, speakerNotes, layoutType, colorScheme ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky", "navy", "slate").
+- Layoutga qarab: iconName, diagramSteps, imagePrompt, comparisonData, statValue, statDesc.
 
-Har bir slayd uchun majburiy maydonlar:
-- title: Slayd sarlavhasi (O'zbekcha)
-- content: Qisqa va mazmunli bandlar (O'zbekcha, Markdown)
-- speakerNotes: O'qituvchi uchun nutq matni
-- layoutType: Yuqoridagi 3 tadan bittasi
-- colorScheme: Slayd uchun bitta rang palitrasi nomi ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky")
+Muhim Yo'riqnoma: ${themeInstruction}. Ranglar va layoutlarni turli xil qiling.
 
-Muhim Yo'riqnoma: ${themeInstruction}. layoutTypelarni aralashtirib foydalaning, hammasi bir xil bo'lib qolmasin.
-
-Quyidagi JSON formatida qaytaring:
-{"slides":[{"title":"...","content":"...","speakerNotes":"...","colorScheme":"...","layoutType":"text_icon|process_diagram|3d_illustration","iconName":"...","diagramSteps":["..."],"imagePrompt":"..."}]}`;
+JSON formatida qaytaring:
+{"slides":[...]}`;
   
   const text = await smartAIRequest(prompt, true);
   const data = JSON.parse(text);
