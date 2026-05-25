@@ -205,9 +205,9 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
               <div className="flex flex-col">
                  <span className="text-[11px] font-black text-slate-800 dark:text-slate-100 leading-none truncate max-w-[80px]">
-                   {currentUser?.displayName || "Mehmon"}
+                   {currentUser?.displayName || t.accountBtn}
                  </span>
-                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Profil</span>
+                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.accountBtn}</span>
               </div>
             </Link>
           </div>

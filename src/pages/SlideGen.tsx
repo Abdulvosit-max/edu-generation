@@ -63,6 +63,8 @@ export default function SlideGen() {
   const [timer, setTimer] = useState(0);
   const [resourceId, setResourceId] = useState<string | number | null>(null);
   const [isShared, setIsShared] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const { t } = useAppContext();
 
   const toggleFullscreen = () => {
@@ -79,7 +81,7 @@ export default function SlideGen() {
   useEffect(() => {
     let interval: any;
     if (loading) {
-      setTimer(18);
+      setTimer(60);
       interval = setInterval(() => setTimer(prev => (prev > 0 ? prev - 1 : 0)), 1000);
     } else {
       setTimer(0);
@@ -99,7 +101,9 @@ export default function SlideGen() {
     setCurrentIdx(0);
     setResourceId(null);
     setIsShared(false);
-    
+    setErrorMsg(null);
+    setShareSuccess(false);
+
     try {
       const resp = await generateEducationalSlides(topic, theme);
       setSlides(resp);
@@ -112,8 +116,10 @@ export default function SlideGen() {
       });
       setResourceId(id);
     } catch (e: any) {
-      console.error(e);
-      alert(`Xatolik: AI tizimi band. Birozdan so'ng qayta urining.`);
+      console.error("SlideGen xatosi:", e);
+      // Asil xato matnini foydalanuvchiga ko'rsatamiz
+      const msg = e?.message || "Noma'lum xato yuz berdi.";
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -124,9 +130,9 @@ export default function SlideGen() {
     try {
       await togglePublic(resourceId, true);
       setIsShared(true);
-      alert("Slaydlar hamjamiyatga muvaffaqiyatli qo'shildi!");
-    } catch (err) {
-      alert("Xatolik: Ulashib bo'lmadi");
+      setShareSuccess(true);
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Ulashishda xatolik yuz berdi.");
     }
   };
 
@@ -277,10 +283,36 @@ export default function SlideGen() {
             <button
               onClick={handleGenerate}
               disabled={loading || !topic.trim()}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
             >
-              {loading ? <Loader2 className="animate-spin" /> : <FileText />} {loading ? "Tayyorlanmoqda..." : "Yaratish"}
+              {loading ? <Loader2 className="animate-spin" /> : <FileText />}
+              {loading ? `Tayyorlanmoqda... ${timer > 0 ? timer + "s" : ""}` : "Yaratish"}
             </button>
+
+            {/* Xato xabari — alert() o'rniga inline banner */}
+            {errorMsg && (
+              <div className="mt-3 p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-2xl">
+                <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-1.5">
+                  ⚠️ Xatolik yuz berdi
+                </p>
+                <p className="text-xs text-rose-500 dark:text-rose-400 leading-relaxed">{errorMsg}</p>
+                <button
+                  onClick={() => setErrorMsg(null)}
+                  className="mt-2 text-[10px] font-bold text-rose-400 hover:text-rose-600 underline"
+                >
+                  Yopish
+                </button>
+              </div>
+            )}
+
+            {/* Ulashish muvaffaqiyat xabari */}
+            {shareSuccess && (
+              <div className="mt-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl">
+                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  ✅ Slaydlar hamjamiyatga muvaffaqiyatli qo'shildi!
+                </p>
+              </div>
+            )}
           </div>
 
           {slides && (

@@ -16,14 +16,61 @@ if (!import.meta.env.VITE_FIREBASE_API_KEY) {
 }
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const originalAuth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Mock User state va kuzatuvchilar (listeners)
+let mockUser: any = null;
+const listeners = new Set<(user: any) => void>();
+
+// LocalStorage'dan mock userni tiklash
+try {
+  const saved = localStorage.getItem("edu_generation_mock_user");
+  if (saved) {
+    mockUser = JSON.parse(saved);
+  }
+} catch (e) {
+  console.error("Mock userni tiklashda xatolik:", e);
+}
+
+// Transparent Proxy auth obyekti uchun
+export const auth = new Proxy(originalAuth, {
+  get(target, prop, receiver) {
+    if (prop === "currentUser") {
+      return mockUser || target.currentUser;
+    }
+    if (prop === "onAuthStateChanged") {
+      return (callback: (user: any) => void) => {
+        listeners.add(callback);
+        // Hozirgi holatni darhol yuboramiz
+        callback(mockUser || target.currentUser);
+        
+        // Asl firebase holat o'zgarishini ham kuzatamiz
+        const unsub = target.onAuthStateChanged((usr) => {
+          if (!mockUser) {
+            callback(usr);
+          }
+        });
+        
+        return () => {
+          listeners.delete(callback);
+          unsub();
+        };
+      };
+    }
+    const val = Reflect.get(target, prop, receiver);
+    if (typeof val === "function") {
+      return val.bind(target);
+    }
+    return val;
+  }
+});
 
 // Yordamchi funksiyalar va Firebase eksportlari
 export async function signInWithGoogle() {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(originalAuth, googleProvider);
     return result.user;
   } catch (error) {
     console.error("Kirishda xatolik:", error);
@@ -31,8 +78,24 @@ export async function signInWithGoogle() {
   }
 }
 
+export async function signInAsDemo() {
+  mockUser = {
+    uid: "demo-user-123",
+    displayName: "Mehmon Foydalanuvchi",
+    email: "mehmon@edu-generation.uz",
+    photoURL: null,
+    emailVerified: true
+  };
+  localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+  listeners.forEach(cb => cb(mockUser));
+  return mockUser;
+}
+
 export async function logout() {
-  return signOut(auth);
+  localStorage.removeItem("edu_generation_mock_user");
+  mockUser = null;
+  listeners.forEach(cb => cb(null));
+  return signOut(originalAuth);
 }
 
 export { 
@@ -48,3 +111,4 @@ export {
   deleteDoc,
   where
 };
+

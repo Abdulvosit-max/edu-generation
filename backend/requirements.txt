@@ -4,4 +4,3 @@ django-cors-headers
 requests
 python-dotenv
 whitenoise
-mysqlclient

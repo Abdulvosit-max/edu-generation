@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import AuthOverlay from "./components/AuthOverlay";
 
 import Account from "./pages/Account";
 const Feed = lazy(() => import("./pages/Feed"));
@@ -24,19 +25,22 @@ export default function App() {
     <BrowserRouter>
       <Layout>
         <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Feed />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/image" element={<ImageGen />} />
-              <Route path="/slide" element={<SlideGen />} />
-              <Route path="/test" element={<TestGen />} />
-              <Route path="/video" element={<VideoGen />} />
-              <Route path="/account" element={<Account />} />
-            </Routes>
-          </Suspense>
+          <AuthOverlay>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Feed />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/image" element={<ImageGen />} />
+                <Route path="/slide" element={<SlideGen />} />
+                <Route path="/test" element={<TestGen />} />
+                <Route path="/video" element={<VideoGen />} />
+                <Route path="/account" element={<Account />} />
+              </Routes>
+            </Suspense>
+          </AuthOverlay>
         </ErrorBoundary>
       </Layout>
     </BrowserRouter>
   );
 }
+
