@@ -2,6 +2,12 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
+
+
 # Avval .env, keyin .env.local (ustiga yozadi) yuklanadi
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 load_dotenv(Path(__file__).resolve().parent.parent / ".env.local", override=True)
@@ -14,6 +20,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-edu-gen-secret-key-
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Render domenlari uchun avtomatik ruxsat
+if not '*' in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.extend(['.onrender.com', 'localhost', '127.0.0.1'])
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -59,10 +69,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database: mahalliy SQLite, productionda MySQL (PythonAnywhere)
-DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite')
+# Database: mahalliy SQLite, productionda MySQL (PythonAnywhere) yoki PostgreSQL (Render)
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DB_ENGINE == 'mysql':
+if DATABASE_URL and dj_database_url:
+    # Render-da PostgreSQL yoki boshqa tashqi baza ulangan bo'lsa
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif os.getenv('DB_ENGINE') == 'mysql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -77,12 +96,29 @@ if DB_ENGINE == 'mysql':
         }
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    # SQLite
+    # Render-da Persistent Disk ulanib, /data papkasi yaratilgan bo'lsa, ma'lumotlar o'chib ketmasligi uchun o'sha erga saqlaymiz
+    sqlite_path = os.getenv('DATABASE_PATH')
+    if not sqlite_path and os.path.exists('/data'):
+        sqlite_path = '/data/db.sqlite3'
+        
+    if sqlite_path:
+        # Parent papka yaratilganini ta'minlaymiz
+        os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': sqlite_path,
+            }
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
