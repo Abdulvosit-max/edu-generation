@@ -19,7 +19,7 @@ echo "Username: $PA_USER"
 if [ ! -d "/home/$PA_USER/edu-generation" ]; then
   echo "[1/7] Reponi klonlash..."
   cd /home/$PA_USER
-  git clone https://github.com/YOUR_GITHUB_USERNAME/edu-generation.git
+  git clone https://github.com/Abdulvosit-max/edu-generation.git
 else
   echo "[1/7] Reponi yangilash..."
   cd /home/$PA_USER/edu-generation
@@ -97,12 +97,12 @@ echo "  Virtualenv: /home/$PA_USER/.virtualenvs/edu-gen"
 echo ""
 echo "WSGI faylini quyidagi kontent bilan to'ldiring:"
 echo "----------------------------------------------"
-cat << 'WSGI'
+cat << WSGI
 import sys
 import os
 from dotenv import load_dotenv
 
-project_path = '/home/YOUR_USERNAME/edu-generation/backend'
+project_path = '/home/$PA_USER/edu-generation/backend'
 sys.path.insert(0, project_path)
 load_dotenv(os.path.join(project_path, '.env'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'core.settings'
@@ -110,4 +110,5 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'core.settings'
 from core.wsgi import application
 WSGI
 echo "----------------------------------------------"
-echo "YOUR_USERNAME o'rniga: $PA_USER"
+echo "Barcha amallar muvaffaqiyatli bajarildi!"
+
