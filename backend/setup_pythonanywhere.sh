@@ -7,9 +7,12 @@ set -e
 PA_USER="${1:-$(whoami)}"
 DB_PASS="${2:-}"
 
+# DB_PASS bo'sh bo'lsa SQLite ishlatiladi (Free tier uchun juda qulay!)
 if [ -z "$DB_PASS" ]; then
-  echo "Foydalanish: bash setup_pythonanywhere.sh <username> <db_password>"
-  exit 1
+  echo "[!] Baza paroli berilmadi. SQLite (Doimiy fayl) ishlatiladi."
+  USE_SQLITE=true
+else
+  USE_SQLITE=false
 fi
 
 echo "=== EduGen Backend Setup (PythonAnywhere) ==="
@@ -42,7 +45,18 @@ pip install --quiet -r requirements.txt
 
 # 4. .env faylini yaratish
 echo "[4/7] .env konfiguratsiyasi..."
-cat > /home/$PA_USER/edu-generation/backend/.env << EOF
+if [ "$USE_SQLITE" = true ]; then
+  cat > /home/$PA_USER/edu-generation/backend/.env << EOF
+DJANGO_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+DJANGO_DEBUG=False
+ALLOWED_HOSTS=$PA_USER.pythonanywhere.com
+
+DB_ENGINE=sqlite
+
+CORS_ALLOW_ALL_ORIGINS=True
+EOF
+else
+  cat > /home/$PA_USER/edu-generation/backend/.env << EOF
 DJANGO_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
 DJANGO_DEBUG=False
 ALLOWED_HOSTS=$PA_USER.pythonanywhere.com
@@ -54,15 +68,18 @@ DB_PASSWORD=$DB_PASS
 DB_HOST=$PA_USER.mysql.pythonanywhere-services.com
 DB_PORT=3306
 
-CORS_ALLOW_ALL_ORIGINS=False
-CORS_ALLOWED_ORIGINS=https://edu-generation.vercel.app
+CORS_ALLOW_ALL_ORIGINS=True
 EOF
+fi
 
 echo ".env fayli yaratildi."
 
-# 5. MySQL database tekshiruvi
-echo "[5/7] MySQL ulanishini tekshirish..."
-python3 -c "
+# 5. Database tekshiruvi
+if [ "$USE_SQLITE" = true ]; then
+  echo "[5/7] SQLite ishlatilmoqda. Ulanishni tekshirish shart emas."
+else
+  echo "[5/7] MySQL ulanishini tekshirish..."
+  python3 -c "
 import os
 os.environ['DB_ENGINE'] = 'mysql'
 os.environ['DB_NAME'] = '${PA_USER}\$edu_gen'
@@ -78,6 +95,7 @@ except Exception as e:
     print(f'MySQL xatolik: {e}')
     print('PythonAnywhere Dashboard > Databases dan edu_gen bazasini yarating.')
 "
+fi
 
 # 6. Migrations
 echo "[6/7] Database migratsiyalari..."
