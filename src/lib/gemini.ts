@@ -175,19 +175,8 @@ async function smartAIRequest(
     }
     return result;
   } catch (proxyErr: any) {
-    // Backend mavjud bo'lmasa yoki ulanish xatosi bo'lsa — fallback ga o'tamiz
-    const isNetworkError =
-      proxyErr?.name === "AbortError" ||
-      proxyErr?.message?.includes("Failed to fetch") ||
-      proxyErr?.message?.includes("fetch") ||
-      proxyErr?.message?.includes("Network");
-
-    if (!isNetworkError) {
-      // Agar backend javob berdi lekin xato qaytardi — qayta urinmaymiz
-      throw new Error(proxyErr.message || "AI xizmatida xatolik yuz berdi.");
-    }
-    // Network xatosida — mahalliy kalitlar bilan davom etamiz
-    console.warn("Backend proxy ulanmadi, mahalliy kalit bilan urinilmoqda...");
+    // Har qanday backend xatosida (ulanish xatosi, server kaliti yo'qligi) — foydalanuvchining local kaliti (VITE_GEMINI_API_KEY) orqali davom etamiz!
+    console.warn("Backend proxy orqali AI so'rov yuborishda xatolik yuz berdi. Mahalliy kalit bilan urinib ko'rilmoqda...", proxyErr);
   }
 
   // -------------------------------------------------------

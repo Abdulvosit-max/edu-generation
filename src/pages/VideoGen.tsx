@@ -42,9 +42,8 @@ export default function VideoGen() {
   const [storyboard, setStoryboard] = useState<StoryboardData | null>(null);
   const [activeFrameIdx, setActiveFrameIdx] = useState(0);
   
-  // Frame Visual Generation States
   const [frameImages, setFrameImages] = useState<Record<number, string>>({});
-  const [generatingFrameIdx, setGeneratingFrameIdx] = useState<number | null>(null);
+  const [generatingFrames, setGeneratingFrames] = useState<Record<number, boolean>>({});
 
   // Text-To-Speech / Audio States
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -142,14 +141,19 @@ export default function VideoGen() {
     setIsPlayingSim(false);
   };
 
-  // Storyboard Simulation Play loop
+  // Storyboard Simulation Play loop with robust fallback
   useEffect(() => {
     let timer: NodeJS.Timeout;
+    let fallbackTimer: NodeJS.Timeout;
+    
     if (isPlayingSim && storyboard) {
       const currentFrame = storyboard.frames[activeFrameIdx];
       
-      speakText(currentFrame.scriptText, () => {
-        // Wait 2.5 seconds, then advance
+      let hasAdvanced = false;
+      const advance = () => {
+        if (hasAdvanced) return;
+        hasAdvanced = true;
+        
         timer = setTimeout(() => {
           if (activeFrameIdx < storyboard.frames.length - 1) {
             setActiveFrameIdx(prev => prev + 1);
@@ -158,21 +162,32 @@ export default function VideoGen() {
             setIsPlayingSim(false);
             setActiveFrameIdx(0);
           }
-        }, 2500);
+        }, 1500); // Wait 1.5s after audio ends before moving to next frame
+      };
+
+      // Play audio narration
+      speakText(currentFrame.scriptText, () => {
+        advance();
       });
+
+      // Browser Autoplay Fallback: If voice is blocked or gets stuck, automatically advance after 7 seconds!
+      fallbackTimer = setTimeout(() => {
+        advance();
+      }, 7000);
     }
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(fallbackTimer);
     };
   }, [isPlayingSim, activeFrameIdx, storyboard]);
 
-  // Sequential Background visual generation
-  const triggerSequentialGeneration = async (framesList: StoryboardFrame[]) => {
-    for (let i = 0; i < framesList.length; i++) {
-      // Generate each frame's image sequentially to load them in background
-      await generateFrameVisual(i, framesList[i].visualDescription);
-    }
+  // Parallel Background visual generation for blazing fast speed
+  const triggerParallelGeneration = (framesList: StoryboardFrame[]) => {
+    framesList.forEach((frame, i) => {
+      // Fire all image requests concurrently in parallel!
+      generateFrameVisual(i, frame.visualDescription);
+    });
   };
 
   // Storyboard Yaratish
@@ -186,9 +201,9 @@ export default function VideoGen() {
       const data = await generateEducationalStoryboard(topic, subject, ageGroup, style, language);
       setStoryboard(data);
       
-      // Auto-trigger background generation of all frame visuals sequentially
+      // Auto-trigger background generation of all frame visuals concurrently
       setTimeout(() => {
-        triggerSequentialGeneration(data.frames);
+        triggerParallelGeneration(data.frames);
       }, 200);
     } catch (e) {
       console.error("Storyboard generatsiyasida xato:", e);
@@ -200,7 +215,7 @@ export default function VideoGen() {
 
   // Fast Pollinations AI drawing loader
   const generateFrameVisual = async (idx: number, visualDesc: string) => {
-    setGeneratingFrameIdx(idx);
+    setGeneratingFrames(prev => ({ ...prev, [idx]: true }));
     try {
       // 1. Prompt sanitization (removes quotes/newlines and slices to 200 chars for extreme URL safety)
       const cleanDesc = visualDesc
@@ -224,12 +239,12 @@ export default function VideoGen() {
       // Instantly set the frame image URL to let the browser begin downloading and rendering it immediately
       setFrameImages(prev => ({ ...prev, [idx]: url }));
 
-      // Asynchronously preload/wait in background for 3.5 seconds to elegantly pace the sequential generation
+      // Asynchronously preload image to cache in browser
       await new Promise<boolean>((resolve) => {
         const img = new Image();
         const timer = setTimeout(() => {
           resolve(false);
-        }, 3500);
+        }, 8000); // 8s timeout
         
         img.onload = () => {
           clearTimeout(timer);
@@ -244,7 +259,7 @@ export default function VideoGen() {
     } catch (err) {
       console.error("Rasm chizishda xato:", err);
     } finally {
-      setGeneratingFrameIdx(null);
+      setGeneratingFrames(prev => ({ ...prev, [idx]: false }));
     }
   };
 
@@ -649,7 +664,7 @@ export default function VideoGen() {
             {storyboard.frames.map((frame, idx) => {
               const isCurrent = activeFrameIdx === idx;
               const hasImg = !!frameImages[idx];
-              const isGenerating = generatingFrameIdx === idx;
+              const isGenerating = !!generatingFrames[idx];
 
               return (
                 <button
@@ -682,7 +697,7 @@ export default function VideoGen() {
             <div className="w-full max-w-3xl aspect-video bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-900 shadow-md flex items-center justify-center">
               {frameImages[activeFrameIdx] ? (
                 <>
-                  {generatingFrameIdx === activeFrameIdx && (
+                  {!!generatingFrames[activeFrameIdx] && (
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xs">
                       <Loader2 size={32} className="animate-spin text-pink-500" />
                       <p className="text-white text-[10px] font-black mt-2 tracking-wide animate-pulse">Tasvir chizilmoqda...</p>
@@ -696,7 +711,7 @@ export default function VideoGen() {
                 </>
               ) : (
                 <div className="p-6 text-center text-slate-500 flex flex-col items-center gap-3">
-                  {generatingFrameIdx === activeFrameIdx ? (
+                  {!!generatingFrames[activeFrameIdx] ? (
                     <>
                       <Loader2 size={32} className="animate-spin text-pink-500" />
                       <p className="text-[10px] font-black text-slate-400 animate-pulse">Tasvir chizilmoqda...</p>
