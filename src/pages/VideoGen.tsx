@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Video, 
   Wand2, 
@@ -27,6 +27,216 @@ import { useAppContext } from "../lib/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 
+// Custom Canvas Particle Overlay for premium Animated Resource experience
+function ParticleOverlay({ activeFrame, style }: { activeFrame: StoryboardFrame | null; style: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || !activeFrame) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = canvas.offsetWidth || 800);
+    let height = (canvas.height = canvas.offsetHeight || 450);
+
+    // Detect animation type from frame content
+    const text = (activeFrame.visualDescription + " " + activeFrame.animationDescription + " " + activeFrame.title).toLowerCase();
+    
+    let animType: "rain" | "space" | "glow" | "gear" | "bokeh" = "bokeh";
+    
+    if (text.includes("rain") || text.includes("yomg'ir") || text.includes("water") || text.includes("suv") || text.includes("drop") || text.includes("cycle") || text.includes("falling")) {
+      animType = "rain";
+    } else if (text.includes("space") || text.includes("sayyora") || text.includes("yulduz") || text.includes("kosmos") || text.includes("planet") || text.includes("star") || text.includes("orbit") || text.includes("galaxy") || text.includes("sky") || text.includes("solar")) {
+      animType = "space";
+    } else if (text.includes("light") || text.includes("nur") || text.includes("yorug'") || text.includes("glow") || text.includes("energy") || text.includes("bulb") || text.includes("spark")) {
+      animType = "glow";
+    } else if (text.includes("rotate") || text.includes("spin") || text.includes("gear") || text.includes("turn") || text.includes("wheel") || text.includes("aylanish")) {
+      animType = "gear";
+    }
+
+    // Particle Classes
+    class RainParticle {
+      x = Math.random() * width;
+      y = Math.random() * -height;
+      vy = Math.random() * 4 + 6;
+      length = Math.random() * 15 + 10;
+      opacity = Math.random() * 0.4 + 0.3;
+
+      update() {
+        this.y += this.vy;
+        if (this.y > height) {
+          this.y = Math.random() * -20;
+          this.x = Math.random() * width;
+          this.vy = Math.random() * 4 + 6;
+        }
+      }
+
+      draw(c: CanvasRenderingContext2D) {
+        c.strokeStyle = `rgba(174, 219, 255, ${this.opacity})`;
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(this.x, this.y);
+        c.lineTo(this.x + 0.5, this.y + this.length);
+        c.stroke();
+      }
+    }
+
+    class SpaceParticle {
+      x = width / 2;
+      y = height / 2;
+      angle = Math.random() * Math.PI * 2;
+      speed = Math.random() * 1.5 + 0.5;
+      radius = Math.random() * 1.5;
+      distance = Math.random() * 40;
+      opacity = 0;
+
+      update() {
+        this.distance += this.speed;
+        this.opacity = Math.min(0.6, (this.distance - 40) / 100);
+        this.x = width / 2 + Math.cos(this.angle) * this.distance;
+        this.y = height / 2 + Math.sin(this.angle) * this.distance;
+
+        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+          this.distance = Math.random() * 20;
+          this.angle = Math.random() * Math.PI * 2;
+          this.speed = Math.random() * 1.5 + 0.5;
+          this.radius = Math.random() * 1.5;
+        }
+      }
+
+      draw(c: CanvasRenderingContext2D) {
+        c.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+      }
+    }
+
+    class BokehParticle {
+      x = Math.random() * width;
+      y = Math.random() * height;
+      vx = Math.random() * 0.4 - 0.2;
+      vy = Math.random() * -0.4 - 0.1;
+      radius = Math.random() * 6 + 3;
+      opacity = Math.random() * 0.25 + 0.05;
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.y < -10) {
+          this.y = height + 10;
+          this.x = Math.random() * width;
+        }
+        if (this.x < -10 || this.x > width + 10) {
+          this.x = Math.random() * width;
+        }
+      }
+
+      draw(c: CanvasRenderingContext2D) {
+        c.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+      }
+    }
+
+    // Initialize Particles
+    const rainCount = 45;
+    const spaceCount = 60;
+    const bokehCount = 20;
+
+    const rainParticles: RainParticle[] = [];
+    const spaceParticles: SpaceParticle[] = [];
+    const bokehParticles: BokehParticle[] = [];
+
+    if (animType === "rain") {
+      for (let i = 0; i < rainCount; i++) rainParticles.push(new RainParticle());
+    } else if (animType === "space") {
+      for (let i = 0; i < spaceCount; i++) spaceParticles.push(new SpaceParticle());
+    } else {
+      for (let i = 0; i < bokehCount; i++) bokehParticles.push(new BokehParticle());
+    }
+
+    let pulseGlow = 0;
+    let pulseDirection = 1;
+    let gearAngle = 0;
+
+    // Loop
+    const loop = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Handle custom resizing if container changes
+      if (canvas.width !== canvas.offsetWidth || canvas.height !== canvas.offsetHeight) {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+      }
+
+      if (animType === "rain") {
+        rainParticles.forEach((p) => {
+          p.update();
+          p.draw(ctx);
+        });
+      } else if (animType === "space") {
+        spaceParticles.forEach((p) => {
+          p.update();
+          p.draw(ctx);
+        });
+      } else if (animType === "glow") {
+        // Glowing aura effect
+        pulseGlow += 0.015 * pulseDirection;
+        if (pulseGlow > 0.4) pulseDirection = -1;
+        if (pulseGlow < 0.05) pulseDirection = 1;
+
+        const grad = ctx.createRadialGradient(width / 2, height / 2, 20, width / 2, height / 2, Math.min(width, height) / 1.6);
+        grad.addColorStop(0, `rgba(255, 223, 100, ${pulseGlow})`);
+        grad.addColorStop(0.5, `rgba(255, 120, 200, ${pulseGlow * 0.4})`);
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (animType === "gear") {
+        // Spin a subtle mechanical dashboard overlay on active simulation
+        gearAngle += 0.005;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(width - 50, 50, 30, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(width - 50, 50);
+        ctx.rotate(gearAngle);
+        for (let i = 0; i < 8; i++) {
+          ctx.rotate(Math.PI / 4);
+          ctx.beginPath();
+          ctx.rect(-4, -38, 8, 8);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Always draw subtle floating cinematic bokeh for maximum premium feel
+      bokehParticles.forEach((p) => {
+        p.update();
+        p.draw(ctx);
+      });
+
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    loop();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [activeFrame]);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-10 pointer-events-none w-full h-full" />;
+}
+
+
 export default function VideoGen() {
   const { t, language } = useAppContext();
   
@@ -44,12 +254,15 @@ export default function VideoGen() {
   
   const [frameImages, setFrameImages] = useState<Record<number, string>>({});
   const [generatingFrames, setGeneratingFrames] = useState<Record<number, boolean>>({});
+  const [animationMode, setAnimationMode] = useState(true);
 
   // Text-To-Speech / Audio States
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
+  const [simProgress, setSimProgress] = useState(0);
   const [speechLanguage, setSpeechLanguage] = useState<"uz" | "ru" | "en">("uz");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   
   // Collapsible Accordion State for Pedagogical Plan
   const [showPedagogicalPlan, setShowPedagogicalPlan] = useState(false);
@@ -85,30 +298,76 @@ export default function VideoGen() {
     setIsShared(false);
     setIsPlayingSim(false);
     setShowPedagogicalPlan(false);
-    if (typeof window !== "undefined") {
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
   };
 
-  // Web Speech API - Text to Speech with robust Language selection
+  // Web Speech API / Google TTS - Text to Speech with natural Uzbek voice fallback
   const speakText = (text: string, onEndCallback?: () => void) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
+    if (typeof window === "undefined") return;
+    
+    // Stop any currently playing audio/speech
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
     if (!text) return;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Configure locale code
-    let langCode = "uz-UZ";
-    if (speechLanguage === "ru") {
-      langCode = "ru-RU";
-    } else if (speechLanguage === "en") {
-      langCode = "en-US";
+    // 1. Primary: Natural Google Translate TTS for beautiful, real Uzbek pronunciation
+    try {
+      let langCode = "uz";
+      if (speechLanguage === "ru") langCode = "ru";
+      else if (speechLanguage === "en") langCode = "en";
+
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${langCode}&client=tw-ob&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        if (onEndCallback) onEndCallback();
+      };
+      
+      audio.onerror = (e) => {
+        console.warn("Google TTS xatosi, Web Speech API ga o'tilmoqda...", e);
+        speakTextNative(text, onEndCallback);
+      };
+
+      activeAudioRef.current = audio;
+      setIsSpeaking(true);
+      
+      audio.play().catch(err => {
+        console.warn("Autoplay blocked, playing via Web Speech API...", err);
+        speakTextNative(text, onEndCallback);
+      });
+    } catch (err) {
+      speakTextNative(text, onEndCallback);
     }
+  };
+
+  // Web Speech API Native Fallback
+  const speakTextNative = (text: string, onEndCallback?: () => void) => {
+    if (!window.speechSynthesis) {
+      setIsSpeaking(false);
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    let langCode = "uz-UZ";
+    if (speechLanguage === "ru") langCode = "ru-RU";
+    else if (speechLanguage === "en") langCode = "en-US";
 
     utterance.lang = langCode;
 
-    // Find custom matching voice in system
     const matchedVoice = voices.find(
       (v) => v.lang.toLowerCase().startsWith(speechLanguage)
     );
@@ -116,7 +375,7 @@ export default function VideoGen() {
       utterance.voice = matchedVoice;
     }
 
-    utterance.rate = 0.95; // Slightly slower for better clarity
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
     utterance.onend = () => {
@@ -134,6 +393,10 @@ export default function VideoGen() {
   };
 
   const stopSpeaking = () => {
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -141,54 +404,73 @@ export default function VideoGen() {
     setIsPlayingSim(false);
   };
 
-  // Storyboard Simulation Play loop with robust fallback
+  // Storyboard Simulation Play loop with visual progress and audio syncing
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    let fallbackTimer: NodeJS.Timeout;
+    let interval: NodeJS.Timeout;
+    let transitionTimer: NodeJS.Timeout;
     
     if (isPlayingSim && storyboard) {
       const currentFrame = storyboard.frames[activeFrameIdx];
+      const duration = Math.min(9500, Math.max(3800, currentFrame.scriptText.length * 68)); // dynamic reading duration
       
-      let hasAdvanced = false;
-      const advance = () => {
-        if (hasAdvanced) return;
-        hasAdvanced = true;
+      setSimProgress(0);
+      
+      // Start TTS audio narration
+      speakText(currentFrame.scriptText);
+      
+      const startTime = Date.now();
+      
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const percent = Math.min(100, (elapsed / duration) * 100);
+        setSimProgress(percent);
         
-        timer = setTimeout(() => {
-          if (activeFrameIdx < storyboard.frames.length - 1) {
-            setActiveFrameIdx(prev => prev + 1);
-          } else {
-            // End of simulation
-            setIsPlayingSim(false);
-            setActiveFrameIdx(0);
-          }
-        }, 1500); // Wait 1.5s after audio ends before moving to next frame
-      };
-
-      // Play audio narration
-      speakText(currentFrame.scriptText, () => {
-        advance();
-      });
-
-      // Browser Autoplay Fallback: If voice is blocked or gets stuck, automatically advance after 7 seconds!
-      fallbackTimer = setTimeout(() => {
-        advance();
-      }, 7000);
+        if (percent >= 100) {
+          clearInterval(interval);
+          
+          // Wait 1.2s after audio/progress ends before moving to next frame
+          transitionTimer = setTimeout(() => {
+            if (activeFrameIdx < storyboard.frames.length - 1) {
+              setActiveFrameIdx(prev => prev + 1);
+            } else {
+              // End of storyboard simulation
+              setIsPlayingSim(false);
+              setActiveFrameIdx(0);
+              stopSpeaking();
+            }
+          }, 1200);
+        }
+      }, 100);
+    } else {
+      setSimProgress(0);
     }
 
     return () => {
-      clearTimeout(timer);
-      clearTimeout(fallbackTimer);
+      clearInterval(interval);
+      clearTimeout(transitionTimer);
     };
   }, [isPlayingSim, activeFrameIdx, storyboard]);
 
-  // Parallel Background visual generation for blazing fast speed
-  const triggerParallelGeneration = (framesList: StoryboardFrame[]) => {
-    framesList.forEach((frame, i) => {
-      // Fire all image requests concurrently in parallel!
-      generateFrameVisual(i, frame.visualDescription);
-    });
+  // Priority Sequential Background visual generation
+  const triggerSequentialGeneration = async (framesList: StoryboardFrame[], startIdx = 0) => {
+    // 1. Generate active frame first with top priority
+    await generateFrameVisual(startIdx, framesList[startIdx].visualDescription);
+    
+    // 2. Generate other frames sequentially with a delay to prevent API rate-limits
+    for (let i = 0; i < framesList.length; i++) {
+      if (i === startIdx) continue;
+      // Wait 700ms before starting next one to pace requests elegantly
+      await new Promise(r => setTimeout(r, 700));
+      await generateFrameVisual(i, framesList[i].visualDescription);
+    }
   };
+
+  // Trigger active frame generation on-the-fly if not already generated
+  useEffect(() => {
+    if (storyboard && !frameImages[activeFrameIdx] && !generatingFrames[activeFrameIdx]) {
+      generateFrameVisual(activeFrameIdx, storyboard.frames[activeFrameIdx].visualDescription);
+    }
+  }, [activeFrameIdx, storyboard]);
 
   // Storyboard Yaratish
   const handleCreateStoryboard = async () => {
@@ -201,9 +483,9 @@ export default function VideoGen() {
       const data = await generateEducationalStoryboard(topic, subject, ageGroup, style, language);
       setStoryboard(data);
       
-      // Auto-trigger background generation of all frame visuals concurrently
+      // Auto-trigger background generation of all frame visuals sequentially
       setTimeout(() => {
-        triggerParallelGeneration(data.frames);
+        triggerSequentialGeneration(data.frames, 0);
       }, 200);
     } catch (e) {
       console.error("Storyboard generatsiyasida xato:", e);
@@ -213,7 +495,7 @@ export default function VideoGen() {
     }
   };
 
-  // Fast Pollinations AI drawing loader
+  // Fast Pollinations AI drawing loader (Turbo Model enabled)
   const generateFrameVisual = async (idx: number, visualDesc: string) => {
     setGeneratingFrames(prev => ({ ...prev, [idx]: true }));
     try {
@@ -231,36 +513,32 @@ export default function VideoGen() {
                           style === "Multfilm / Illyustratsiya" ? "vibrant school book illustration, colorful drawing style" :
                           "minimalist modern flat vector design, clean paths";
 
-      // Blazing fast default Pollinations AI model (removed model=flux to speed up from 25s to 0.6s!)
+      // Blazing fast default Pollinations AI model (Turbo model yields 1s renders and high stability)
       const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(
         cleanDesc + `, professional ${stylePrompt}, high quality educational material`
-      )}?width=1024&height=1024&seed=${seed}&nologo=true`;
+      )}?width=1024&height=1024&seed=${seed}&nologo=true&model=turbo`;
       
       // Instantly set the frame image URL to let the browser begin downloading and rendering it immediately
       setFrameImages(prev => ({ ...prev, [idx]: url }));
 
-      // Asynchronously preload image to cache in browser
-      await new Promise<boolean>((resolve) => {
-        const img = new Image();
-        const timer = setTimeout(() => {
-          resolve(false);
-        }, 8000); // 8s timeout
-        
-        img.onload = () => {
-          clearTimeout(timer);
-          resolve(true);
-        };
-        img.onerror = () => {
-          clearTimeout(timer);
-          resolve(false);
-        };
-        img.src = url;
-      });
+      // Asynchronously preload image in background (non-blocking fire-and-forget!)
+      const img = new Image();
+      img.src = url;
     } catch (err) {
       console.error("Rasm chizishda xato:", err);
     } finally {
-      setGeneratingFrames(prev => ({ ...prev, [idx]: false }));
+      // Stop showing generation spinner after a short aesthetic timeout (500ms)
+      setTimeout(() => {
+        setGeneratingFrames(prev => ({ ...prev, [idx]: false }));
+      }, 500);
     }
+  };
+
+  // Regenerate visual for a specific frame
+  const handleRegenerateFrameVisual = async (idx: number) => {
+    if (!storyboard) return;
+    const frame = storyboard.frames[idx];
+    await generateFrameVisual(idx, frame.visualDescription);
   };
 
   // Storyboardni saqlash
@@ -694,7 +972,7 @@ export default function VideoGen() {
           <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200/60 dark:border-slate-700/60 overflow-hidden shadow-sm flex flex-col items-center p-6 space-y-6">
             
             {/* Widescreen Cinema Screen (16:9 Aspect Video container) */}
-            <div className="w-full max-w-3xl aspect-video bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-900 shadow-md flex items-center justify-center">
+            <div className="w-full max-w-3xl aspect-video bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-900 shadow-md flex items-center justify-center group/screen">
               {frameImages[activeFrameIdx] ? (
                 <>
                   {!!generatingFrames[activeFrameIdx] && (
@@ -703,11 +981,84 @@ export default function VideoGen() {
                       <p className="text-white text-[10px] font-black mt-2 tracking-wide animate-pulse">Tasvir chizilmoqda...</p>
                     </div>
                   )}
-                  <img
+                  <motion.img
+                    key={activeFrameIdx}
                     src={frameImages[activeFrameIdx]}
                     alt={`Kadr #${activeFrameIdx + 1}`}
                     className="w-full h-full object-cover"
+                    animate={animationMode ? {
+                      scale: [1.02, 1.08, 1.02],
+                      x: [-4, 4, -4],
+                      y: [-2, 2, -2]
+                    } : {}}
+                    transition={{
+                      duration: 18,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   />
+                  {/* Canvas Particle Animation Overlay for premium Animated Resource experience */}
+                  {animationMode && (
+                    <ParticleOverlay 
+                      activeFrame={storyboard.frames[activeFrameIdx]} 
+                      style={style} 
+                    />
+                  )}
+                  
+                  {/* Premium glassmorphic animated subtitles overlay (Karaoke word-by-word highlight) */}
+                  <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none select-none">
+                    <motion.div 
+                      key={activeFrameIdx + "-" + isPlayingSim}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-black/75 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-white text-xs md:text-sm font-black tracking-wide text-center shadow-lg max-w-[95%] leading-relaxed"
+                    >
+                      <span className="text-pink-500 font-extrabold mr-1.5 uppercase text-[9px] tracking-wider block mb-1 text-center flex items-center justify-center gap-1">
+                        {isSpeaking ? (
+                          <>
+                            <span className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-ping" />
+                            {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY (OVOZLI)" : "🎙️ NARRATION (AUDIO ACTIVE)"}
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 bg-slate-500 rounded-full" />
+                            {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY" : "🎙️ NARRATION"}
+                          </>
+                        )}
+                      </span>
+                      <span className="text-white leading-relaxed">
+                        {storyboard.frames[activeFrameIdx].scriptText.split(" ").map((word, wordIdx, arr) => {
+                          const wordProgressThreshold = (wordIdx / arr.length) * 100;
+                          const isHighlighted = isPlayingSim ? (simProgress >= wordProgressThreshold) : true;
+                          return (
+                            <span 
+                              key={wordIdx} 
+                              className={`inline-block mr-1 transition-all duration-200 ${
+                                isHighlighted 
+                                  ? "text-pink-400 scale-105 font-black drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" 
+                                  : "text-white/60 font-semibold"
+                              }`}
+                            >
+                              {word}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </motion.div>
+                  </div>
+
+                  {/* Hover Action Overlay to Re-draw image */}
+                  <div className="absolute top-3 right-3 z-20 opacity-0 group-hover/screen:opacity-100 transition-opacity flex gap-2">
+                    <button
+                      onClick={() => handleRegenerateFrameVisual(activeFrameIdx)}
+                      disabled={generatingFrames[activeFrameIdx]}
+                      className="px-3 py-1.5 bg-black/75 hover:bg-black/90 text-white rounded-lg text-[10px] font-black flex items-center gap-1.5 backdrop-blur-md border border-white/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                      title="Ushbu kadr tasvirini boshqatdan chizish"
+                    >
+                      <Sparkles size={11} className="text-pink-500 animate-pulse" />
+                      Tasvirni qayta chizish
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="p-6 text-center text-slate-500 flex flex-col items-center gap-3">
@@ -726,14 +1077,14 @@ export default function VideoGen() {
               )}
 
               {/* Cinema HUD overlay */}
-              <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/5 text-white text-[9px] font-black tracking-widest uppercase">
+              <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/5 text-white text-[9px] font-black tracking-widest uppercase z-20">
                 {storyboard.frames[activeFrameIdx].title}
               </div>
             </div>
 
             {/* Script card under the screen */}
-            <div className="w-full max-w-3xl p-5 bg-pink-50/30 dark:bg-pink-950/20 border border-pink-100/50 dark:border-pink-900/20 rounded-2xl space-y-1 relative">
-              <span className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest block flex items-center gap-1 justify-between">
+            <div className="w-full max-w-3xl p-5 bg-pink-50/30 dark:bg-pink-950/20 border border-pink-100/50 dark:border-pink-900/20 rounded-2xl space-y-1.5 relative overflow-hidden">
+              <span className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest block mb-0.5 flex items-center justify-between">
                 <span className="flex items-center gap-0.5">
                   <Volume2 size={10} /> Ssenariy / Ovoz Nutqi:
                 </span>
@@ -741,9 +1092,18 @@ export default function VideoGen() {
                   <Languages size={8} /> {speechLanguage === "uz" ? "🇺🇿 UZ" : speechLanguage === "ru" ? "🇷🇺 RU" : "🇬🇧 EN"} talaffuzi
                 </span>
               </span>
-              <p className="text-xs md:text-sm font-semibold text-slate-800 dark:text-pink-100 leading-relaxed italic text-center">
+              <p className="text-xs md:text-sm font-semibold text-slate-800 dark:text-pink-100 leading-relaxed italic text-center relative z-10">
                 "{storyboard.frames[activeFrameIdx].scriptText}"
               </p>
+              {/* Progress bar overlay at bottom of script card during simulation */}
+              {isPlayingSim && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-slate-800/50">
+                  <div 
+                    className="h-full bg-pink-500 transition-all duration-100 ease-linear"
+                    style={{ width: `${simProgress}%` }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Sub-details (Actions and Pedagogical details stacked cleanly) */}
@@ -762,7 +1122,7 @@ export default function VideoGen() {
             <div className="w-full max-w-3xl pt-5 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
               
               {/* Voice and Sim Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => {
                     if (isSpeaking) {
@@ -785,10 +1145,7 @@ export default function VideoGen() {
                   onClick={() => {
                     if (isPlayingSim) {
                       setIsPlayingSim(false);
-                      if (typeof window !== "undefined") {
-                        window.speechSynthesis.cancel();
-                      }
-                      setIsSpeaking(false);
+                      stopSpeaking();
                     } else {
                       setIsPlayingSim(true);
                       setActiveFrameIdx(0);
@@ -802,6 +1159,20 @@ export default function VideoGen() {
                 >
                   {isPlayingSim ? <Square size={11} /> : <Play size={11} />}
                   {isPlayingSim ? "To'xtatish" : "Avtomatik Simulyatsiya"}
+                </button>
+
+                {/* Animated Resource Toggle Switch */}
+                <button
+                  onClick={() => setAnimationMode(prev => !prev)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                    animationMode 
+                      ? "bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900/30 dark:text-indigo-400" 
+                      : "bg-slate-105 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-850"
+                  }`}
+                  title="Ken Burns kameraning siljishi va Canvas animatsiya effektlarini yoqish/o'chirish"
+                >
+                  <Sparkles size={13} className={animationMode ? "text-pink-500 animate-spin" : "text-slate-400"} />
+                  Animatsiya Rejimi
                 </button>
               </div>
 
