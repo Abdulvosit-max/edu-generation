@@ -205,3 +205,134 @@ class AIGenerateView(APIView):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
+
+class ImageGenerateView(APIView):
+    """
+    POST /api/ai/generate-image/
+
+    Body (JSON):
+        prompt      : str   — rasm prompti
+        style       : str   — rasm uslubi (3D Render, Realistik, etc.)
+        format      : str   — rasm formati (16:9, 1:1, 4:3)
+
+    Javob:
+        {"image_url": "data:image/jpeg;base64,...", "source": "gemini-imagen" | "pollinations-fallback" | "picsum-fallback"}
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        body = request.data
+        prompt: str = body.get("prompt", "").strip()
+        style: str = body.get("style", "").strip()
+        format_val: str = body.get("format", "").strip()
+
+        if not prompt:
+            return Response(
+                {"error": "prompt maydoni bo'sh bo'lmasligi kerak"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        gemini_key: str = os.getenv("GEMINI_API_KEY", "")
+
+        # Format / Aspect Ratio xaritalash
+        aspect_ratio_map = {
+            "16:9 (Keng ekranli)": "16:9",
+            "4:3 (Standart)": "4:3",
+            "1:1 (Kvadrat)": "1:1",
+            "16:9": "16:9",
+            "4:3": "4:3",
+            "1:1": "1:1",
+        }
+        aspect_ratio = aspect_ratio_map.get(format_val, "1:1")
+
+        # Rasm uslubiga qarab promptni boyitish
+        style_prompt = ""
+        if style == "3D Render":
+            style_prompt = ", isometric 3D render, minimalist cartoon style, vibrant colors"
+        elif style == "Realistik":
+            style_prompt = ", realistic photography, documentary educational style, highly detailed"
+        elif style == "Infografik / Diagramma":
+            style_prompt = ", educational infographic, labeled vector schematic, clear vector diagram"
+        elif style == "Multfilm / Illyustratsiya":
+            style_prompt = ", vibrant school book illustration, colorful drawing style"
+        elif style == "Minimalizm":
+            style_prompt = ", minimalist modern flat vector design, clean paths"
+
+        full_prompt = f"{prompt}{style_prompt}, high quality educational material, clear focus"
+
+        # 1) Google AI Studio Imagen 3 orqali tasvir yaratish
+        if gemini_key:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={gemini_key}"
+                payload = {
+                    "instances": [
+                        {
+                            "prompt": full_prompt
+                        }
+                    ],
+                    "parameters": {
+                        "sampleCount": 1,
+                        "aspectRatio": aspect_ratio,
+                        "outputMimeType": "image/jpeg"
+                    }
+                }
+                headers = {"Content-Type": "application/json"}
+                resp = req_lib.post(url, json=payload, headers=headers, timeout=30)
+                
+                if resp.ok:
+                    data = resp.json()
+                    predictions = data.get("predictions", [])
+                    if predictions and "bytesBase64Encoded" in predictions[0]:
+                        b64_data = predictions[0]["bytesBase64Encoded"]
+                        return Response({
+                            "image_url": f"data:image/jpeg;base64,{b64_data}",
+                            "source": "gemini-imagen"
+                        })
+                    else:
+                        print("Imagen 3 prediction output format mismatch:", data)
+                else:
+                    print(f"Imagen 3 API returned HTTP {resp.status_code}: {resp.text}")
+            except Exception as e:
+                print(f"Google AI Studio Imagen 3 generatsiyasida xatolik: {e}")
+
+        # 2) Fallback: Pollinations AI
+        try:
+            # Pollinations AI orqali rasmni backendda yuklab olib, Base64 formatga o'tkazish
+            import base64
+            import urllib.parse
+            encoded_prompt = urllib.parse.quote(full_prompt)
+            seed = int(os.urandom(4).hex(), 16) % 9999999
+            
+            pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&model=flux"
+            
+            img_resp = req_lib.get(pollinations_url, timeout=20)
+            if img_resp.ok:
+                b64_data = base64.b64encode(img_resp.content).decode("utf-8")
+                return Response({
+                    "image_url": f"data:image/jpeg;base64,{b64_data}",
+                    "source": "pollinations-fallback"
+                })
+        except Exception as e:
+            print(f"Pollinations fallbackda xatolik: {e}")
+
+        # 3) Oxirgi fallback: Picsum statik rasmlari
+        try:
+            import base64
+            import urllib.parse
+            picsum_url = f"https://picsum.photos/seed/{urllib.parse.quote(prompt[:30])}/1024/1024"
+            img_resp = req_lib.get(picsum_url, timeout=15)
+            if img_resp.ok:
+                b64_data = base64.b64encode(img_resp.content).decode("utf-8")
+                return Response({
+                    "image_url": f"data:image/jpeg;base64,{b64_data}",
+                    "source": "picsum-fallback"
+                })
+        except Exception as e:
+            print(f"Picsum fallbackda xatolik: {e}")
+
+        return Response(
+            {"error": "Rasm generatsiya qilish tizimi vaqtincha ishlamayapti."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+

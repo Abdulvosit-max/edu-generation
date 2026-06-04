@@ -21,7 +21,7 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
-import { generateEducationalStoryboard, StoryboardData, StoryboardFrame } from "../lib/gemini";
+import { generateEducationalStoryboard, StoryboardData, StoryboardFrame, generateEducationalImage } from "../lib/gemini";
 import { saveResource } from "../lib/db";
 import { useAppContext } from "../lib/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +48,7 @@ export default function VideoGen() {
   
   const [frameImages, setFrameImages] = useState<Record<number, string>>({});
   const [generatingFrames, setGeneratingFrames] = useState<Record<number, boolean>>({});
+  const [frameElapsedTimes, setFrameElapsedTimes] = useState<Record<number, number>>({});
   const [animationMode, setAnimationMode] = useState(true);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [speechRate, setSpeechRate] = useState(1.0);
@@ -453,9 +454,21 @@ export default function VideoGen() {
   };
 
   // Fast Pollinations AI drawing loader with Puter.js free text-to-image integration
+  // Fast Pollinations AI drawing loader with Puter.js free text-to-image integration
   const generateFrameVisual = async (idx: number, visualDesc: string) => {
     setGeneratingFrames(prev => ({ ...prev, [idx]: true }));
     setImageErrors(prev => ({ ...prev, [idx]: false })); // Reset error state on new generation
+    setFrameElapsedTimes(prev => ({ ...prev, [idx]: 0 }));
+
+    let timerInterval: any;
+    const startTime = Date.now();
+    timerInterval = setInterval(() => {
+      setFrameElapsedTimes(prev => ({
+        ...prev,
+        [idx]: parseFloat(((Date.now() - startTime) / 1000).toFixed(1))
+      }));
+    }, 100);
+
     try {
       // 1. Prompt sanitization (removes quotes/newlines and slices to 200 chars for extreme URL safety)
       const cleanDesc = visualDesc
@@ -484,27 +497,18 @@ export default function VideoGen() {
             return; // Exit successfully!
           }
         } catch (puterErr) {
-          console.warn("Puter.js generatsiya xatosi, Pollinations-ga o'tilmoqda:", puterErr);
+          console.warn("Puter.js generatsiya xatosi, backend proxy-ga o'tilmoqda:", puterErr);
         }
       }
 
-      // 2. Fallback to Pollinations AI
-      const seed = Math.floor(Math.random() * 9999999);
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
-      
-      // Instantly set the frame image URL to let the browser begin downloading and rendering it immediately
-      setFrameImages(prev => ({ ...prev, [idx]: url }));
-
-      // Asynchronously preload image in background (non-blocking fire-and-forget!)
-      const img = new Image();
-      img.src = url;
+      // 2. Call backend proxy or frontend fallback
+      const imgUrl = await generateEducationalImage(promptText, style, "1:1");
+      setFrameImages(prev => ({ ...prev, [idx]: imgUrl }));
     } catch (err) {
       console.error("Rasm chizishda xato:", err);
     } finally {
-      // Stop showing generation spinner after a short aesthetic timeout (500ms)
-      setTimeout(() => {
-        setGeneratingFrames(prev => ({ ...prev, [idx]: false }));
-      }, 500);
+      clearInterval(timerInterval);
+      setGeneratingFrames(prev => ({ ...prev, [idx]: false }));
     }
   };
 
@@ -1043,9 +1047,14 @@ export default function VideoGen() {
               {frameImages[activeFrameIdx] ? (
                 <>
                   {!!generatingFrames[activeFrameIdx] && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xs">
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xs gap-2">
                       <Loader2 size={32} className="animate-spin text-pink-500" />
-                      <p className="text-white text-[10px] font-black mt-2 tracking-wide animate-pulse">Tasvir chizilmoqda...</p>
+                      <p className="text-white text-[10px] font-black tracking-wide animate-pulse">Tasvir chizilmoqda...</p>
+                      <div className="px-3 py-1 bg-pink-500/20 border border-pink-500/40 rounded-xl">
+                        <span className="font-mono text-xs font-black text-pink-400">
+                          {(frameElapsedTimes[activeFrameIdx] || 0.0).toFixed(1)}s
+                        </span>
+                      </div>
                     </div>
                   )}
                   <motion.img
@@ -1142,10 +1151,15 @@ export default function VideoGen() {
               ) : (
                 <div className="p-6 text-center text-slate-500 flex flex-col items-center gap-3">
                   {!!generatingFrames[activeFrameIdx] ? (
-                    <>
+                    <div className="flex flex-col items-center gap-2">
                       <Loader2 size={32} className="animate-spin text-pink-500" />
                       <p className="text-[10px] font-black text-slate-400 animate-pulse">Tasvir chizilmoqda...</p>
-                    </>
+                      <div className="px-3 py-1 bg-pink-500/10 border border-pink-500/30 rounded-xl">
+                        <span className="font-mono text-xs font-black text-pink-500 dark:text-pink-400">
+                          {(frameElapsedTimes[activeFrameIdx] || 0.0).toFixed(1)}s
+                        </span>
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <Sparkles size={20} className="text-slate-700 animate-pulse" />

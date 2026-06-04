@@ -312,16 +312,40 @@ export async function generateEducationalChat(
   return await smartAIRequest(message, false, chatHistory);
 }
 
-export async function generateEducationalImage(prompt: string) {
+export async function generateEducationalImage(prompt: string, style = "", format = "") {
+  try {
+    const response = await fetch(`${API_URL}/ai/generate-image/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, style, format }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.image_url) {
+        return data.image_url;
+      }
+    }
+  } catch (err) {
+    console.warn("Backend orqali tasvir yaratishda xato, frontend fallbackga o'tilmoqda:", err);
+  }
+
+  // Frontend Fallback to Pollinations AI
   try {
     const enhancedPrompt = await smartAIRequest(
       `Convert this educational image request into a highly detailed, photorealistic 8k English prompt. Focus on clarity, educational value, and cinematic lighting. Original request: "${prompt}". Return ONLY the English prompt text.`,
       false
-    );
+    ).catch(() => prompt);
+
+    const stylePrompt = style === "3D Render" ? ", isometric 3D render, minimalist cartoon style, vibrant colors" :
+                        style === "Realistik" ? ", realistic photography, documentary educational style, highly detailed" :
+                        style === "Infografik / Diagramma" ? ", educational infographic, labeled vector schematic, clear vector diagram" :
+                        style === "Multfilm / Illyustratsiya" ? ", vibrant school book illustration, colorful drawing style" :
+                        style === "Minimalizm" ? ", minimalist modern flat vector design, clean paths" : "";
+
     const seed = Math.floor(Math.random() * 9999999);
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(
-      enhancedPrompt.trim() +
-        ", professional educational photography, 8k, sharp focus, high quality"
+      enhancedPrompt.trim() + stylePrompt + ", professional educational photography, 8k, sharp focus, high quality"
     )}?model=flux&width=1024&height=1024&seed=${seed}&nologo=true`;
   } catch {
     const seed = Math.floor(Math.random() * 9999);
@@ -330,6 +354,11 @@ export async function generateEducationalImage(prompt: string) {
     )}?model=flux&width=1024&height=1024&nologo=true&seed=${seed}`;
   }
 }
+
+export async function getSlideImageUrl(imagePrompt: string) {
+  return await generateEducationalImage(imagePrompt, "3D Render", "1:1");
+}
+
 
 export async function generateEducationalTests(
   topic: string,

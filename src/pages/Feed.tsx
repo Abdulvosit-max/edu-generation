@@ -34,7 +34,7 @@ import {
   deleteResource, 
   Resource 
 } from "../lib/db";
-import { StoryboardData, StoryboardFrame } from "../lib/gemini";
+import { StoryboardData, StoryboardFrame, getSlideImageUrl } from "../lib/gemini";
 import { useAppContext } from "../lib/AppContext";
 import { cn } from "../lib/utils";
 import Markdown from "react-markdown";
@@ -59,6 +59,71 @@ const hexColors: Record<string, string> = {
   indigo: "4338CA", purple: "7E22CE", cyan: "0891B2", slate: "334155",
   zinc: "3F3F46", gray: "4B5563", teal: "0F766E", sky: "0284C7", navy: "0F172A"
 };
+
+function SlideImage({ src, alt, isPrompt = false }: { src: string; alt: string; isPrompt?: boolean }) {
+  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [resolvedSrc, setResolvedSrc] = useState<string>("");
+  const [elapsedTime, setElapsedTime] = useState(0.0);
+
+  useEffect(() => {
+    let active = true;
+    setStatus("loading");
+    setElapsedTime(0);
+    
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      setElapsedTime(parseFloat(((Date.now() - startTime) / 1000).toFixed(1)));
+    }, 100);
+
+    const resolve = async () => {
+      try {
+        let finalUrl = src;
+        if (isPrompt) {
+          finalUrl = await getSlideImageUrl(src);
+        }
+        if (active) {
+          setResolvedSrc(finalUrl);
+        }
+      } catch (err) {
+        if (active) setStatus("error");
+      } finally {
+        clearInterval(timerInterval);
+      }
+    };
+    resolve();
+
+    return () => {
+      active = false;
+      clearInterval(timerInterval);
+    };
+  }, [src, isPrompt]);
+
+  return (
+    <div className="w-full h-full min-h-[160px] rounded-3xl overflow-hidden bg-white/10 flex items-center justify-center relative border border-white/20">
+      {status === "error" ? (
+        <div className="flex flex-col items-center gap-2 text-white/50 p-4"><Icons.ImageIcon size={32} /></div>
+      ) : (
+        <>
+          {status === "loading" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm gap-2">
+              <Icons.Loader2 size={24} className="animate-spin text-white" />
+              <span className="font-mono text-xs font-bold text-white/80">{elapsedTime.toFixed(1)}s</span>
+            </div>
+          )}
+          {resolvedSrc && (
+            <img
+              src={resolvedSrc}
+              alt={alt}
+              onLoad={() => setStatus("ok")}
+              onError={() => setStatus("error")}
+              className={`w-full h-full object-cover shadow-2xl transition-opacity duration-700 ${status === "ok" ? "opacity-100" : "opacity-0"}`}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function Feed() {
   const { t, theme, language } = useAppContext();
@@ -221,12 +286,18 @@ export default function Feed() {
         slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
         const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
         slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "50%", h: 4.5, fontSize: 18, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
-        const seed = Math.floor(Math.random() * 9999);
-        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=${seed}`;
         try {
-          const resp = await fetch(imgUrl);
-          const blob = await resp.blob();
-          const base64 = await new Promise<string>((res) => { const r = new FileReader(); r.onloadend = () => res(r.result as string); r.readAsDataURL(blob); });
+          const imgUrl = await getSlideImageUrl(slide.imagePrompt);
+          let base64 = imgUrl;
+          if (imgUrl.startsWith("http")) {
+            const resp = await fetch(imgUrl);
+            const blob = await resp.blob();
+            base64 = await new Promise<string>((resolveProm) => { 
+              const reader = new FileReader(); 
+              reader.onloadend = () => resolveProm(reader.result as string); 
+              reader.readAsDataURL(blob); 
+            });
+          }
           slideObj.addImage({ data: base64, x: 5.8, y: 1.5, w: 4.0, h: 4.0, rounding: true });
         } catch (e) {
           slideObj.addShape(pptx.ShapeType.ellipse, { x: 6.2, y: 1.5, w: 3.5, h: 3.5, fill: { color: "FFFFFF", transparency: 80 }});
@@ -736,12 +807,12 @@ export default function Feed() {
                               <div className="flex flex-col gap-4 flex-1">
                                 <div className="prose prose-sm prose-invert max-w-none text-white/90 text-xs md:text-sm">
                                   <Markdown>{Array.isArray(activeSlide.content) ? activeSlide.content.join("\n") : String(activeSlide.content)}</Markdown>
+                                  {activeSlide.layoutType === "3d_illustration" && activeSlide.imagePrompt && (
+                                    <div className="w-full md:w-1/3 aspect-square mx-auto">
+                                      <SlideImage src={activeSlide.imagePrompt} isPrompt={true} alt="3D Illustration" />
+                                    </div>
+                                  )}
                                 </div>
-                                {activeSlide.layoutType === "3d_illustration" && activeSlide.imagePrompt && (
-                                  <div className="w-full h-32 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 p-2 text-white/60 text-xs font-medium gap-2">
-                                     <Sparkles size={16} /> 3D Rasm generatsiya ko'rinishi
-                                  </div>
-                                )}
                               </div>
                             </>
                           )}

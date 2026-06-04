@@ -25,6 +25,7 @@ export default function ImageGen() {
   
   const [resourceId, setResourceId] = useState<string | number | null>(null);
   const [isShared, setIsShared] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const { t } = useAppContext();
 
   // Promptni AI yordamida yaxshilash
@@ -54,6 +55,13 @@ export default function ImageGen() {
     setImgError(false);
     setResourceId(null);
     setIsShared(false);
+    setElapsedTime(0);
+
+    let timerInterval: any;
+    const startTime = Date.now();
+    timerInterval = setInterval(() => {
+      setElapsedTime(parseFloat(((Date.now() - startTime) / 1000).toFixed(1)));
+    }, 100);
 
     let finalPrompt = enhancedPrompt;
     if (!finalPrompt.trim()) {
@@ -93,7 +101,11 @@ export default function ImageGen() {
       }
 
       if (!generatedUrl) {
-        generatedUrl = await generateEducationalImage(finalPrompt + `, in ${style} visual style, structured layout, high detail, high educational value`);
+        generatedUrl = await generateEducationalImage(
+          finalPrompt + `, in ${style} visual style, structured layout, high detail, high educational value`,
+          style,
+          format
+        );
         setImage(generatedUrl);
       }
     } catch (e: any) {
@@ -113,6 +125,7 @@ export default function ImageGen() {
       generatedUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/768`;
       setImage(generatedUrl);
     } finally {
+      clearInterval(timerInterval);
       setLoading(false);
     }
 
@@ -380,9 +393,34 @@ export default function ImageGen() {
           <div className="bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-800/50 rounded-[32px] p-6 sm:p-8 min-h-[450px] flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
             {/* Loading Indicator for Image */}
             {loading && !image && (
-              <div className="flex flex-col items-center gap-4 text-slate-400">
-                <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
-                <p className="font-black animate-pulse text-blue-600 dark:text-blue-400 tracking-wider text-xs uppercase">{t.generating}</p>
+              <div className="flex flex-col items-center justify-center p-8 bg-slate-900/5 dark:bg-slate-900/40 rounded-[28px] border border-blue-500/25 relative overflow-hidden backdrop-blur-md max-w-sm w-full mx-auto shadow-2xl animate-pulse">
+                {/* Glowing neon back light */}
+                <div className="absolute -inset-10 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 rounded-full blur-3xl animate-spin pointer-events-none"></div>
+                
+                <div className="relative z-10 flex flex-col items-center gap-5">
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <div className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+                    <div className="absolute w-12 h-12 border-4 border-indigo-500/15 border-b-indigo-500 rounded-full animate-spin [animation-direction:reverse]"></div>
+                    <ImageIcon className="text-blue-500 animate-bounce" size={24} />
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="font-black text-slate-800 dark:text-slate-100 text-sm tracking-wide mb-1">
+                      {t.generating}
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                      EduVisual AI tasvir chizmoqda...
+                    </p>
+                  </div>
+                  
+                  {/* Live Timer Counter */}
+                  <div className="px-5 py-2.5 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-ping"></span>
+                    <span className="font-mono text-base font-extrabold text-blue-600 dark:text-blue-400">
+                      {elapsedTime.toFixed(1)}s
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 

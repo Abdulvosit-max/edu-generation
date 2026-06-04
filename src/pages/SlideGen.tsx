@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 import { Presentation, Loader2, FileText, ChevronLeft, ChevronRight, Download, Maximize2, Share2, CheckCircle, Palette, ImageIcon } from "lucide-react";
-import { generateEducationalSlides, SlideData } from "../lib/gemini";
+import { generateEducationalSlides, SlideData, getSlideImageUrl } from "../lib/gemini";
 import { saveResource, togglePublic } from "../lib/db";
 import Markdown from "react-markdown";
 import { useAppContext } from "../lib/AppContext";
@@ -30,22 +30,65 @@ const hexColors: Record<string, string> = {
   zinc: "3F3F46", gray: "4B5563", teal: "0F766E", sky: "0284C7", navy: "0F172A"
 };
 
-function SlideImage({ src, alt }: { src: string; alt: string }) {
+function SlideImage({ src, alt, isPrompt = false }: { src: string; alt: string; isPrompt?: boolean }) {
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [resolvedSrc, setResolvedSrc] = useState<string>("");
+  const [elapsedTime, setElapsedTime] = useState(0.0);
+
+  useEffect(() => {
+    let active = true;
+    setStatus("loading");
+    setElapsedTime(0);
+    
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      setElapsedTime(parseFloat(((Date.now() - startTime) / 1000).toFixed(1)));
+    }, 100);
+
+    const resolve = async () => {
+      try {
+        let finalUrl = src;
+        if (isPrompt) {
+          finalUrl = await getSlideImageUrl(src);
+        }
+        if (active) {
+          setResolvedSrc(finalUrl);
+        }
+      } catch (err) {
+        if (active) setStatus("error");
+      } finally {
+        clearInterval(timerInterval);
+      }
+    };
+    resolve();
+
+    return () => {
+      active = false;
+      clearInterval(timerInterval);
+    };
+  }, [src, isPrompt]);
+
   return (
     <div className="w-full h-full min-h-[160px] rounded-3xl overflow-hidden bg-white/10 flex items-center justify-center relative border border-white/20">
       {status === "error" ? (
         <div className="flex flex-col items-center gap-2 text-white/50 p-4"><ImageIcon size={32} /></div>
       ) : (
         <>
-          {status === "loading" && <Loader2 size={32} className="animate-spin text-white absolute" />}
-          <img
-            src={src}
-            alt={alt}
-            onLoad={() => setStatus("ok")}
-            onError={() => setStatus("error")}
-            className={`w-full h-full object-cover shadow-2xl transition-opacity duration-700 ${status === "ok" ? "opacity-100" : "opacity-0"}`}
-          />
+          {status === "loading" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm gap-2">
+              <Loader2 size={24} className="animate-spin text-white" />
+              <span className="font-mono text-xs font-bold text-white/80">{elapsedTime.toFixed(1)}s</span>
+            </div>
+          )}
+          {resolvedSrc && (
+            <img
+              src={resolvedSrc}
+              alt={alt}
+              onLoad={() => setStatus("ok")}
+              onError={() => setStatus("error")}
+              className={`w-full h-full object-cover shadow-2xl transition-opacity duration-700 ${status === "ok" ? "opacity-100" : "opacity-0"}`}
+            />
+          )}
         </>
       )}
     </div>
@@ -198,12 +241,18 @@ export default function SlideGen() {
         slideObj.addText(slide.title, { x: 0.5, y: 0.2, w: "90%", h: 0.8, fontSize: 32, bold: true, color: "FFFFFF", align: "left", fontFace: "Arial" });
         const textContent = slide.content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\*\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "• ");
         slideObj.addText(textContent, { x: 0.5, y: 1.5, w: "50%", h: 4.5, fontSize: 18, color: "FFFFFF", valign: "top", fontFace: "Arial", lineSpacing: 32 });
-        const seed = Math.floor(Math.random() * 9999);
-        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=${seed}`;
         try {
-          const resp = await fetch(imgUrl);
-          const blob = await resp.blob();
-          const base64 = await new Promise<string>((res) => { const r = new FileReader(); r.onloadend = () => res(r.result as string); r.readAsDataURL(blob); });
+          const imgUrl = await getSlideImageUrl(slide.imagePrompt);
+          let base64 = imgUrl;
+          if (imgUrl.startsWith("http")) {
+            const resp = await fetch(imgUrl);
+            const blob = await resp.blob();
+            base64 = await new Promise<string>((resolveProm) => { 
+              const reader = new FileReader(); 
+              reader.onloadend = () => resolveProm(reader.result as string); 
+              reader.readAsDataURL(blob); 
+            });
+          }
           slideObj.addImage({ data: base64, x: 5.8, y: 1.5, w: 4.0, h: 4.0, rounding: true });
         } catch (e) {
           slideObj.addShape(pptx.ShapeType.ellipse, { x: 6.2, y: 1.5, w: 3.5, h: 3.5, fill: { color: "FFFFFF", transparency: 80 }});
@@ -419,10 +468,10 @@ export default function SlideGen() {
                           </div>
                           
                           {currentSlide.layoutType === "3d_illustration" && currentSlide.imagePrompt && (
-                            <div className="w-full md:w-1/3 aspect-square">
-                              <SlideImage src={`https://image.pollinations.ai/prompt/${encodeURIComponent(currentSlide.imagePrompt + ", 3d isometric render, minimalist illustration on white background, high quality")}?model=flux&width=800&height=800&nologo=true&seed=123`} alt="3D Illustration" />
-                            </div>
-                          )}
+                             <div className="w-full md:w-1/3 aspect-square">
+                               <SlideImage src={currentSlide.imagePrompt} isPrompt={true} alt="3D Illustration" />
+                             </div>
+                           )}
 
                           {currentSlide.layoutType === "text_icon" && currentSlide.iconName && (
                             <div className="w-full md:w-1/4 flex justify-center items-center">
