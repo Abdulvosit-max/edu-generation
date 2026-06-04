@@ -98,7 +98,21 @@ export default function ImageGen() {
       }
     } catch (e: any) {
       console.error("AI Tasvir yaratishda xato:", e);
-      generatedUrl = `https://loremflickr.com/1024/768/${encodeURIComponent(prompt)}`;
+      const subjectMap: Record<string, string> = {
+        "Biologiya": "biology,nature,cell",
+        "Fizika": "physics,laboratory,space",
+        "Kimyo": "chemistry,molecule,beaker",
+        "Informatika": "computer,coding,technology",
+        "Matematika": "math,geometry,numbers",
+        "Tarix": "history,ancient,castle",
+        "Geografiya": "geography,globe,map",
+        "Boshlang'ich ta'lim": "school,elementary,kids",
+        "Kasbiy fanlar": "mechanic,construction,engineering"
+      };
+      const engSubject = subjectMap[subject] || "education,science";
+      const cleanTopic = `${engSubject},classroom`;
+      const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
+      generatedUrl = `https://loremflickr.com/1024/768/${pathTags}?random=${Math.random()}`;
       setImage(generatedUrl);
     } finally {
       setLoading(false);
@@ -167,8 +181,21 @@ export default function ImageGen() {
       }
     }
     
-    const cleanTopic = prompt ? prompt.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").slice(0, 3).join(",") : "education,science";
-    const flickrUrl = `https://loremflickr.com/1024/768/${encodeURIComponent(cleanTopic)}?random=${Math.random()}`;
+    const subjectMap: Record<string, string> = {
+      "Biologiya": "biology,nature,cell",
+      "Fizika": "physics,laboratory,space",
+      "Kimyo": "chemistry,molecule,beaker",
+      "Informatika": "computer,coding,technology",
+      "Matematika": "math,geometry,numbers",
+      "Tarix": "history,ancient,castle",
+      "Geografiya": "geography,globe,map",
+      "Boshlang'ich ta'lim": "school,elementary,kids",
+      "Kasbiy fanlar": "mechanic,construction,engineering"
+    };
+    const engSubject = subjectMap[subject] || "education,science";
+    const cleanTopic = `${engSubject},classroom,study`;
+    const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
+    const flickrUrl = `https://loremflickr.com/1024/768/${pathTags}?random=${Math.random()}`;
     console.warn("Pollinations failed completely, falling back to LoremFlickr:", flickrUrl);
     setImage(flickrUrl);
     setImgError(false); // Reset error overlay since we found a fallback image

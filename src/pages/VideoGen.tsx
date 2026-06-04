@@ -435,9 +435,22 @@ export default function VideoGen() {
         }
       } else {
         // If Pollinations is completely blocked/down (e.g. 402 Payment Required),
-        // fallback to a high-quality educational placeholder image from loremflickr.com based on the topic!
-        const cleanTopic = topic ? topic.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").slice(0, 3).join(",") : "education,science";
-        const flickrUrl = `https://loremflickr.com/1024/1024/${encodeURIComponent(cleanTopic)}?random=${idx}`;
+        // fallback to a high-quality educational placeholder image from loremflickr.com based on the subject!
+        const subjectMap: Record<string, string> = {
+          "Biologiya": "biology,nature,cell",
+          "Fizika": "physics,laboratory,space",
+          "Kimyo": "chemistry,molecule,beaker",
+          "Informatika": "computer,coding,technology",
+          "Matematika": "math,geometry,numbers",
+          "Tarix": "history,ancient,castle",
+          "Geografiya": "geography,globe,map",
+          "Boshlang'ich ta'lim": "school,elementary,kids",
+          "Kasbiy fanlar": "mechanic,construction,engineering"
+        };
+        const engSubject = subjectMap[subject] || "education,science";
+        const cleanTopic = `${engSubject},classroom`;
+        const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
+        const flickrUrl = `https://loremflickr.com/1024/1024/${pathTags}?random=${idx}`;
         console.warn(`Pollinations butunlay xatolik berdi. LoremFlickr orqali rasm yuklanmoqda:`, flickrUrl);
         return { ...prev, [idx]: flickrUrl };
       }
