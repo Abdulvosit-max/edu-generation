@@ -413,47 +413,42 @@ export default function VideoGen() {
       const originalUrl = prev[idx];
       if (!originalUrl) return prev;
       
-      // If we haven't tried the model-less fallback yet, try it
-      if (!originalUrl.includes("fallback=true")) {
-        try {
-          const urlObj = new URL(originalUrl);
-          urlObj.searchParams.delete("model");
-          urlObj.searchParams.set("fallback", "true");
-          const fallbackUrl = urlObj.toString();
-          console.warn(`Rasm yuklashda xatolik! Kadr #${idx + 1} uchun fallback URL ga o'tilmoqda:`, fallbackUrl);
+      if (originalUrl.includes("image.pollinations.ai")) {
+        if (originalUrl.includes("model=flux")) {
+          // Fallback 1: try grok-imagine
+          const fallbackUrl = originalUrl.replace("model=flux", "model=grok-imagine");
+          console.warn(`Rasm yuklashda xatolik! Kadr #${idx + 1} uchun grok-imagine fallback URL ga o'tilmoqda:`, fallbackUrl);
           return { ...prev, [idx]: fallbackUrl };
-        } catch (err) {
-          let fallbackUrl = originalUrl
-            .replace("&model=turbo", "")
-            .replace("model=turbo", "")
-            .replace("&model=flux", "")
-            .replace("model=flux", "");
-            
-          if (!fallbackUrl.includes("?")) fallbackUrl += "?";
-          fallbackUrl += "&fallback=true";
+        } else if (originalUrl.includes("model=grok-imagine")) {
+          // Fallback 2: try gptimage
+          const fallbackUrl = originalUrl.replace("model=grok-imagine", "model=gptimage");
+          console.warn(`Rasm yuklashda xatolik! Kadr #${idx + 1} uchun gptimage fallback URL ga o'tilmoqda:`, fallbackUrl);
+          return { ...prev, [idx]: fallbackUrl };
+        } else if (originalUrl.includes("model=gptimage")) {
+          // Fallback 3: try zimage
+          const fallbackUrl = originalUrl.replace("model=gptimage", "model=zimage");
+          console.warn(`Rasm yuklashda xatolik! Kadr #${idx + 1} uchun zimage fallback URL ga o'tilmoqda:`, fallbackUrl);
           return { ...prev, [idx]: fallbackUrl };
         }
-      } else {
-        // If Pollinations is completely blocked/down (e.g. 402 Payment Required),
-        // fallback to a high-quality educational placeholder image from loremflickr.com based on the subject!
-        const subjectMap: Record<string, string> = {
-          "Biologiya": "biology,nature,cell",
-          "Fizika": "physics,laboratory,space",
-          "Kimyo": "chemistry,molecule,beaker",
-          "Informatika": "computer,coding,technology",
-          "Matematika": "math,geometry,numbers",
-          "Tarix": "history,ancient,castle",
-          "Geografiya": "geography,globe,map",
-          "Boshlang'ich ta'lim": "school,elementary,kids",
-          "Kasbiy fanlar": "mechanic,construction,engineering"
-        };
-        const engSubject = subjectMap[subject] || "education,science";
-        const cleanTopic = `${engSubject},classroom`;
-        const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
-        const flickrUrl = `https://loremflickr.com/1024/1024/${pathTags}?random=${idx}`;
-        console.warn(`Pollinations butunlay xatolik berdi. LoremFlickr orqali rasm yuklanmoqda:`, flickrUrl);
-        return { ...prev, [idx]: flickrUrl };
       }
+      
+      // Final fallback to Lorem Picsum
+      const subjectMap: Record<string, string> = {
+        "Biologiya": "biology,nature,cell",
+        "Fizika": "physics,laboratory,space",
+        "Kimyo": "chemistry,molecule,beaker",
+        "Informatika": "computer,coding,technology",
+        "Matematika": "math,geometry,numbers",
+        "Tarix": "history,ancient,castle",
+        "Geografiya": "geography,globe,map",
+        "Boshlang'ich ta'lim": "school,elementary,kids",
+        "Kasbiy fanlar": "mechanic,construction,engineering"
+      };
+      const engSubject = subjectMap[subject] || "education,science";
+      // We use Lorem Picsum with seed to get consistent, beautiful, cat-free stock photos
+      const picsumUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/1024`;
+      console.warn(`Pollinations butunlay xatolik berdi. Lorem Picsum orqali rasm yuklanmoqda:`, picsumUrl);
+      return { ...prev, [idx]: picsumUrl };
     });
   };
 

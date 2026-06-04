@@ -110,9 +110,7 @@ export default function ImageGen() {
         "Kasbiy fanlar": "mechanic,construction,engineering"
       };
       const engSubject = subjectMap[subject] || "education,science";
-      const cleanTopic = `${engSubject},classroom`;
-      const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
-      generatedUrl = `https://loremflickr.com/1024/768/${pathTags}?random=${Math.random()}`;
+      generatedUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/768`;
       setImage(generatedUrl);
     } finally {
       setLoading(false);
@@ -174,8 +172,21 @@ export default function ImageGen() {
     
     if (image.includes("image.pollinations.ai")) {
       if (image.includes("model=flux")) {
-        const fallbackUrl = image.replace("model=flux", "") + "&fallback=true";
-        console.warn("Pollinations flux error, trying stable model-less fallback:", fallbackUrl);
+        // Fallback 1: Try grok-imagine
+        const fallbackUrl = image.replace("model=flux", "model=grok-imagine");
+        console.warn("Pollinations flux error, trying grok-imagine fallback:", fallbackUrl);
+        setImage(fallbackUrl);
+        return;
+      } else if (image.includes("model=grok-imagine")) {
+        // Fallback 2: Try gptimage
+        const fallbackUrl = image.replace("model=grok-imagine", "model=gptimage");
+        console.warn("Pollinations grok-imagine error, trying gptimage fallback:", fallbackUrl);
+        setImage(fallbackUrl);
+        return;
+      } else if (image.includes("model=gptimage")) {
+        // Fallback 3: Try zimage
+        const fallbackUrl = image.replace("model=gptimage", "model=zimage");
+        console.warn("Pollinations gptimage error, trying zimage fallback:", fallbackUrl);
         setImage(fallbackUrl);
         return;
       }
@@ -193,11 +204,10 @@ export default function ImageGen() {
       "Kasbiy fanlar": "mechanic,construction,engineering"
     };
     const engSubject = subjectMap[subject] || "education,science";
-    const cleanTopic = `${engSubject},classroom,study`;
-    const pathTags = cleanTopic.split(',').map(tag => encodeURIComponent(tag.trim())).join(',');
-    const flickrUrl = `https://loremflickr.com/1024/768/${pathTags}?random=${Math.random()}`;
-    console.warn("Pollinations failed completely, falling back to LoremFlickr:", flickrUrl);
-    setImage(flickrUrl);
+    // We use Lorem Picsum with seed to get consistent, beautiful, cat-free stock photos
+    const picsumUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/768`;
+    console.warn("Pollinations failed completely, falling back to Lorem Picsum:", picsumUrl);
+    setImage(picsumUrl);
     setImgError(false); // Reset error overlay since we found a fallback image
   };
 
