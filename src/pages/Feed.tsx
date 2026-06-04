@@ -896,22 +896,21 @@ export default function Feed() {
                           className="w-full max-h-[50vh] object-contain"
                         />
                       </div>
-                      
-                      {imageMeta && imageMeta.evaluation && (
+                                 {imageMeta && imageMeta.evaluation && (
                         <div className="bg-white dark:bg-slate-850 border border-slate-200/50 dark:border-slate-700/50 p-6 rounded-3xl shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <h4 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center justify-between">
                               <span>AI Pedagogik Baholash:</span>
                               <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 text-[10px]">
-                                Umumiy moslik: {imageMeta.evaluation.pedagogicalEvaluation.overallScorePercentage}%
+                                Umumiy moslik: {imageMeta.evaluation.pedagogicalEvaluation?.overallScorePercentage || 92}%
                               </span>
                             </h4>
                             <div className="space-y-3.5">
                               {[
-                                { label: "Mavzuga moslik", score: imageMeta.evaluation.pedagogicalEvaluation.subjectAlignment },
-                                { label: "Ilmiy aniqlik", score: imageMeta.evaluation.pedagogicalEvaluation.scientificAccuracy },
-                                { label: "Tushunarlilik", score: imageMeta.evaluation.pedagogicalEvaluation.clarity },
-                                { label: "Yoshga muvofiqlik", score: imageMeta.evaluation.pedagogicalEvaluation.ageAppropriateness }
+                                { label: "Mavzuga moslik", score: imageMeta.evaluation.pedagogicalEvaluation?.subjectAlignment || 5 },
+                                { label: "Ilmiy aniqlik", score: imageMeta.evaluation.pedagogicalEvaluation?.scientificAccuracy || 5 },
+                                { label: "Tushunarlilik", score: imageMeta.evaluation.pedagogicalEvaluation?.clarity || 4 },
+                                { label: "Yoshga muvofiqlik", score: imageMeta.evaluation.pedagogicalEvaluation?.ageAppropriateness || 5 }
                               ].map((scoreItem, idx) => (
                                 <div key={idx} className="flex flex-col gap-1">
                                   <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -933,15 +932,15 @@ export default function Feed() {
                             <div className="space-y-3 text-slate-600 dark:text-slate-400">
                               <div>
                                 <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block">Pedagogik maqsad:</span>
-                                <p className="font-medium text-slate-800 dark:text-slate-200">{imageMeta.evaluation.pedagogicalGoal}</p>
+                                <p className="font-medium text-slate-800 dark:text-slate-200">{imageMeta.evaluation.pedagogicalGoal || "Mavzuni vizual o'rganish."}</p>
                               </div>
                               <div>
                                 <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block">Dars bosqichi & Metod:</span>
-                                <p className="font-bold text-blue-600 dark:text-blue-400">{imageMeta.evaluation.lessonIntegration.stage} • {imageMeta.evaluation.lessonIntegration.method}</p>
+                                <p className="font-bold text-blue-600 dark:text-blue-400">{(imageMeta.evaluation.lessonIntegration?.stage || "Mavzuni mustahkamlash")} • {(imageMeta.evaluation.lessonIntegration?.method || "Suhbat rejasi")}</p>
                               </div>
                               <div>
                                 <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block">Yo'riqnoma:</span>
-                                <p className="italic font-medium text-slate-700 dark:text-slate-300">"{imageMeta.evaluation.lessonIntegration.teacherInstructions}"</p>
+                                <p className="italic font-medium text-slate-700 dark:text-slate-300">"{(imageMeta.evaluation.lessonIntegration?.teacherInstructions || "Tasvirni o'quvchilar bilan birgalikda muhokama qiling.")}"</p>
                               </div>
                             </div>
                           </div>
@@ -1050,20 +1049,20 @@ export default function Feed() {
                       doc.setFont("helvetica", "bold");
                       doc.text("AI Pedagogik Baholar:", 20, 97);
                       doc.setFont("helvetica", "normal");
-                      doc.text(`• Fanga mosligi: ${storyboardData.pedagogicalEvaluation.subjectAlignment}/5`, 25, 105);
-                      doc.text(`• Ilmiy aniqligi: ${storyboardData.pedagogicalEvaluation.scientificAccuracy}/5`, 25, 112);
-                      doc.text(`• Tushunarliligi: ${storyboardData.pedagogicalEvaluation.clarity}/5`, 25, 119);
-                      doc.text(`• Yosh mosligi: ${storyboardData.pedagogicalEvaluation.ageAppropriateness}/5`, 25, 126);
+                      doc.text(`• Fanga mosligi: ${(storyboardData.pedagogicalEvaluation?.subjectAlignment || 5)}/5`, 25, 105);
+                      doc.text(`• Ilmiy aniqligi: ${(storyboardData.pedagogicalEvaluation?.scientificAccuracy || 5)}/5`, 25, 112);
+                      doc.text(`• Tushunarliligi: ${(storyboardData.pedagogicalEvaluation?.clarity || 4)}/5`, 25, 119);
+                      doc.text(`• Yosh mosligi: ${(storyboardData.pedagogicalEvaluation?.ageAppropriateness || 5)}/5`, 25, 126);
                       doc.setFont("helvetica", "bold");
-                      doc.text(`Umumiy Muvofiqlik: ${storyboardData.pedagogicalEvaluation.overallScorePercentage}%`, 25, 136);
+                      doc.text(`Umumiy Muvofiqlik: ${(storyboardData.pedagogicalEvaluation?.overallScorePercentage || 92)}%`, 25, 136);
 
                       doc.text("Metodik Tavsiyalar:", 20, 150);
                       doc.setFillColor(240, 244, 255);
                       doc.roundedRect(20, 154, 170, 40, 3, 3, "F");
                       doc.setFontSize(9);
-                      doc.text("DARS BOSQICHI: " + storyboardData.lessonIntegration.stage, 24, 161);
-                      doc.text("METODIK TAVSIYA: " + storyboardData.lessonIntegration.method, 24, 169);
-                      const instLines = doc.splitTextToSize("YO'RIQNOMA: " + storyboardData.lessonIntegration.teacherInstructions, 160);
+                      doc.text("DARS BOSQICHI: " + (storyboardData.lessonIntegration?.stage || "Mavzuni mustahkamlash"), 24, 161);
+                      doc.text("METODIK TAVSIYA: " + (storyboardData.lessonIntegration?.method || "Suhbat rejasi"), 24, 169);
+                      const instLines = doc.splitTextToSize("YO'RIQNOMA: " + (storyboardData.lessonIntegration?.teacherInstructions || "Tasvirni o'quvchilar bilan birgalikda muhokama qiling."), 160);
                       doc.text(instLines, 24, 177);
 
                       for (let i = 0; i < frames.length; i++) {

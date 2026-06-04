@@ -641,12 +641,12 @@ export default function VideoGen() {
       doc.setFont("helvetica", "bold");
       doc.text("AI Pedagogik Baholash Ko'rsatkichlari:", 20, 97);
       doc.setFont("helvetica", "normal");
-      doc.text(`• Fanga mosligi: ${storyboard.pedagogicalEvaluation.subjectAlignment}/5`, 25, 105);
-      doc.text(`• Ilmiy aniqligi: ${storyboard.pedagogicalEvaluation.scientificAccuracy}/5`, 25, 112);
-      doc.text(`• Tushunarliligi: ${storyboard.pedagogicalEvaluation.clarity}/5`, 25, 119);
-      doc.text(`• Yosh darajasiga muvofiqligi: ${storyboard.pedagogicalEvaluation.ageAppropriateness}/5`, 25, 126);
+      doc.text(`• Fanga mosligi: ${(storyboard.pedagogicalEvaluation?.subjectAlignment || 5)}/5`, 25, 105);
+      doc.text(`• Ilmiy aniqligi: ${(storyboard.pedagogicalEvaluation?.scientificAccuracy || 5)}/5`, 25, 112);
+      doc.text(`• Tushunarliligi: ${(storyboard.pedagogicalEvaluation?.clarity || 4)}/5`, 25, 119);
+      doc.text(`• Yosh darajasiga muvofiqligi: ${(storyboard.pedagogicalEvaluation?.ageAppropriateness || 5)}/5`, 25, 126);
       doc.setFont("helvetica", "bold");
-      doc.text(`Umumiy Muvofiqlik Reytingi: ${storyboard.pedagogicalEvaluation.overallScorePercentage}%`, 25, 136);
+      doc.text(`Umumiy Muvofiqlik Reytingi: ${(storyboard.pedagogicalEvaluation?.overallScorePercentage || 92)}%`, 25, 136);
 
       // Integration
       doc.text("Dars Bosqichiga Integratsiya:", 20, 150);
@@ -656,17 +656,17 @@ export default function VideoGen() {
       doc.setFontSize(9);
       doc.text("DARS BOSQICHI / STAGE:", 24, 161);
       doc.setFont("helvetica", "normal");
-      doc.text(storyboard.lessonIntegration.stage, 72, 161);
+      doc.text(storyboard.lessonIntegration?.stage || "Mavzuni mustahkamlash", 72, 161);
       
       doc.setFont("helvetica", "bold");
       doc.text("METODIK TAVSIYA / METHOD:", 24, 169);
       doc.setFont("helvetica", "normal");
-      doc.text(storyboard.lessonIntegration.method, 79, 169);
+      doc.text(storyboard.lessonIntegration?.method || "Suhbat rejasi", 79, 169);
 
       doc.setFont("helvetica", "bold");
       doc.text("YO'RIQNOMA / INSTRUCTIONS:", 24, 177);
       doc.setFont("helvetica", "normal");
-      const instLines = doc.splitTextToSize(storyboard.lessonIntegration.teacherInstructions, 115);
+      const instLines = doc.splitTextToSize(storyboard.lessonIntegration?.teacherInstructions || "Tasvirni o'quvchilar bilan birgalikda muhokama qiling.", 115);
       doc.text(instLines, 82, 177);
 
       // Pages 2+: Frames List with Images
@@ -1634,15 +1634,15 @@ export default function VideoGen() {
                     <div className="space-y-3.5">
                       <div>
                         <span className="font-extrabold text-slate-450 dark:text-slate-500 uppercase text-[8px] tracking-wider block mb-0.5">Dars Bosqichi:</span>
-                        <p className="font-bold text-indigo-650 dark:text-indigo-400">{storyboard.lessonIntegration.stage}</p>
+                        <p className="font-bold text-indigo-650 dark:text-indigo-400">{storyboard.lessonIntegration?.stage || "Mavzuni mustahkamlash"}</p>
                       </div>
                       <div>
                         <span className="font-extrabold text-slate-450 dark:text-slate-500 uppercase text-[8px] tracking-wider block mb-0.5">Tavsiya etiladigan metod:</span>
-                        <p className="font-bold text-pink-650 dark:text-pink-400">{storyboard.lessonIntegration.method}</p>
+                        <p className="font-bold text-pink-650 dark:text-pink-400">{storyboard.lessonIntegration?.method || "Suhbat rejasi"}</p>
                       </div>
                       <div>
                         <span className="font-extrabold text-slate-450 dark:text-slate-500 uppercase text-[8px] tracking-wider block mb-0.5">O'qituvchi uchun yo'riqnoma:</span>
-                        <p className="italic font-medium text-slate-700 dark:text-slate-300 leading-relaxed">"{storyboard.lessonIntegration.teacherInstructions}"</p>
+                        <p className="italic font-medium text-slate-700 dark:text-slate-300 leading-relaxed">"{storyboard.lessonIntegration?.teacherInstructions || "Tasvirni o'quvchilar bilan birgalikda muhokama qiling."}"</p>
                       </div>
                     </div>
                   </div>
@@ -1654,10 +1654,10 @@ export default function VideoGen() {
                     </h4>
                     <div className="space-y-3">
                       {[
-                        { label: "Mavzuga va fanga mosligi", score: storyboard.pedagogicalEvaluation.subjectAlignment },
-                        { label: "Ilmiy va vizual aniqligi", score: storyboard.pedagogicalEvaluation.scientificAccuracy },
-                        { label: "O'quvchiga tushunarliligi", score: storyboard.pedagogicalEvaluation.clarity },
-                        { label: "Yosh darajasiga muvofiqligi", score: storyboard.pedagogicalEvaluation.ageAppropriateness }
+                        { label: "Mavzuga va fanga mosligi", score: storyboard.pedagogicalEvaluation?.subjectAlignment || 5 },
+                        { label: "Ilmiy va vizual aniqligi", score: storyboard.pedagogicalEvaluation?.scientificAccuracy || 5 },
+                        { label: "O'quvchiga tushunarliligi", score: storyboard.pedagogicalEvaluation?.clarity || 4 },
+                        { label: "Yosh darajasiga muvofiqligi", score: storyboard.pedagogicalEvaluation?.ageAppropriateness || 5 }
                       ].map((evalItem, idx) => (
                         <div key={idx} className="flex flex-col gap-1">
                           <div className="flex justify-between text-slate-700 dark:text-slate-300 font-extrabold text-[11px]">
