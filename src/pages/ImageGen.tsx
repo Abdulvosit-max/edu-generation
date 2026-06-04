@@ -61,8 +61,31 @@ export default function ImageGen() {
 
     // 1. Tasvirni generatsiya qilish
     try {
-      generatedUrl = await generateEducationalImage(finalPrompt + `, in ${style} visual style, structured layout, high detail, high educational value`);
-      setImage(generatedUrl);
+      // 1. Check if Puter.js is loaded and active for 100% free keyless AI generation!
+      const puter = typeof window !== "undefined" && (window as any).puter;
+      if (puter && puter.ai) {
+        try {
+          console.log("Puter.js orqali AI tasvir generatsiya qilinmoqda (ImageGen)...");
+          const stylePrompt = style === "3D Render" ? "isometric 3D render, minimalist cartoon style, vibrant colors" :
+                              style === "Realistik" ? "realistic photography, documentary educational style, highly detailed" :
+                              style === "Infografik / Diagramma" ? "educational infographic, labeled vector schematic, clear vector diagram" :
+                              style === "Multfilm / Illyustratsiya" ? "vibrant school book illustration, colorful drawing style" :
+                              "minimalist modern flat vector design, clean paths";
+          const promptText = `${finalPrompt}, professional ${stylePrompt}, high quality educational material`;
+          const imgElement = await puter.ai.txt2img(promptText);
+          if (imgElement && imgElement.src) {
+            setImage(imgElement.src);
+            generatedUrl = imgElement.src;
+          }
+        } catch (puterErr) {
+          console.warn("Puter.js error, falling back to Pollinations:", puterErr);
+        }
+      }
+
+      if (!generatedUrl) {
+        generatedUrl = await generateEducationalImage(finalPrompt + `, in ${style} visual style, structured layout, high detail, high educational value`);
+        setImage(generatedUrl);
+      }
     } catch (e: any) {
       console.error("AI Tasvir yaratishda xato:", e);
       generatedUrl = `https://loremflickr.com/1024/768/${encodeURIComponent(prompt)}`;
@@ -119,6 +142,26 @@ export default function ImageGen() {
     } catch (dbErr) {
       console.error("Backend-ga saqlashda xato:", dbErr);
     }
+  };
+
+  // Fallback handler if image fails to load (e.g. Pollinations 402 error)
+  const handleImageError = () => {
+    if (!image) return;
+    
+    if (image.includes("image.pollinations.ai")) {
+      if (image.includes("model=flux")) {
+        const fallbackUrl = image.replace("model=flux", "") + "&fallback=true";
+        console.warn("Pollinations flux error, trying stable model-less fallback:", fallbackUrl);
+        setImage(fallbackUrl);
+        return;
+      }
+    }
+    
+    const cleanTopic = prompt ? prompt.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").slice(0, 3).join(",") : "education,science";
+    const flickrUrl = `https://loremflickr.com/1024/768/${encodeURIComponent(cleanTopic)}?random=${Math.random()}`;
+    console.warn("Pollinations failed completely, falling back to LoremFlickr:", flickrUrl);
+    setImage(flickrUrl);
+    setImgError(false); // Reset error overlay since we found a fallback image
   };
 
   // Hamjamiyatga chiqarish
@@ -316,11 +359,11 @@ export default function ImageGen() {
                     src={image}
                     alt="Generated Educational Resource"
                     referrerPolicy="no-referrer"
-                    onLoad={() => setImgLoading(false)}
-                    onError={() => {
-                      setImgError(true);
+                    onLoad={() => {
                       setImgLoading(false);
+                      setImgError(false);
                     }}
+                    onError={handleImageError}
                     className={`w-full max-h-[500px] object-contain transition-all duration-500 ${imgLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
                   />
                 </div>
