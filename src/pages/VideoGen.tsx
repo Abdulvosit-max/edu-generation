@@ -27,214 +27,8 @@ import { useAppContext } from "../lib/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 
-// Custom Canvas Particle Overlay for premium Animated Resource experience
-function ParticleOverlay({ activeFrame, style }: { activeFrame: StoryboardFrame | null; style: string }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+// ParticleOverlay component removed as it was unused and distracted from clean storyboard visuals
 
-  useEffect(() => {
-    if (!canvasRef.current || !activeFrame) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let width = (canvas.width = canvas.offsetWidth || 800);
-    let height = (canvas.height = canvas.offsetHeight || 450);
-
-    // Detect animation type from frame content
-    const text = (activeFrame.visualDescription + " " + activeFrame.animationDescription + " " + activeFrame.title).toLowerCase();
-    
-    let animType: "rain" | "space" | "glow" | "gear" | "bokeh" = "bokeh";
-    
-    if (text.includes("rain") || text.includes("yomg'ir") || text.includes("water") || text.includes("suv") || text.includes("drop") || text.includes("cycle") || text.includes("falling")) {
-      animType = "rain";
-    } else if (text.includes("space") || text.includes("sayyora") || text.includes("yulduz") || text.includes("kosmos") || text.includes("planet") || text.includes("star") || text.includes("orbit") || text.includes("galaxy") || text.includes("sky") || text.includes("solar")) {
-      animType = "space";
-    } else if (text.includes("light") || text.includes("nur") || text.includes("yorug'") || text.includes("glow") || text.includes("energy") || text.includes("bulb") || text.includes("spark")) {
-      animType = "glow";
-    } else if (text.includes("rotate") || text.includes("spin") || text.includes("gear") || text.includes("turn") || text.includes("wheel") || text.includes("aylanish")) {
-      animType = "gear";
-    }
-
-    // Particle Classes
-    class RainParticle {
-      x = Math.random() * width;
-      y = Math.random() * -height;
-      vy = Math.random() * 4 + 6;
-      length = Math.random() * 15 + 10;
-      opacity = Math.random() * 0.4 + 0.3;
-
-      update() {
-        this.y += this.vy;
-        if (this.y > height) {
-          this.y = Math.random() * -20;
-          this.x = Math.random() * width;
-          this.vy = Math.random() * 4 + 6;
-        }
-      }
-
-      draw(c: CanvasRenderingContext2D) {
-        c.strokeStyle = `rgba(174, 219, 255, ${this.opacity})`;
-        c.lineWidth = 1.5;
-        c.beginPath();
-        c.moveTo(this.x, this.y);
-        c.lineTo(this.x + 0.5, this.y + this.length);
-        c.stroke();
-      }
-    }
-
-    class SpaceParticle {
-      x = width / 2;
-      y = height / 2;
-      angle = Math.random() * Math.PI * 2;
-      speed = Math.random() * 1.5 + 0.5;
-      radius = Math.random() * 1.5;
-      distance = Math.random() * 40;
-      opacity = 0;
-
-      update() {
-        this.distance += this.speed;
-        this.opacity = Math.min(0.6, (this.distance - 40) / 100);
-        this.x = width / 2 + Math.cos(this.angle) * this.distance;
-        this.y = height / 2 + Math.sin(this.angle) * this.distance;
-
-        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-          this.distance = Math.random() * 20;
-          this.angle = Math.random() * Math.PI * 2;
-          this.speed = Math.random() * 1.5 + 0.5;
-          this.radius = Math.random() * 1.5;
-        }
-      }
-
-      draw(c: CanvasRenderingContext2D) {
-        c.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        c.beginPath();
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        c.fill();
-      }
-    }
-
-    class BokehParticle {
-      x = Math.random() * width;
-      y = Math.random() * height;
-      vx = Math.random() * 0.4 - 0.2;
-      vy = Math.random() * -0.4 - 0.1;
-      radius = Math.random() * 6 + 3;
-      opacity = Math.random() * 0.25 + 0.05;
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.y < -10) {
-          this.y = height + 10;
-          this.x = Math.random() * width;
-        }
-        if (this.x < -10 || this.x > width + 10) {
-          this.x = Math.random() * width;
-        }
-      }
-
-      draw(c: CanvasRenderingContext2D) {
-        c.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        c.beginPath();
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        c.fill();
-      }
-    }
-
-    // Initialize Particles
-    const rainCount = 45;
-    const spaceCount = 60;
-    const bokehCount = 20;
-
-    const rainParticles: RainParticle[] = [];
-    const spaceParticles: SpaceParticle[] = [];
-    const bokehParticles: BokehParticle[] = [];
-
-    if (animType === "rain") {
-      for (let i = 0; i < rainCount; i++) rainParticles.push(new RainParticle());
-    } else if (animType === "space") {
-      for (let i = 0; i < spaceCount; i++) spaceParticles.push(new SpaceParticle());
-    } else {
-      for (let i = 0; i < bokehCount; i++) bokehParticles.push(new BokehParticle());
-    }
-
-    let pulseGlow = 0;
-    let pulseDirection = 1;
-    let gearAngle = 0;
-
-    // Loop
-    const loop = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      // Handle custom resizing if container changes
-      if (canvas.width !== canvas.offsetWidth || canvas.height !== canvas.offsetHeight) {
-        width = canvas.width = canvas.offsetWidth;
-        height = canvas.height = canvas.offsetHeight;
-      }
-
-      if (animType === "rain") {
-        rainParticles.forEach((p) => {
-          p.update();
-          p.draw(ctx);
-        });
-      } else if (animType === "space") {
-        spaceParticles.forEach((p) => {
-          p.update();
-          p.draw(ctx);
-        });
-      } else if (animType === "glow") {
-        // Glowing aura effect
-        pulseGlow += 0.015 * pulseDirection;
-        if (pulseGlow > 0.4) pulseDirection = -1;
-        if (pulseGlow < 0.05) pulseDirection = 1;
-
-        const grad = ctx.createRadialGradient(width / 2, height / 2, 20, width / 2, height / 2, Math.min(width, height) / 1.6);
-        grad.addColorStop(0, `rgba(255, 223, 100, ${pulseGlow})`);
-        grad.addColorStop(0.5, `rgba(255, 120, 200, ${pulseGlow * 0.4})`);
-        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-      } else if (animType === "gear") {
-        // Spin a subtle mechanical dashboard overlay on active simulation
-        gearAngle += 0.005;
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(width - 50, 50, 30, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.save();
-        ctx.translate(width - 50, 50);
-        ctx.rotate(gearAngle);
-        for (let i = 0; i < 8; i++) {
-          ctx.rotate(Math.PI / 4);
-          ctx.beginPath();
-          ctx.rect(-4, -38, 8, 8);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // Always draw subtle floating cinematic bokeh for maximum premium feel
-      bokehParticles.forEach((p) => {
-        p.update();
-        p.draw(ctx);
-      });
-
-      animationFrameId = requestAnimationFrame(loop);
-    };
-
-    loop();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [activeFrame]);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 z-10 pointer-events-none w-full h-full" />;
-}
 
 
 export default function VideoGen() {
@@ -255,6 +49,33 @@ export default function VideoGen() {
   const [frameImages, setFrameImages] = useState<Record<number, string>>({});
   const [generatingFrames, setGeneratingFrames] = useState<Record<number, boolean>>({});
   const [animationMode, setAnimationMode] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [speechPitch, setSpeechPitch] = useState(1.0);
+  const [speechVolume, setSpeechVolume] = useState(1.0);
+  const [activeDetailTab, setActiveDetailTab] = useState<"explanation" | "terms" | "activity" | "script">("explanation");
+  const [showSubtitles, setShowSubtitles] = useState(true);
+  const [narrationType, setNarrationType] = useState<"google" | "native" | "azure">(() => {
+    try {
+      return (localStorage.getItem("edu_gen_narration_type") as any) || "google";
+    } catch {
+      return "google";
+    }
+  });
+  const [azureKey, setAzureKey] = useState(() => {
+    try {
+      return localStorage.getItem("edu_gen_azure_key") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [azureRegion, setAzureRegion] = useState(() => {
+    try {
+      return localStorage.getItem("edu_gen_azure_region") || "eastus";
+    } catch {
+      return "eastus";
+    }
+  });
 
   // Text-To-Speech / Audio States
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -294,6 +115,7 @@ export default function VideoGen() {
     setStoryboard(null);
     setActiveFrameIdx(0);
     setFrameImages({});
+    setImageErrors({});
     setResourceId(null);
     setIsShared(false);
     setIsPlayingSim(false);
@@ -307,22 +129,51 @@ export default function VideoGen() {
     }
   };
 
-  // Web Speech API / Google TTS - Text to Speech with natural Uzbek voice fallback
-  const speakText = (text: string, onEndCallback?: () => void) => {
-    if (typeof window === "undefined") return;
+  // Microsoft Azure Cognitive Speech Synthesis helper using REST API
+  const fetchAzureTTS = async (
+    text: string, 
+    apiKey: string, 
+    region: string, 
+    voiceName = "uz-UZ-MadinaNeural", 
+    rate = 1.0, 
+    pitch = 1.0
+  ): Promise<string> => {
+    const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
     
-    // Stop any currently playing audio/speech
-    if (activeAudioRef.current) {
-      activeAudioRef.current.pause();
-      activeAudioRef.current = null;
-    }
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    // Relative speed and pitch in SSML
+    const ratePercent = `${Math.round((rate - 1.0) * 100)}%`;
+    const pitchPercent = `${Math.round((pitch - 1.0) * 50)}%`;
     
-    if (!text) return;
+    const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='uz-UZ'>
+      <voice name='${voiceName}'>
+        <prosody rate='${rate >= 1.0 ? "+" : ""}${ratePercent}' pitch='${pitch >= 1.0 ? "+" : ""}${pitchPercent}'>
+          ${text}
+        </prosody>
+      </voice>
+    </speak>`;
 
-    // 1. Primary: Natural Google Translate TTS for beautiful, real Uzbek pronunciation
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Ocp-Apim-Subscription-Key": apiKey,
+        "Content-Type": "application/ssml+xml",
+        "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+        "User-Agent": "EduVisualAI"
+      },
+      body: ssml
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Azure TTS error: ${response.status} - ${errorText}`);
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  };
+
+  // Google Translate TTS Fallback
+  const speakTextGoogle = (text: string, onEndCallback?: () => void) => {
     try {
       let langCode = "uz";
       if (speechLanguage === "ru") langCode = "ru";
@@ -344,6 +195,10 @@ export default function VideoGen() {
       activeAudioRef.current = audio;
       setIsSpeaking(true);
       
+      audio.defaultPlaybackRate = speechRate;
+      audio.playbackRate = speechRate;
+      audio.volume = speechVolume;
+      
       audio.play().catch(err => {
         console.warn("Autoplay blocked, playing via Web Speech API...", err);
         speakTextNative(text, onEndCallback);
@@ -351,6 +206,60 @@ export default function VideoGen() {
     } catch (err) {
       speakTextNative(text, onEndCallback);
     }
+  };
+
+  // Dispatcher for Narration Types
+  const speakText = async (text: string, onEndCallback?: () => void) => {
+    if (typeof window === "undefined") return;
+    
+    // Stop any currently playing audio/speech
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    if (!text) return;
+
+    if (narrationType === "azure" && azureKey.trim()) {
+      try {
+        setIsSpeaking(true);
+        const voiceName = speechLanguage === "uz" ? "uz-UZ-MadinaNeural" : 
+                          speechLanguage === "ru" ? "ru-RU-SvetlanaNeural" : "en-US-AvaNeural";
+        const audioUrl = await fetchAzureTTS(text, azureKey, azureRegion, voiceName, speechRate, speechPitch);
+        
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          setIsSpeaking(false);
+          if (onEndCallback) onEndCallback();
+        };
+        audio.onerror = (e) => {
+          console.warn("Azure TTS xatosi, Google TTS ga o'tilmoqda...", e);
+          speakTextGoogle(text, onEndCallback);
+        };
+        
+        activeAudioRef.current = audio;
+        audio.volume = speechVolume;
+        audio.play().catch(err => {
+          console.warn("Azure audio play blocklandi, Google TTS ga o'tilmoqda...", err);
+          speakTextGoogle(text, onEndCallback);
+        });
+      } catch (err) {
+        console.warn("Azure TTS so'rovida xatolik, Google TTS ga o'tilmoqda...", err);
+        speakTextGoogle(text, onEndCallback);
+      }
+      return;
+    }
+
+    if (narrationType === "native") {
+      speakTextNative(text, onEndCallback);
+      return;
+    }
+
+    // Default: Google TTS
+    speakTextGoogle(text, onEndCallback);
   };
 
   // Web Speech API Native Fallback
@@ -375,8 +284,9 @@ export default function VideoGen() {
       utterance.voice = matchedVoice;
     }
 
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    utterance.rate = speechRate;
+    utterance.pitch = speechPitch;
+    utterance.volume = speechVolume;
 
     utterance.onend = () => {
       setIsSpeaking(false);
@@ -495,9 +405,49 @@ export default function VideoGen() {
     }
   };
 
-  // Fast Pollinations AI drawing loader (Turbo Model enabled)
+  // Handle image loading error with automatic fallback to a model-less stable request
+  // and then to a relevant placeholder image from loremflickr.com if Pollinations fails completely.
+  const handleImageError = (idx: number) => {
+    setImageErrors(prev => ({ ...prev, [idx]: true }));
+    setFrameImages(prev => {
+      const originalUrl = prev[idx];
+      if (!originalUrl) return prev;
+      
+      // If we haven't tried the model-less fallback yet, try it
+      if (!originalUrl.includes("fallback=true")) {
+        try {
+          const urlObj = new URL(originalUrl);
+          urlObj.searchParams.delete("model");
+          urlObj.searchParams.set("fallback", "true");
+          const fallbackUrl = urlObj.toString();
+          console.warn(`Rasm yuklashda xatolik! Kadr #${idx + 1} uchun fallback URL ga o'tilmoqda:`, fallbackUrl);
+          return { ...prev, [idx]: fallbackUrl };
+        } catch (err) {
+          let fallbackUrl = originalUrl
+            .replace("&model=turbo", "")
+            .replace("model=turbo", "")
+            .replace("&model=flux", "")
+            .replace("model=flux", "");
+            
+          if (!fallbackUrl.includes("?")) fallbackUrl += "?";
+          fallbackUrl += "&fallback=true";
+          return { ...prev, [idx]: fallbackUrl };
+        }
+      } else {
+        // If Pollinations is completely blocked/down (e.g. 402 Payment Required),
+        // fallback to a high-quality educational placeholder image from loremflickr.com based on the topic!
+        const cleanTopic = topic ? topic.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").slice(0, 3).join(",") : "education,science";
+        const flickrUrl = `https://loremflickr.com/1024/1024/${encodeURIComponent(cleanTopic)}?random=${idx}`;
+        console.warn(`Pollinations butunlay xatolik berdi. LoremFlickr orqali rasm yuklanmoqda:`, flickrUrl);
+        return { ...prev, [idx]: flickrUrl };
+      }
+    });
+  };
+
+  // Fast Pollinations AI drawing loader with Puter.js free text-to-image integration
   const generateFrameVisual = async (idx: number, visualDesc: string) => {
     setGeneratingFrames(prev => ({ ...prev, [idx]: true }));
+    setImageErrors(prev => ({ ...prev, [idx]: false })); // Reset error state on new generation
     try {
       // 1. Prompt sanitization (removes quotes/newlines and slices to 200 chars for extreme URL safety)
       const cleanDesc = visualDesc
@@ -506,17 +456,33 @@ export default function VideoGen() {
         .trim()
         .slice(0, 200);
 
-      const seed = Math.floor(Math.random() * 9999999);
       const stylePrompt = style === "3D Render" ? "isometric 3D render, minimalist cartoon style, vibrant colors" :
                           style === "Realistik" ? "realistic photography, documentary educational style, highly detailed" :
                           style === "Infografik / Diagramma" ? "educational infographic, labeled vector schematic, clear vector diagram" :
                           style === "Multfilm / Illyustratsiya" ? "vibrant school book illustration, colorful drawing style" :
                           "minimalist modern flat vector design, clean paths";
+      
+      const promptText = `${cleanDesc}, professional ${stylePrompt}, high quality educational material`;
 
-      // Blazing fast default Pollinations AI model (Turbo model yields 1s renders and high stability)
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-        cleanDesc + `, professional ${stylePrompt}, high quality educational material`
-      )}?width=1024&height=1024&seed=${seed}&nologo=true&model=turbo`;
+      // 1. Check if Puter.js is loaded and active for 100% free keyless AI generation!
+      const puter = typeof window !== "undefined" && (window as any).puter;
+      if (puter && puter.ai) {
+        try {
+          console.log("Puter.js orqali AI tasvir generatsiya qilinmoqda...");
+          // Call Puter.js txt2img (Stable Diffusion/Flux based free engine)
+          const imgElement = await puter.ai.txt2img(promptText);
+          if (imgElement && imgElement.src) {
+            setFrameImages(prev => ({ ...prev, [idx]: imgElement.src }));
+            return; // Exit successfully!
+          }
+        } catch (puterErr) {
+          console.warn("Puter.js generatsiya xatosi, Pollinations-ga o'tilmoqda:", puterErr);
+        }
+      }
+
+      // 2. Fallback to Pollinations AI
+      const seed = Math.floor(Math.random() * 9999999);
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
       
       // Instantly set the frame image URL to let the browser begin downloading and rendering it immediately
       setFrameImages(prev => ({ ...prev, [idx]: url }));
@@ -539,6 +505,53 @@ export default function VideoGen() {
     if (!storyboard) return;
     const frame = storyboard.frames[idx];
     await generateFrameVisual(idx, frame.visualDescription);
+  };
+
+  // Copy current script to clipboard
+  const handleCopyScript = () => {
+    if (!storyboard) return;
+    const currentScript = storyboard.frames[activeFrameIdx].scriptText;
+    navigator.clipboard.writeText(currentScript);
+    alert("Ssenariy matni buferga muvaffaqiyatli nusxalandi!");
+  };
+
+  // Download all scripts as a clean text file
+  const handleDownloadFullScript = () => {
+    if (!storyboard) return;
+    const fullText = storyboard.frames
+      .map(f => `Kadr #${f.frameNumber}: ${f.title}\nScript: ${f.scriptText}\nAnimation: ${f.animationDescription}\n\n`)
+      .join("");
+    
+    const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `${storyboard.animationTitle.replace(/\s+/g, "_")}_ssenariy.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  };
+
+  // Download active frame image
+  const handleDownloadImage = async () => {
+    const url = frameImages[activeFrameIdx];
+    if (!url) return;
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${storyboard?.animationTitle.replace(/\s+/g, "_") || "kadr"}_kadr_${activeFrameIdx + 1}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      // CORS fallback: open in new tab
+      window.open(url, "_blank");
+    }
   };
 
   // Storyboardni saqlash
@@ -691,31 +704,77 @@ export default function VideoGen() {
 
         // Details Side
         const xOffset = 118;
-        doc.setFontSize(11);
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text("1. Ssenariy / Ovoz Nutqi:", xOffset, 34);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         const scriptLines = doc.splitTextToSize(frame.scriptText, 72);
-        doc.text(scriptLines, xOffset, 41);
+        doc.text(scriptLines, xOffset, 40);
 
-        const yPos1 = 41 + (scriptLines.length * 5) + 6;
-        doc.setFontSize(11);
+        const yPos1 = 40 + (scriptLines.length * 4.5) + 5;
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text("2. Animatsiya Harakati:", xOffset, yPos1);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         const animLines = doc.splitTextToSize(frame.animationDescription, 72);
-        doc.text(animLines, xOffset, yPos1 + 7);
+        doc.text(animLines, xOffset, yPos1 + 6);
 
-        const yPos2 = yPos1 + 7 + (animLines.length * 5) + 6;
-        doc.setFontSize(11);
+        const yPos2 = yPos1 + 6 + (animLines.length * 4.5) + 5;
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.text("3. Pedagogik Qiymati:", xOffset, yPos2);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         const pedLines = doc.splitTextToSize(frame.pedagogicalValue, 72);
-        doc.text(pedLines, xOffset, yPos2 + 7);
+        doc.text(pedLines, xOffset, yPos2 + 6);
+
+        // Section Underneath (Below image and side details, y starts at 128mm)
+        let yUnder = 128;
+        
+        // 4. Batafsil ilmiy tushuntirish
+        if (frame.detailedExplanation) {
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          doc.text("4. Batafsil Mavzu Tushuntirishi:", 20, yUnder);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          const detailedLines = doc.splitTextToSize(frame.detailedExplanation, 170);
+          doc.text(detailedLines, 20, yUnder + 6);
+          yUnder = yUnder + 6 + (detailedLines.length * 4.5) + 6;
+        }
+
+        // 5. Tayanch atamalar va topshiriqlar
+        if (frame.keyTerms || frame.studentActivity) {
+          const colWidth = 82;
+          const col2Offset = 108;
+          let maxHeightAdded = 0;
+          
+          if (frame.keyTerms) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text("5. Tayanch Atamalar:", 20, yUnder);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            const termsLines = doc.splitTextToSize(frame.keyTerms, colWidth);
+            doc.text(termsLines, 20, yUnder + 6);
+            maxHeightAdded = Math.max(maxHeightAdded, 6 + (termsLines.length * 4.5));
+          }
+          
+          if (frame.studentActivity) {
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text("6. Interfaol Savol / Topshiriq:", col2Offset, yUnder);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            const activityLines = doc.splitTextToSize(frame.studentActivity, colWidth);
+            doc.text(activityLines, col2Offset, yUnder + 6);
+            maxHeightAdded = Math.max(maxHeightAdded, 6 + (activityLines.length * 4.5));
+          }
+          
+          yUnder += maxHeightAdded + 6;
+        }
       }
 
       doc.save(`${storyboard.animationTitle.replace(/\s+/g, "_")}_dars_rejasi.pdf`);
@@ -986,6 +1045,8 @@ export default function VideoGen() {
                     src={frameImages[activeFrameIdx]}
                     alt={`Kadr #${activeFrameIdx + 1}`}
                     className="w-full h-full object-cover"
+                    onError={() => handleImageError(activeFrameIdx)}
+                    onLoad={() => setImageErrors(prev => ({ ...prev, [activeFrameIdx]: false }))}
                     animate={animationMode ? {
                       scale: [1.02, 1.08, 1.02],
                       x: [-4, 4, -4],
@@ -997,55 +1058,65 @@ export default function VideoGen() {
                       ease: "easeInOut"
                     }}
                   />
-                  {/* Canvas Particle Animation Overlay for premium Animated Resource experience */}
-                  {animationMode && (
-                    <ParticleOverlay 
-                      activeFrame={storyboard.frames[activeFrameIdx]} 
-                      style={style} 
-                    />
+                  
+                  {/* Image loading error retry overlay */}
+                  {imageErrors[activeFrameIdx] && (
+                    <div className="absolute inset-0 z-15 flex flex-col items-center justify-center bg-slate-900/90 text-center p-4 space-y-2">
+                      <p className="text-white text-[11px] font-bold">Rasm yuklanishida xatolik yuz berdi (Internet sust bo'lishi mumkin).</p>
+                      <button
+                        onClick={() => handleRegenerateFrameVisual(activeFrameIdx)}
+                        className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer active:scale-95"
+                      >
+                        Tasvirni qayta chizish
+                      </button>
+                    </div>
                   )}
                   
                   {/* Premium glassmorphic animated subtitles overlay (Karaoke word-by-word highlight) */}
-                  <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none select-none">
-                    <motion.div 
-                      key={activeFrameIdx + "-" + isPlayingSim}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-black/75 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-white text-xs md:text-sm font-black tracking-wide text-center shadow-lg max-w-[95%] leading-relaxed"
-                    >
-                      <span className="text-pink-500 font-extrabold mr-1.5 uppercase text-[9px] tracking-wider block mb-1 text-center flex items-center justify-center gap-1">
-                        {isSpeaking ? (
-                          <>
-                            <span className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-ping" />
-                            {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY (OVOZLI)" : "🎙️ NARRATION (AUDIO ACTIVE)"}
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-1.5 h-1.5 bg-slate-500 rounded-full" />
-                            {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY" : "🎙️ NARRATION"}
-                          </>
-                        )}
-                      </span>
-                      <span className="text-white leading-relaxed">
-                        {storyboard.frames[activeFrameIdx].scriptText.split(" ").map((word, wordIdx, arr) => {
-                          const wordProgressThreshold = (wordIdx / arr.length) * 100;
-                          const isHighlighted = isPlayingSim ? (simProgress >= wordProgressThreshold) : true;
-                          return (
-                            <span 
-                              key={wordIdx} 
-                              className={`inline-block mr-1 transition-all duration-200 ${
-                                isHighlighted 
-                                  ? "text-pink-400 scale-105 font-black drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" 
-                                  : "text-white/60 font-semibold"
-                              }`}
-                            >
-                              {word}
-                            </span>
-                          );
-                        })}
-                      </span>
-                    </motion.div>
-                  </div>
+                  {showSubtitles && (
+                    <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none select-none">
+                      <motion.div 
+                        key={activeFrameIdx + "-" + isPlayingSim}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-black/75 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-white text-xs md:text-sm font-black tracking-wide text-center shadow-lg max-w-[95%] leading-relaxed"
+                      >
+                        <span className="text-pink-500 font-extrabold mr-1.5 uppercase text-[9px] tracking-wider block mb-1 text-center flex items-center justify-center gap-1">
+                          {isSpeaking ? (
+                            <>
+                              <span className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-ping" />
+                              {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY (OVOZLI)" : "🎙️ NARRATION (AUDIO ACTIVE)"}
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-1.5 h-1.5 bg-slate-500 rounded-full" />
+                              {speechLanguage === "uz" ? "🎙️ ANIMATSION SSENARIY" : "🎙️ NARRATION"}
+                            </>
+                          )}
+                        </span>
+                        <span className="text-white leading-relaxed">
+                          {storyboard.frames[activeFrameIdx].scriptText.split(" ").map((word, wordIdx, arr) => {
+                            const wordProgressThreshold = (wordIdx / arr.length) * 100;
+                            const isHighlighted = isPlayingSim ? (simProgress >= wordProgressThreshold) : true;
+                            return (
+                              <span key={wordIdx} className="inline-block mr-1">
+                                <span 
+                                  className={`transition-all duration-200 ${
+                                    isHighlighted 
+                                      ? "text-pink-400 scale-105 font-black drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" 
+                                      : "text-white/60 font-semibold"
+                                  }`}
+                                >
+                                  {word}
+                                </span>
+                                {" "}
+                              </span>
+                            );
+                          })}
+                        </span>
+                      </motion.div>
+                    </div>
+                  )}
 
                   {/* Hover Action Overlay to Re-draw image */}
                   <div className="absolute top-3 right-3 z-20 opacity-0 group-hover/screen:opacity-100 transition-opacity flex gap-2">
@@ -1082,6 +1153,52 @@ export default function VideoGen() {
               </div>
             </div>
 
+            {/* Utility Action Buttons (Toggle Subtitles, Download Image, Copy Script, Download Full Script) */}
+            <div className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 text-xs font-bold text-slate-655 dark:text-slate-350 shadow-xs">
+              <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 font-extrabold">
+                🛠️ Kadr Boshqaruvi:
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setShowSubtitles(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    showSubtitles 
+                      ? "border-pink-200 bg-pink-50/20 text-pink-600 dark:border-pink-900/30 dark:text-pink-400" 
+                      : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950"
+                  }`}
+                  title="Subtitrlarni ko'rsatish/yashirish"
+                >
+                  {showSubtitles ? <span className="text-pink-500">👁️ Subtitrlar Yoqilgan</span> : <span>👁️‍Dars Subtitrlari Yashirilgan</span>}
+                </button>
+
+                <button
+                  onClick={handleDownloadImage}
+                  disabled={!frameImages[activeFrameIdx]}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-105 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-40"
+                  title="Kadr tasvirini kompyuterga yuklab olish"
+                >
+                  <Download size={13} />
+                  Tasvirni Yuklash
+                </button>
+
+                <button
+                  onClick={handleCopyScript}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-105 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                  title="Joriy ssenariy audio matnini nusxalash"
+                >
+                  <span>📋</span> Ssenariyni Nusxalash
+                </button>
+
+                <button
+                  onClick={handleDownloadFullScript}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-105 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                  title="Barcha kadrlar ssenariysini .txt shaklida yuklash"
+                >
+                  <span>📄</span> To'liq Ssenariy (.txt)
+                </button>
+              </div>
+            </div>
+
             {/* Script card under the screen */}
             <div className="w-full max-w-3xl p-5 bg-pink-50/30 dark:bg-pink-950/20 border border-pink-100/50 dark:border-pink-900/20 rounded-2xl space-y-1.5 relative overflow-hidden">
               <span className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest block mb-0.5 flex items-center justify-between">
@@ -1107,15 +1224,113 @@ export default function VideoGen() {
             </div>
 
             {/* Sub-details (Actions and Pedagogical details stacked cleanly) */}
-            <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
-                <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider">🎬 Animatsiya Harakati (Kadrda):</span>
-                <p className="text-slate-700 dark:text-slate-350 leading-relaxed">{storyboard.frames[activeFrameIdx].animationDescription}</p>
-              </div>
-              <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
-                <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider">💡 Pedagogik Qiymat (O'quvchiga):</span>
-                <p className="text-slate-700 dark:text-slate-350 leading-relaxed">{storyboard.frames[activeFrameIdx].pedagogicalValue}</p>
-              </div>
+            {/* Beautiful Tab Bar for Frame details */}
+            <div className="w-full max-w-3xl border-b border-slate-200 dark:border-slate-700 flex gap-2 overflow-x-auto pb-px">
+              {[
+                { id: "explanation", label: "📖 Batafsil Tahlil", activeColor: "border-indigo-500 text-indigo-650 dark:text-indigo-400" },
+                { id: "terms", label: "🔑 Tayanch Atamalar", activeColor: "border-emerald-500 text-emerald-600 dark:text-emerald-400" },
+                { id: "activity", label: "🙋 Interfaol Topshiriq", activeColor: "border-pink-500 text-pink-600 dark:text-pink-400" },
+                { id: "script", label: "🎬 Ssenariy & Animatsiya", activeColor: "border-amber-500 text-amber-600 dark:text-amber-400" }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveDetailTab(tab.id as any)}
+                  className={`px-4 py-2.5 text-xs font-black border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                    activeDetailTab === tab.id
+                      ? `${tab.activeColor} scale-102`
+                      : "border-transparent text-slate-400 hover:text-slate-655 dark:hover:text-slate-350"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sub-details Tab Contents with beautiful slide/fade-in transitions */}
+            <div className="w-full max-w-3xl min-h-[140px] text-xs">
+              <AnimatePresence mode="wait">
+                {activeDetailTab === "explanation" && (
+                  <motion.div
+                    key="explanation"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                    className="p-5 bg-indigo-50/10 dark:bg-indigo-950/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/30 space-y-2"
+                  >
+                    <span className="font-extrabold text-indigo-600 dark:text-indigo-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
+                      <span>📖</span> Batafsil Mavzu Tushuntirishi:
+                    </span>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-xs md:text-sm font-semibold">
+                      {storyboard.frames[activeFrameIdx].detailedExplanation || "Ushbu kadr uchun batafsil tushuntirish mavjud emas."}
+                    </p>
+                  </motion.div>
+                )}
+
+                {activeDetailTab === "terms" && (
+                  <motion.div
+                    key="terms"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                    className="p-5 bg-emerald-50/10 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-950/20 space-y-2"
+                  >
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
+                      <span>🔑</span> Tayanch Atamalar va Ibora Ta'riflari:
+                    </span>
+                    <p className="text-slate-750 dark:text-emerald-250 leading-relaxed text-xs md:text-sm font-bold whitespace-pre-line">
+                      {storyboard.frames[activeFrameIdx].keyTerms || "Ushbu kadr uchun tayanch atamalar mavjud emas."}
+                    </p>
+                  </motion.div>
+                )}
+
+                {activeDetailTab === "activity" && (
+                  <motion.div
+                    key="activity"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                    className="p-5 bg-pink-50/10 dark:bg-pink-950/10 rounded-2xl border border-pink-100/40 dark:border-pink-950/20 space-y-2"
+                  >
+                    <span className="font-extrabold text-pink-650 dark:text-pink-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
+                      <span>🙋</span> O'quvchilar uchun Interfaol Savol / Topshiriq:
+                    </span>
+                    <p className="text-slate-755 dark:text-pink-250 leading-relaxed text-xs md:text-sm italic font-semibold">
+                      {storyboard.frames[activeFrameIdx].studentActivity || "Ushbu kadr uchun topshiriqlar mavjud emas."}
+                    </p>
+                  </motion.div>
+                )}
+
+                {activeDetailTab === "script" && (
+                  <motion.div
+                    key="script"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
+                      <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider flex items-center gap-1">
+                        <span>🎬</span> Animatsiya Harakati (Kadrda):
+                      </span>
+                      <p className="text-slate-700 dark:text-slate-350 leading-relaxed font-medium">
+                        {storyboard.frames[activeFrameIdx].animationDescription}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
+                      <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider flex items-center gap-1">
+                        <span>💡</span> Pedagogik Qiymat (O'quvchiga):
+                      </span>
+                      <p className="text-slate-700 dark:text-slate-350 leading-relaxed font-medium">
+                        {storyboard.frames[activeFrameIdx].pedagogicalValue}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Playback Controls & Voice selection row */}
@@ -1230,6 +1445,159 @@ export default function VideoGen() {
                 >
                   <ChevronRight size={14} />
                 </button>
+              </div>
+
+            </div>
+
+            {/* Ovoz sozlamalari (Tezlik, Ton va Balandlik + Azure Config) */}
+            <div className="w-full max-w-3xl p-5 bg-slate-50 dark:bg-slate-900/60 rounded-3xl border border-slate-150 dark:border-slate-800/80 space-y-4 text-xs font-semibold text-slate-700 dark:text-slate-350">
+              
+              {/* Narration System Toggle */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
+                <div className="flex items-center gap-2">
+                  <Volume2 size={14} className="text-pink-650 dark:text-pink-500 animate-pulse" />
+                  <span className="font-extrabold">Nutq Tizimi (TTS Speech System):</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850">
+                  {[
+                    { id: "google", label: "Google (Free)" },
+                    { id: "native", label: "Local Speech" },
+                    { id: "azure", label: "Azure Neural (HD)" }
+                  ].map(sys => (
+                    <button
+                      key={sys.id}
+                      onClick={() => {
+                        setNarrationType(sys.id as any);
+                        localStorage.setItem("edu_gen_narration_type", sys.id);
+                        if (isSpeaking) {
+                          speakText(storyboard.frames[activeFrameIdx].scriptText);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                        narrationType === sys.id
+                          ? "bg-pink-600 text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+                      }`}
+                    >
+                      {sys.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Azure Config Form (Conditionally visible when azure selected) */}
+              {narrationType === "azure" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="p-4 bg-indigo-50/10 dark:bg-indigo-950/20 rounded-2xl border border-indigo-150/40 dark:border-indigo-900/30 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-wider block mb-1">
+                      Microsoft Azure Cognitive Speech Sozlamalari
+                    </span>
+                    <a
+                      href="https://azure.microsoft.com/en-us/products/ai-services/ai-speech/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[9px] text-indigo-500 hover:underline"
+                    >
+                      Kalit olish (Free 500k chars)
+                    </a>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+                        Azure API Subscription Key:
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Kalitni kiriting (Ocp-Apim-Subscription-Key)..."
+                        value={azureKey}
+                        onChange={(e) => {
+                          setAzureKey(e.target.value);
+                          localStorage.setItem("edu_gen_azure_key", e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-indigo-500 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+                        Azure API Service Region:
+                      </label>
+                      <select
+                        value={azureRegion}
+                        onChange={(e) => {
+                          setAzureRegion(e.target.value);
+                          localStorage.setItem("edu_gen_azure_region", e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-indigo-500 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                      >
+                        {["eastus", "westeurope", "southeastasia", "centralus", "eastasia", "westus2", "northeurope"].map(reg => (
+                          <option key={reg} value={reg}>{reg}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Sliders Container */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+                <span>Nutq Parametrlari:</span>
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                  {/* Speech Rate Slider */}
+                  <div className="flex items-center gap-2 w-full sm:w-40 justify-between">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold">Tezlik: {speechRate}x</span>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2.0"
+                      step="0.1"
+                      value={speechRate}
+                      onChange={(e) => {
+                        const rate = parseFloat(e.target.value);
+                        setSpeechRate(rate);
+                        if (activeAudioRef.current) {
+                          activeAudioRef.current.playbackRate = rate;
+                        }
+                      }}
+                      className="w-20 accent-pink-600 cursor-pointer"
+                    />
+                  </div>
+                  {/* Speech Pitch Slider */}
+                  <div className="flex items-center gap-2 w-full sm:w-40 justify-between">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold">Toni: {speechPitch}x</span>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="1.5"
+                      step="0.1"
+                      value={speechPitch}
+                      onChange={(e) => setSpeechPitch(parseFloat(e.target.value))}
+                      className="w-20 accent-pink-600 cursor-pointer"
+                    />
+                  </div>
+                  {/* Speech Volume Slider */}
+                  <div className="flex items-center gap-2 w-full sm:w-40 justify-between">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-extrabold">Balandlik: {Math.round(speechVolume * 100)}%</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={speechVolume}
+                      onChange={(e) => {
+                        const vol = parseFloat(e.target.value);
+                        setSpeechVolume(vol);
+                        if (activeAudioRef.current) {
+                          activeAudioRef.current.volume = vol;
+                        }
+                      }}
+                      className="w-20 accent-pink-600 cursor-pointer"
+                    />
+                  </div>
+                </div>
               </div>
 
             </div>

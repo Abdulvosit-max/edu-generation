@@ -327,7 +327,7 @@ export async function generateEducationalImage(prompt: string) {
     const seed = Math.floor(Math.random() * 9999);
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(
       prompt + ", educational, clear, professional high quality"
-    )}?model=turbo&width=1024&height=1024&nologo=true&seed=${seed}`;
+    )}?model=flux&width=1024&height=1024&nologo=true&seed=${seed}`;
   }
 }
 
@@ -491,6 +491,9 @@ export interface StoryboardFrame {
   scriptText: string;
   animationDescription: string;
   pedagogicalValue: string;
+  detailedExplanation: string; // Kadrda ko'rsatilgan ilmiy tushunchaning batafsil bayoni
+  keyTerms: string;            // Kadrga oid asosiy terminlar va ularning ta'riflari
+  studentActivity: string;     // O'quvchilar uchun kadr bo'yicha beriladigan interfaol savol yoki topshiriq
 }
 
 export interface StoryboardData {
@@ -550,7 +553,10 @@ Quyidagi JSON formatida qaytaring (hamma matnlar ${langText}, faqat visualDescri
       "visualDescription": "[Batafsil inglizcha tasvir tavsifi rasm chizish uchun, masalan: 'isometric 3D model of water cycle, cloud raining over a mountain, vector illustration, white background']",
       "scriptText": "[Kadr uchun audio matn yoki o'qituvchi aytadigan so'zlar]",
       "animationDescription": "[Kadrda nimalar harakatlanishi yoki qanday animatsiya effekti bo'lishi]",
-      "pedagogicalValue": "[Ushbu kadr darsda qanday pedagogik ahamiyatga ega]"
+      "pedagogicalValue": "[Ushbu kadr darsda qanday pedagogik ahamiyatga ega]",
+      "detailedExplanation": "[Kadrda tasvirlangan ilmiy mavzuning to'liq va batafsil tushuntirishi (kamida 3-4 ta to'liq gapdan iborat bo'lsin)]",
+      "keyTerms": "[Kadrga oid muhim tayanch atamalar va ularning qisqacha ta'riflari, masalan: 'Termin 1 - Ta'rif 1, Termin 2 - Ta'rif 2']",
+      "studentActivity": "[O'quvchilar uchun kadr bo'yicha beriladigan interfaol savol, aqliy hujum yoki topshiriq]"
     }
   ]
 }`;
