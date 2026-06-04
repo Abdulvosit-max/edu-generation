@@ -44,8 +44,7 @@ export default function ImageGen() {
 
   // Tasvir va Pedagogik Baholashni yaratish
   const handleGenerate = async () => {
-    const finalPrompt = enhancedPrompt || prompt;
-    if (!finalPrompt.trim()) return;
+    if (!prompt.trim()) return;
 
     setLoading(true);
     setImgLoading(true);
@@ -55,6 +54,17 @@ export default function ImageGen() {
     setImgError(false);
     setResourceId(null);
     setIsShared(false);
+
+    let finalPrompt = enhancedPrompt;
+    if (!finalPrompt.trim()) {
+      try {
+        console.log("Promptni AI yordamida o'zbekchadan inglizchaga tarjima qilish/yaxshilash...");
+        finalPrompt = await enhanceEducationalPrompt(prompt, subject, ageGroup, style);
+        setEnhancedPrompt(finalPrompt);
+      } catch (err) {
+        finalPrompt = prompt;
+      }
+    }
 
     let generatedUrl = "";
     let evalResult: PedagogikEvaluation | null = null;
