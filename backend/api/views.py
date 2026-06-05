@@ -260,10 +260,10 @@ class ImageGenerateView(APIView):
 
         full_prompt = f"{prompt}{style_prompt}, high quality educational material, clear focus"
 
-        # 1) Google AI Studio Imagen 3 orqali tasvir yaratish
+        # 1) Google AI Studio Imagen 4 orqali tasvir yaratish
         if gemini_key:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={gemini_key}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={gemini_key}"
                 payload = {
                     "instances": [
                         {
@@ -289,11 +289,11 @@ class ImageGenerateView(APIView):
                             "source": "gemini-imagen"
                         })
                     else:
-                        print("Imagen 3 prediction output format mismatch:", data)
+                        print("Imagen 4 prediction output format mismatch:", data)
                 else:
-                    print(f"Imagen 3 API returned HTTP {resp.status_code}: {resp.text}")
+                    print(f"Imagen 4 API returned HTTP {resp.status_code}: {resp.text}")
             except Exception as e:
-                print(f"Google AI Studio Imagen 3 generatsiyasida xatolik: {e}")
+                print(f"Google AI Studio Imagen 4 generatsiyasida xatolik: {e}")
 
         # 2) Fallback: Pollinations AI
         try:
