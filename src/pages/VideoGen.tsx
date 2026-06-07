@@ -51,38 +51,13 @@ export default function VideoGen() {
   const [frameElapsedTimes, setFrameElapsedTimes] = useState<Record<number, number>>({});
   const [animationMode, setAnimationMode] = useState(true);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
-  const [speechRate, setSpeechRate] = useState(1.0);
-  const [speechPitch, setSpeechPitch] = useState(1.0);
-  const [speechVolume, setSpeechVolume] = useState(1.0);
-  const [activeDetailTab, setActiveDetailTab] = useState<"explanation" | "terms" | "activity" | "script">("explanation");
+  const [speechLanguage, setSpeechLanguage] = useState<"uz" | "ru" | "en">("uz");
   const [showSubtitles, setShowSubtitles] = useState(true);
-  const [narrationType, setNarrationType] = useState<"google" | "native" | "azure">(() => {
-    try {
-      return (localStorage.getItem("edu_gen_narration_type") as any) || "google";
-    } catch {
-      return "google";
-    }
-  });
-  const [azureKey, setAzureKey] = useState(() => {
-    try {
-      return localStorage.getItem("edu_gen_azure_key") || "";
-    } catch {
-      return "";
-    }
-  });
-  const [azureRegion, setAzureRegion] = useState(() => {
-    try {
-      return localStorage.getItem("edu_gen_azure_region") || "eastus";
-    } catch {
-      return "eastus";
-    }
-  });
 
   // Text-To-Speech / Audio States
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [simProgress, setSimProgress] = useState(0);
-  const [speechLanguage, setSpeechLanguage] = useState<"uz" | "ru" | "en">("uz");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -94,7 +69,7 @@ export default function VideoGen() {
   const [isShared, setIsShared] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
-  // Initialize Speech Voices & Sync Language
+  // Initialize Speech Voices
   useEffect(() => {
     const loadVoices = () => {
       if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -105,7 +80,6 @@ export default function VideoGen() {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-
     if (language) {
       setSpeechLanguage(language as "uz" | "ru" | "en");
     }
@@ -130,137 +104,56 @@ export default function VideoGen() {
     }
   };
 
-  // Microsoft Azure Cognitive Speech Synthesis helper using REST API
-  const fetchAzureTTS = async (
-    text: string, 
-    apiKey: string, 
-    region: string, 
-    voiceName = "uz-UZ-MadinaNeural", 
-    rate = 1.0, 
-    pitch = 1.0
-  ): Promise<string> => {
-    const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    
-    // Relative speed and pitch in SSML
-    const ratePercent = `${Math.round((rate - 1.0) * 100)}%`;
-    const pitchPercent = `${Math.round((pitch - 1.0) * 50)}%`;
-    
-    const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='uz-UZ'>
-      <voice name='${voiceName}'>
-        <prosody rate='${rate >= 1.0 ? "+" : ""}${ratePercent}' pitch='${pitch >= 1.0 ? "+" : ""}${pitchPercent}'>
-          ${text}
-        </prosody>
-      </voice>
-    </speak>`;
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Content-Type": "application/ssml+xml",
-        "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
-        "User-Agent": "EduVisualAI"
-      },
-      body: ssml
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Azure TTS error: ${response.status} - ${errorText}`);
-    }
-
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  };
-
-  // Google Translate TTS Fallback
-  const speakTextGoogle = (text: string, onEndCallback?: () => void) => {
+  // OpenAI TTS via backend — asosiy naratsiya
+  const speakTextOpenAI = async (text: string, onEndCallback?: () => void): Promise<boolean> => {
     try {
-      let langCode = "uz";
-      if (speechLanguage === "ru") langCode = "ru";
-      else if (speechLanguage === "en") langCode = "en";
-
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${langCode}&client=tw-ob&q=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
-      
+      const API_URL = import.meta.env.VITE_API_URL || "https://fibot.pythonanywhere.com/api";
+      // Ovoz: nova (ayol, tabiiy), onyx (erkak, chuqur)
+      const voice = speechLanguage === "uz" ? "nova" : speechLanguage === "ru" ? "echo" : "nova";
+      const resp = await fetch(`${API_URL}/ai/tts/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice, speed: 1.0 })
+      });
+      if (!resp.ok) throw new Error(`TTS HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
       audio.onended = () => {
         setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
         if (onEndCallback) onEndCallback();
       };
-      
-      audio.onerror = (e) => {
-        console.warn("Google TTS xatosi, Web Speech API ga o'tilmoqda...", e);
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
         speakTextNative(text, onEndCallback);
       };
-
       activeAudioRef.current = audio;
       setIsSpeaking(true);
-      
-      audio.defaultPlaybackRate = speechRate;
-      audio.playbackRate = speechRate;
-      audio.volume = speechVolume;
-      
-      audio.play().catch(err => {
-        console.warn("Autoplay blocked, playing via Web Speech API...", err);
-        speakTextNative(text, onEndCallback);
-      });
+      await audio.play();
+      return true;
     } catch (err) {
-      speakTextNative(text, onEndCallback);
+      console.warn("OpenAI TTS xatosi, Web Speech API ga o'tilmoqda:", err);
+      return false;
     }
   };
 
-  // Dispatcher for Narration Types
+  // Asosiy naratsiya dispatcher: OpenAI TTS → Web Speech API fallback
   const speakText = async (text: string, onEndCallback?: () => void) => {
     if (typeof window === "undefined") return;
-    
-    // Stop any currently playing audio/speech
+    // Avvalgi audioни to'xtatish
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
       activeAudioRef.current = null;
     }
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     if (!text) return;
 
-    if (narrationType === "azure" && azureKey.trim()) {
-      try {
-        setIsSpeaking(true);
-        const voiceName = speechLanguage === "uz" ? "uz-UZ-MadinaNeural" : 
-                          speechLanguage === "ru" ? "ru-RU-SvetlanaNeural" : "en-US-AvaNeural";
-        const audioUrl = await fetchAzureTTS(text, azureKey, azureRegion, voiceName, speechRate, speechPitch);
-        
-        const audio = new Audio(audioUrl);
-        audio.onended = () => {
-          setIsSpeaking(false);
-          if (onEndCallback) onEndCallback();
-        };
-        audio.onerror = (e) => {
-          console.warn("Azure TTS xatosi, Google TTS ga o'tilmoqda...", e);
-          speakTextGoogle(text, onEndCallback);
-        };
-        
-        activeAudioRef.current = audio;
-        audio.volume = speechVolume;
-        audio.play().catch(err => {
-          console.warn("Azure audio play blocklandi, Google TTS ga o'tilmoqda...", err);
-          speakTextGoogle(text, onEndCallback);
-        });
-      } catch (err) {
-        console.warn("Azure TTS so'rovida xatolik, Google TTS ga o'tilmoqda...", err);
-        speakTextGoogle(text, onEndCallback);
-      }
-      return;
-    }
-
-    if (narrationType === "native") {
-      speakTextNative(text, onEndCallback);
-      return;
-    }
-
-    // Default: Google TTS
-    speakTextGoogle(text, onEndCallback);
+    // 1. OpenAI TTS (backend)
+    const openaiOk = await speakTextOpenAI(text, onEndCallback);
+    // 2. Fallback — brauzer Web Speech API
+    if (!openaiOk) speakTextNative(text, onEndCallback);
   };
 
   // Web Speech API Native Fallback
