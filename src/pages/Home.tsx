@@ -13,16 +13,19 @@ import {
   Sun,
   User,
   Lock,
-  Mail
+  Mail,
+  X
 } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, signInAsDemo } from "../lib/firebase";
 import { Language } from "../lib/i18n";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { theme, setTheme, language, setLanguage } = useAppContext();
   
-  // Auth Form states
+  // Auth Modal states
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +39,7 @@ export default function Home() {
       subtitle: "Sun'iy Intellekt yordamida zamonaviy ta'lim resurslarini yaratish platformasi",
       heroTitle: "Kelajak ta'limini bugun yarating",
       heroDesc: "EduGen — o'qituvchilar va pedagoglar uchun dars ishlanmalari, slaydlar, multimedia storyboardlar, interaktiv testlar va rasmlarni soniyalar ichida yaratuvchi aqlli ta'lim ekotizimi.",
-      getStarted: "Boshlash",
+      getStarted: "Bepul boshlash",
       featuresTitle: "Loyihadagi imkoniyatlar",
       featuresDesc: "Dars o'tish sifatini oshiruvchi va vaqtingizni tejovchi sun'iy intellekt vositalari.",
       pricingTitle: "Tarif Rejalari",
@@ -94,7 +97,7 @@ export default function Home() {
       subtitle: "Платформа для создания современных образовательных ресурсов с помощью ИИ",
       heroTitle: "Создавайте образование будущего сегодня",
       heroDesc: "EduGen — это умная экосистема для учителей и педагогов, создающая планы уроков, слайды, мультимедийные раскадровки, интерактивные тесты и изображения за секунды.",
-      getStarted: "Начать работу",
+      getStarted: "Начать бесплатно",
       featuresTitle: "Возможности проекта",
       featuresDesc: "Инструменты искусственного интеллекта, улучшающие качество обучения и экономящие ваше время.",
       pricingTitle: "Тарифные Планы",
@@ -152,7 +155,7 @@ export default function Home() {
       subtitle: "AI-Powered Platform for Creating Modern Educational Resources",
       heroTitle: "Create the Future of Education Today",
       heroDesc: "EduGen is a smart ecosystem for teachers and educators that creates lesson plans, presentation slides, multimedia storyboards, interactive quizzes, and educational illustrations in seconds.",
-      getStarted: "Get Started",
+      getStarted: "Start for Free",
       featuresTitle: "Project Features",
       featuresDesc: "AI-driven tools designed to enhance teaching quality and save your valuable time.",
       pricingTitle: "Pricing Plans",
@@ -210,11 +213,17 @@ export default function Home() {
 
   const t = landTrans[language as Language] || landTrans.uz;
 
+  const openAuth = () => {
+    setErrorMsg(null);
+    setShowAuthModal(true);
+  };
+
   const handleGoogleLogin = async () => {
     setErrorMsg(null);
     setLoading(true);
     try {
       await signInWithGoogle();
+      setShowAuthModal(false);
     } catch (err: any) {
       setErrorMsg(err.message || "Google orqali kirishda xato.");
     } finally {
@@ -227,6 +236,7 @@ export default function Home() {
     setLoading(true);
     try {
       await signInAsDemo();
+      setShowAuthModal(false);
     } catch (err: any) {
       setErrorMsg(err.message || "Mehmon rejimida kirishda xato.");
     } finally {
@@ -254,16 +264,13 @@ export default function Home() {
       } else {
         await signUpWithEmail(email, password, name);
       }
+      setShowAuthModal(false);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Akkaunt amaliyotida xatolik.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const scrollToAuth = () => {
-    document.getElementById("auth-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -306,10 +313,10 @@ export default function Home() {
           </select>
 
           <button 
-            onClick={scrollToAuth}
-            className="hidden sm:inline-flex px-5 py-2.5 bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 rounded-xl text-xs font-black transition-all shadow-xs uppercase tracking-wider cursor-pointer"
+            onClick={openAuth}
+            className="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 rounded-xl text-xs font-black transition-all shadow-xs uppercase tracking-wider cursor-pointer active:scale-95"
           >
-            {t.loginGoogle.split(" ")[0]}
+            {t.getStarted}
           </button>
         </div>
       </header>
@@ -317,7 +324,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-6 pt-16 pb-12 text-center flex flex-col items-center">
         <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full mb-6">
-          🌟 AI Education Ecosytem
+          🌟 AI Education Ecosystem
         </span>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-slate-950 dark:text-white max-w-3xl mb-6">
           {t.heroTitle}
@@ -327,7 +334,7 @@ export default function Home() {
         </p>
         <div className="flex gap-4">
           <button
-            onClick={scrollToAuth}
+            onClick={openAuth}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all cursor-pointer active:scale-98 text-xs uppercase tracking-wider"
           >
             {t.getStarted} <ArrowRight size={14} />
@@ -412,7 +419,7 @@ export default function Home() {
               </ul>
 
               <button 
-                onClick={scrollToAuth}
+                onClick={openAuth}
                 className={`w-full py-3.5 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-98 text-center uppercase tracking-wider ${
                   plan.popular
                     ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
@@ -426,112 +433,148 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Authentication Section */}
-      <section id="auth-section" className="max-w-md mx-auto px-6 py-12 flex flex-col items-center">
-        
-        <div className="w-full bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200/50 dark:border-slate-800/80 shadow-lg flex flex-col gap-6 relative">
-          
-          <div className="flex gap-1.5 bg-slate-50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-850">
-            <button
-              onClick={() => { setAuthMode("login"); setErrorMsg(null); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                authMode === "login"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-450 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white"
-              }`}
-            >
-              {t.loginTitle}
-            </button>
-            <button
-              onClick={() => { setAuthMode("register"); setErrorMsg(null); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                authMode === "register"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-450 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white"
-              }`}
-            >
-              {t.registerTitle}
-            </button>
-          </div>
+      {/* Authentifikatsiya Overlay Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAuthModal(false)}
+              className="absolute inset-0 bg-slate-950/45 backdrop-blur-md"
+            />
 
-          <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
-            {authMode === "register" && (
-              <div className="relative flex items-center">
-                <User size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder={t.namePlaceholder}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
-                />
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-200/50 dark:border-slate-800/80 shadow-2xl z-10 flex flex-col gap-6"
+            >
+              {/* Close Button */}
+              <button 
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer p-1"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="text-center">
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Sparkles size={20} />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  {authMode === "login" ? t.loginTitle : t.registerTitle}
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">EduGen Ekotizimi</p>
               </div>
-            )}
 
-            <div className="relative flex items-center">
-              <Mail size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
-              <input
-                type="email"
-                placeholder={t.emailPlaceholder}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
-              />
-            </div>
+              {/* Login/Register Tab Toggles */}
+              <div className="flex gap-1.5 bg-slate-50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-850">
+                <button
+                  onClick={() => { setAuthMode("login"); setErrorMsg(null); }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    authMode === "login"
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-455 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                  }`}
+                >
+                  {t.loginTitle}
+                </button>
+                <button
+                  onClick={() => { setAuthMode("register"); setErrorMsg(null); }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    authMode === "register"
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
+                      : "text-slate-455 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                  }`}
+                >
+                  {t.registerTitle}
+                </button>
+              </div>
 
-            <div className="relative flex items-center">
-              <Lock size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
-              <input
-                type="password"
-                placeholder={t.passwordPlaceholder}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
-              />
-            </div>
+              <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
+                {authMode === "register" && (
+                  <div className="relative flex items-center">
+                    <User size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder={t.namePlaceholder}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
+                    />
+                  </div>
+                )}
 
-            {errorMsg && (
-              <p className="text-[10px] text-rose-500 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/20 px-3 py-2 rounded-xl border border-rose-100 dark:border-rose-900/30">
-                ⚠️ {errorMsg}
-              </p>
-            )}
+                <div className="relative flex items-center">
+                  <Mail size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder={t.emailPlaceholder}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-blue-500/20 active:scale-98"
-            >
-              {loading ? t.generating.split(" ")[0] : (authMode === "login" ? t.loginTitle : t.registerTitle)}
-            </button>
-          </form>
+                <div className="relative flex items-center">
+                  <Lock size={14} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    placeholder={t.passwordPlaceholder}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl outline-none focus:border-blue-500 text-xs font-semibold"
+                  />
+                </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-black tracking-widest my-1 select-none">
-            <div className="w-5/12 h-px bg-slate-100 dark:bg-slate-800"></div>
-            <span>{t.orText}</span>
-            <div className="w-5/12 h-px bg-slate-100 dark:bg-slate-800"></div>
+                {errorMsg && (
+                  <p className="text-[10px] text-rose-500 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/20 px-3 py-2 rounded-xl border border-rose-100 dark:border-rose-900/30">
+                    ⚠️ {errorMsg}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-blue-500/20 active:scale-98"
+                >
+                  {loading ? t.generating.split(" ")[0] : (authMode === "login" ? t.loginTitle : t.registerTitle)}
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-black tracking-widest my-1 select-none">
+                <div className="w-5/12 h-px bg-slate-100 dark:bg-slate-800"></div>
+                <span>{t.orText}</span>
+                <div className="w-5/12 h-px bg-slate-100 dark:bg-slate-800"></div>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full py-3.5 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 uppercase tracking-wider shadow-xs"
+                >
+                  <Chrome size={14} className="text-blue-500" />
+                  {t.googleBtn}
+                </button>
+
+                <button
+                  onClick={handleGuestLogin}
+                  disabled={loading}
+                  className="w-full py-3.5 bg-slate-950 hover:bg-slate-850 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 uppercase tracking-wider shadow-md"
+                >
+                  {t.guestBtn}
+                </button>
+              </div>
+            </motion.div>
           </div>
-
-          <div className="flex flex-col gap-2.5">
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full py-3.5 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 uppercase tracking-wider"
-            >
-              <Chrome size={14} className="text-blue-500" />
-              {t.googleBtn}
-            </button>
-
-            <button
-              onClick={handleGuestLogin}
-              disabled={loading}
-              className="w-full py-3.5 bg-slate-950 hover:bg-slate-850 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 uppercase tracking-wider shadow-sm"
-            >
-              {t.guestBtn}
-            </button>
-          </div>
-
-        </div>
-      </section>
+        )}
+      </AnimatePresence>
 
     </div>
   );
