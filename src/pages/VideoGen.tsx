@@ -56,6 +56,9 @@ export default function VideoGen() {
   const [activeDetailTab, setActiveDetailTab] = useState<"explanation" | "terms" | "activity" | "script">("explanation");
 
   // Text-To-Speech / Audio States
+  const [narrationType, setNarrationType] = useState<"google" | "native" | "azure">(
+    () => (localStorage.getItem("edu_gen_narration_type") as any) || "google"
+  );
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [simProgress, setSimProgress] = useState(0);
