@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { 
-  Sparkles, 
-  MessageSquare, 
-  ImageIcon, 
-  Presentation, 
-  FileText, 
-  Video, 
-  Chrome, 
-  ArrowRight, 
-  Check, 
-  Moon, 
+import {
+  Sparkles,
+  MessageSquare,
+  ImageIcon,
+  Presentation,
+  FileText,
+  Video,
+  Chrome,
+  ArrowRight,
+  Check,
+  CheckCircle,
+  Moon,
   Sun,
   User,
   Lock,
@@ -22,7 +23,6 @@ import { useAppContext } from "../lib/AppContext";
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, signInAsDemo } from "../lib/firebase";
 import { Language } from "../lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
-import dashboardPreview from "../assets/edu_gen_dashboard_preview.png";
 
 export default function Home() {
   const { theme, setTheme, language, setLanguage, t: globalT } = useAppContext();
@@ -505,23 +505,111 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Dashboard Preview Mockup Container */}
+        {/* Dashboard Preview — kodlangan, theme ga moslashadi */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-16 relative w-full max-w-5xl mx-auto rounded-[32px] overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-white/30 dark:bg-slate-900/30 backdrop-blur-md p-3 shadow-2xl"
+          className="mt-16 relative w-full max-w-5xl mx-auto"
         >
-          {/* Background Glow */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-purple-500/10 to-indigo-500/10 blur-2xl opacity-80 pointer-events-none -z-10" />
-          
-          <div className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-inner">
-            <img 
-              src={dashboardPreview} 
-              alt="EduGen Dashboard Mockup" 
-              className="w-full h-auto object-cover select-none pointer-events-none dark:brightness-[0.82] dark:contrast-[1.05] dark:opacity-[0.92] transition-all duration-300"
-              loading="lazy"
-            />
+          {/* Glow */}
+          <div className="absolute -inset-4 bg-gradient-to-tr from-blue-500/20 via-purple-500/10 to-indigo-500/20 blur-3xl opacity-60 pointer-events-none -z-10 rounded-[40px]" />
+
+          {/* Browser chrome */}
+          <div className="rounded-[28px] overflow-hidden border border-slate-200/70 dark:border-slate-700/60 shadow-2xl bg-white dark:bg-slate-900 transition-colors duration-300">
+            {/* Browser topbar */}
+            <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 border-b border-slate-200/60 dark:border-slate-700/60 transition-colors duration-300">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-rose-400" />
+                <div className="w-3 h-3 rounded-full bg-amber-400" />
+                <div className="w-3 h-3 rounded-full bg-emerald-400" />
+              </div>
+              <div className="flex-1 mx-4 px-3 py-1.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] text-slate-400 dark:text-slate-500 font-mono transition-colors">
+                edu-generation.vercel.app
+              </div>
+            </div>
+
+            {/* App layout */}
+            <div className="flex h-[340px] md:h-[420px]">
+              {/* Sidebar */}
+              <div className="w-16 md:w-52 shrink-0 bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/80 flex flex-col py-4 gap-1 px-2 md:px-3 transition-colors duration-300">
+                <div className="flex items-center gap-2 px-2 mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shrink-0">
+                    <Sparkles size={13} className="text-white" />
+                  </div>
+                  <span className="hidden md:block text-xs font-black text-slate-900 dark:text-white tracking-tight">EduGen</span>
+                </div>
+                {[
+                  { icon: Video, label: "Storyboard", color: "text-pink-600 dark:text-pink-400", active: true },
+                  { icon: Presentation, label: "Slaydlar", color: "text-indigo-600 dark:text-indigo-400", active: false },
+                  { icon: ImageIcon, label: "Tasvirlar", color: "text-blue-600 dark:text-blue-400", active: false },
+                  { icon: FileText, label: "Testlar", color: "text-emerald-600 dark:text-emerald-400", active: false },
+                  { icon: MessageSquare, label: "Chat", color: "text-violet-600 dark:text-violet-400", active: false },
+                ].map(({ icon: Icon, label, color, active }) => (
+                  <div key={label} className={`flex items-center gap-2.5 px-2 py-2 rounded-xl cursor-pointer transition-colors ${active ? "bg-pink-50 dark:bg-pink-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-900"}`}>
+                    <Icon size={15} className={active ? "text-pink-600 dark:text-pink-400" : color} />
+                    <span className={`hidden md:block text-[11px] font-bold truncate ${active ? "text-pink-700 dark:text-pink-300" : "text-slate-600 dark:text-slate-400"}`}>{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Main content */}
+              <div className="flex-1 bg-slate-50 dark:bg-slate-900 overflow-hidden p-4 md:p-6 space-y-4 transition-colors duration-300">
+                {/* Top bar */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[9px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest">EduVisual Studio</div>
+                    <div className="text-sm font-black text-slate-800 dark:text-white">Storyboard Yaratish</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="px-3 py-1.5 rounded-xl bg-pink-600 text-white text-[9px] font-black flex items-center gap-1 cursor-pointer">
+                      <Sparkles size={10} /> Yaratish
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[9px] font-black text-slate-500 cursor-pointer transition-colors">
+                      {theme === "light" ? "🌙" : "☀️"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Storyboard frames grid */}
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-2.5">
+                  {[
+                    { title: "Kirish", color: "from-pink-500 to-indigo-600", ready: true },
+                    { title: "Asosiy", color: "from-blue-500 to-purple-600", ready: true },
+                    { title: "Tajriba", color: "from-emerald-500 to-teal-600", ready: true },
+                    { title: "Xulosa", color: "from-amber-500 to-orange-600", ready: false },
+                  ].map((frame, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-700/50 bg-white dark:bg-slate-800 shadow-sm transition-colors">
+                      <div className={`h-14 md:h-20 bg-gradient-to-br ${frame.color} relative flex items-center justify-center`}>
+                        {frame.ready ? (
+                          <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <CheckCircle size={14} className="text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border-2 border-white/50 border-t-white animate-spin" />
+                        )}
+                        <div className="absolute bottom-1 left-2 text-[7px] font-black text-white/90 uppercase tracking-wide">Kadr #{i+1}</div>
+                      </div>
+                      <div className="px-2 py-1.5">
+                        <div className="text-[8px] font-black text-slate-700 dark:text-slate-300 truncate">{frame.title}</div>
+                        <div className={`text-[7px] font-bold mt-0.5 ${frame.ready ? "text-emerald-500" : "text-amber-500"}`}>
+                          {frame.ready ? "✓ Tayyor" : "⟳ Chizilmoqda..."}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 flex items-center gap-3 transition-colors">
+                  <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-full w-3/4 bg-gradient-to-r from-pink-500 to-indigo-600 rounded-full" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 shrink-0">3/4 kadr</span>
+                  <div className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[8px] font-black">94% Pedagogik</div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
       </section>
@@ -619,26 +707,26 @@ export default function Home() {
               {/* Right Side: Mockup Preview */}
               <div className="flex-1 w-full flex items-center justify-center">
                 {activeTab === 0 && (
-                  <div className="w-full max-w-md bg-slate-950 text-slate-100 rounded-[32px] p-6 border border-slate-800 shadow-2xl font-mono text-left relative overflow-hidden">
+                  <div className="w-full max-w-md bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 rounded-[32px] p-6 border border-slate-200 dark:border-slate-800 shadow-2xl font-mono text-left relative overflow-hidden transition-colors duration-300">
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                    <div className="flex items-center gap-2 mb-6 border-b border-slate-900 pb-3">
+                    <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-slate-900 pb-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
                       <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                      <span className="text-[9px] text-slate-600 ml-2 font-black font-sans tracking-widest uppercase">EduGen AI Chatbot</span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-600 ml-2 font-black font-sans tracking-widest uppercase">EduGen AI Chatbot</span>
                     </div>
                     <div className="space-y-4 text-[10px]">
-                      <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[85%] font-sans">
-                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
-                        Dars rejasini boyitish yoki pedagogik metodlar tanlashda qanday mavzu bo'yicha yordam beray?
+                      <div className="bg-slate-50 dark:bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 max-w-[85%] font-sans transition-colors">
+                        <span className="text-blue-600 dark:text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                        <span className="text-slate-700 dark:text-slate-300">Dars rejasini boyitish yoki pedagogik metodlar tanlashda qanday mavzu bo'yicha yordam beray?</span>
                       </div>
-                      <div className="bg-blue-600/15 text-blue-200 p-3.5 rounded-2xl rounded-tr-none border border-blue-500/20 max-w-[85%] ml-auto text-right font-sans">
-                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">O'qituvchi:</span>
+                      <div className="bg-blue-600/10 dark:bg-blue-600/15 text-blue-700 dark:text-blue-200 p-3.5 rounded-2xl rounded-tr-none border border-blue-200 dark:border-blue-500/20 max-w-[85%] ml-auto text-right font-sans transition-colors">
+                        <span className="text-blue-600 dark:text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">O'qituvchi:</span>
                         Fotosintez barglarning nafas olishi darsiga interaktiv faollik taklif qil
                       </div>
-                      <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[90%] font-sans animate-pulse-slow">
-                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
-                        <strong>Sinf tajribasi:</strong> Barglarni bankaga solib, karbonat angidrid to'planishini ko'rsatish. O'quvchilarni visual storyboard yordamida guruhlarga bo'lish...
+                      <div className="bg-slate-50 dark:bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 max-w-[90%] font-sans animate-pulse-slow transition-colors">
+                        <span className="text-blue-600 dark:text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                        <span className="text-slate-700 dark:text-slate-300"><strong className="text-slate-900 dark:text-white">Sinf tajribasi:</strong> Barglarni bankaga solib, karbonat angidrid to'planishini ko'rsatish. O'quvchilarni visual storyboard yordamida guruhlarga bo'lish...</span>
                       </div>
                     </div>
                   </div>
