@@ -37,6 +37,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [quizSelected, setQuizSelected] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   // Localization structure for landing page
   const landTrans = {
@@ -368,6 +369,14 @@ export default function Home() {
     ...globalT,
     ...(landTrans[language as Language] || landTrans.uz)
   };
+
+  const showcaseTabs = [
+    { id: 0, icon: MessageSquare, color: "blue",    title: { uz: "AI Chat",     ru: "AI Чат",     en: "AI Chat"     } },
+    { id: 1, icon: Presentation,  color: "indigo",  title: { uz: "Slaydlar",   ru: "Слайды",    en: "Slides"     } },
+    { id: 2, icon: Video,         color: "pink",    title: { uz: "Video",      ru: "Видео",     en: "Video"      } },
+    { id: 3, icon: FileText,      color: "emerald", title: { uz: "Testlar",    ru: "Тесты",     en: "Tests"      } },
+    { id: 4, icon: ImageIcon,     color: "orange",  title: { uz: "Rasmlar",    ru: "Изображения", en: "Images"   } },
+  ];
 
   const openAuth = () => {
     setErrorMsg(null);
