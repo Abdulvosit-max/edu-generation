@@ -38,6 +38,7 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [quizSelected, setQuizSelected] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [showCoinsTable, setShowCoinsTable] = useState<boolean>(false);
 
   // Localization structure for landing page
   const landTrans = {
