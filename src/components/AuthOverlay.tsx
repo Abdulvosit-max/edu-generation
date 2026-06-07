@@ -1,34 +1,15 @@
-// AuthOverlay — Mehmon rejimini qo'llab-quvvatlash
-// Foydalanuvchi login qilmasa ham barcha funksiyalardan foydalana oladi.
-// Google kirish — ixtiyoriy (bulut sinxronizatsiyasi uchun).
-
 import { useEffect, useState } from "react";
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { signInAsDemo } from "../lib/firebase";
+import Home from "../pages/Home";
 
-/**
- * AuthOverlay — autentifikatsiya holatini boshqaradi.
- *
- * Xatti-harakat:
- * - Yuklanayotganda: kichik spinner ko'rsatiladi
- * - Firebase foydalanuvchi yo'q bo'lsa → avtomatik "Mehmon" rejimiga kiradi
- * - Google bilan kirgan bo'lsa → haqiqiy foydalanuvchi sifatida ishlaydi
- * - Har ikki holatda ham BARCHA funksiyalar ishlaydi
- */
 export default function AuthOverlay({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user: User | null) => {
-      if (!user) {
-        // Foydalanuvchi kirmagan → avtomatik Mehmon rejimiga kirish
-        try {
-          await signInAsDemo();
-        } catch (e) {
-          console.warn("Mehmon rejimica kirish muvaffaqiyatsiz:", e);
-        }
-      }
+    const unsub = onAuthStateChanged(auth, (user: User | null) => {
+      setCurrentUser(user);
       setReady(true);
     });
     return () => unsub();
@@ -48,6 +29,11 @@ export default function AuthOverlay({ children }: { children: React.ReactNode })
     );
   }
 
-  // Tayyor — ilovani ko'rsatamiz
+  // Tizimga kirmagan bo'lsa -> Landing / Bosh sahifani ko'rsatish
+  if (!currentUser) {
+    return <Home />;
+  }
+
+  // Tizimga kirgan bo'lsa -> Ilovani ochish
   return <>{children}</>;
 }

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, where } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -68,7 +68,22 @@ export const auth = new Proxy(originalAuth, {
 });
 
 // Yordamchi funksiyalar va Firebase eksportlari
+// Check if Firebase is using dummy keys or valid keys
+const isDummyFirebase = !import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY === "dummy-api-key";
+
 export async function signInWithGoogle() {
+  if (isDummyFirebase) {
+    mockUser = {
+      uid: "mock-google-user-123",
+      displayName: "Google Foydalanuvchi (Mock)",
+      email: "google.user@edu-generation.uz",
+      photoURL: "https://api.dicebear.com/7.x/bottts/svg?seed=google",
+      emailVerified: true
+    };
+    localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+    listeners.forEach(cb => cb(mockUser));
+    return mockUser;
+  }
   try {
     const result = await signInWithPopup(originalAuth, googleProvider);
     return result.user;
@@ -76,6 +91,41 @@ export async function signInWithGoogle() {
     console.error("Kirishda xatolik:", error);
     throw error;
   }
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  if (isDummyFirebase) {
+    mockUser = {
+      uid: "mock-email-user-" + email.replace(/[^a-zA-Z0-9]/g, ""),
+      displayName: email.split("@")[0],
+      email: email,
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${email.split("@")[0]}`,
+      emailVerified: true
+    };
+    localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+    listeners.forEach(cb => cb(mockUser));
+    return mockUser;
+  }
+  const result = await signInWithEmailAndPassword(originalAuth, email, password);
+  return result.user;
+}
+
+export async function signUpWithEmail(email: string, password: string, displayName: string) {
+  if (isDummyFirebase) {
+    mockUser = {
+      uid: "mock-email-user-" + email.replace(/[^a-zA-Z0-9]/g, ""),
+      displayName: displayName || email.split("@")[0],
+      email: email,
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${displayName || email.split("@")[0]}`,
+      emailVerified: true
+    };
+    localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+    listeners.forEach(cb => cb(mockUser));
+    return mockUser;
+  }
+  const result = await createUserWithEmailAndPassword(originalAuth, email, password);
+  await updateProfile(result.user, { displayName });
+  return result.user;
 }
 
 export async function signInAsDemo() {
@@ -95,7 +145,11 @@ export async function logout() {
   localStorage.removeItem("edu_generation_mock_user");
   mockUser = null;
   listeners.forEach(cb => cb(null));
-  return signOut(originalAuth);
+  try {
+    return await signOut(originalAuth);
+  } catch (e) {
+    // Suppress dummy auth error on signout
+  }
 }
 
 export { 
