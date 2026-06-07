@@ -676,24 +676,6 @@ export default function Home() {
               };
               const cfg = typeConfig[item.type] || typeConfig.chat;
 
-              // If image type, try to parse the content as image URL
-              let previewUrl: string | null = null;
-              if (item.type === "image") {
-                try {
-                  const parsed = JSON.parse(item.content);
-                  previewUrl = parsed.url || parsed.imageUrl || null;
-                } catch {
-                  if (item.content.startsWith("http")) previewUrl = item.content;
-                }
-              }
-              if (item.type === "slide") {
-                try {
-                  const parsed = JSON.parse(item.content);
-                  const firstSlide = parsed.slides?.[0] || parsed[0];
-                  previewUrl = firstSlide?.imageUrl || firstSlide?.image || null;
-                } catch { /* no preview */ }
-              }
-
               return (
                 <motion.div
                   key={item.id ?? i}
@@ -703,13 +685,9 @@ export default function Home() {
                   onClick={handleGuestLogin}
                   className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all"
                 >
-                  {/* Preview or icon */}
-                  <div className={`h-24 flex items-center justify-center ${previewUrl ? "" : cfg.color}`}>
-                    {previewUrl ? (
-                      <img src={previewUrl} alt={item.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className={`${cfg.color} p-3 rounded-xl`}>{cfg.icon}</div>
-                    )}
+                  {/* Icon preview */}
+                  <div className={`h-24 flex items-center justify-center ${cfg.color}`}>
+                    <div className={`${cfg.color} p-3 rounded-xl`}>{cfg.icon}</div>
                   </div>
 
                   {/* Info */}
