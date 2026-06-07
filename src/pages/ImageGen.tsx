@@ -110,20 +110,7 @@ export default function ImageGen() {
       }
     } catch (e: any) {
       console.error("AI Tasvir yaratishda xato:", e);
-      const subjectMap: Record<string, string> = {
-        "Biologiya": "biology,nature,cell",
-        "Fizika": "physics,laboratory,space",
-        "Kimyo": "chemistry,molecule,beaker",
-        "Informatika": "computer,coding,technology",
-        "Matematika": "math,geometry,numbers",
-        "Tarix": "history,ancient,castle",
-        "Geografiya": "geography,globe,map",
-        "Boshlang'ich ta'lim": "school,elementary,kids",
-        "Kasbiy fanlar": "mechanic,construction,engineering"
-      };
-      const engSubject = subjectMap[subject] || "education,science";
-      generatedUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/768`;
-      setImage(generatedUrl);
+      setImgError(true);
     } finally {
       clearInterval(timerInterval);
       setLoading(false);
@@ -179,49 +166,27 @@ export default function ImageGen() {
     }
   };
 
-  // Fallback handler if image fails to load (e.g. Pollinations 402 error)
+  // Fallback handler if image fails to load
   const handleImageError = () => {
     if (!image) return;
     
     if (image.includes("image.pollinations.ai")) {
       if (image.includes("model=flux")) {
-        // Fallback 1: Try grok-imagine
         const fallbackUrl = image.replace("model=flux", "model=grok-imagine");
-        console.warn("Pollinations flux error, trying grok-imagine fallback:", fallbackUrl);
+        console.warn("Pollinations flux error, trying grok-imagine:", fallbackUrl);
         setImage(fallbackUrl);
         return;
       } else if (image.includes("model=grok-imagine")) {
-        // Fallback 2: Try gptimage
-        const fallbackUrl = image.replace("model=grok-imagine", "model=gptimage");
-        console.warn("Pollinations grok-imagine error, trying gptimage fallback:", fallbackUrl);
-        setImage(fallbackUrl);
-        return;
-      } else if (image.includes("model=gptimage")) {
-        // Fallback 3: Try zimage
-        const fallbackUrl = image.replace("model=gptimage", "model=zimage");
-        console.warn("Pollinations gptimage error, trying zimage fallback:", fallbackUrl);
+        const fallbackUrl = image.replace("model=grok-imagine", "model=turbo");
+        console.warn("Pollinations grok-imagine error, trying turbo:", fallbackUrl);
         setImage(fallbackUrl);
         return;
       }
     }
-    
-    const subjectMap: Record<string, string> = {
-      "Biologiya": "biology,nature,cell",
-      "Fizika": "physics,laboratory,space",
-      "Kimyo": "chemistry,molecule,beaker",
-      "Informatika": "computer,coding,technology",
-      "Matematika": "math,geometry,numbers",
-      "Tarix": "history,ancient,castle",
-      "Geografiya": "geography,globe,map",
-      "Boshlang'ich ta'lim": "school,elementary,kids",
-      "Kasbiy fanlar": "mechanic,construction,engineering"
-    };
-    const engSubject = subjectMap[subject] || "education,science";
-    // We use Lorem Picsum with seed to get consistent, beautiful, cat-free stock photos
-    const picsumUrl = `https://picsum.photos/seed/${encodeURIComponent(engSubject)}/1024/768`;
-    console.warn("Pollinations failed completely, falling back to Lorem Picsum:", picsumUrl);
-    setImage(picsumUrl);
-    setImgError(false); // Reset error overlay since we found a fallback image
+    // All fallbacks failed — show error
+    setImage(null);
+    setImgError(true);
+    setImgLoading(false);
   };
 
   // Hamjamiyatga chiqarish
