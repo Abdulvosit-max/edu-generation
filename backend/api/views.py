@@ -325,14 +325,14 @@ class ImageGenerateView(APIView):
 
 
 
-class ElevenLabsTTSView(APIView):
+class TTSView(APIView):
     """
     POST /api/ai/tts/
 
     Body (JSON):
-        text     : str — o'qiladigan matn
-        voice_id : str — ElevenLabs ovoz IDsi (default: pNInz6obpgDQGcFmaJgB - Adam)
-        model_id : str — ElevenLabs modeli (default: eleven_multilingual_v2)
+        text     : str  — o'qiladigan matn
+        voice    : str  — ovoz (alloy, echo, fable, onyx, nova, shimmer) default: nova
+        speed    : float — tezlik (0.25-4.0) default: 1.0
 
     Javob:
         MP3 audio fayli (binary)
@@ -342,8 +342,8 @@ class ElevenLabsTTSView(APIView):
     def post(self, request):
         body = request.data
         text: str = body.get("text", "").strip()
-        voice_id: str = body.get("voice_id", "pNInz6obpgDQGcFmaJgB").strip()
-        model_id: str = body.get("model_id", "eleven_multilingual_v2").strip()
+        voice: str = body.get("voice", "nova").strip()
+        speed: float = float(body.get("speed", 1.0))
 
         if not text:
             return Response(
@@ -351,30 +351,37 @@ class ElevenLabsTTSView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        api_key = os.getenv("ELEVENLABS_API_KEY", "")
-        if not api_key:
+        # Ovoz validatsiyasi
+        valid_voices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+        if voice not in valid_voices:
+            voice = "nova"
+
+        # Tezlik chegarasi
+        speed = max(0.25, min(4.0, speed))
+
+        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if not openai_key:
             return Response(
-                {"error": "ElevenLabs API kaliti serverda sozlanmagan."},
+                {"error": "OpenAI API kaliti serverda sozlanmagan."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         try:
-            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            url = "https://api.openai.com/v1/audio/speech"
             headers = {
-                "xi-api-key": api_key,
+                "Authorization": f"Bearer {openai_key}",
                 "Content-Type": "application/json",
             }
             payload = {
-                "text": text,
-                "model_id": model_id,
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.75
-                }
+                "model": "gpt-4o-mini-tts",
+                "input": text,
+                "voice": voice,
+                "speed": speed,
+                "response_format": "mp3"
             }
-            
-            resp = req_lib.post(url, json=payload, headers=headers, timeout=25)
-            
+
+            resp = req_lib.post(url, json=payload, headers=headers, timeout=30)
+
             if resp.ok:
                 from django.http import HttpResponse
                 response = HttpResponse(resp.content, content_type="audio/mpeg")
@@ -382,12 +389,12 @@ class ElevenLabsTTSView(APIView):
                 return response
             else:
                 return Response(
-                    {"error": f"ElevenLabs API xatosi (HTTP {resp.status_code}): {resp.text}"},
+                    {"error": f"OpenAI TTS xatosi (HTTP {resp.status_code}): {resp.text[:200]}"},
                     status=status.HTTP_502_BAD_GATEWAY
                 )
         except Exception as e:
             return Response(
-                {"error": f"Ovoz generatsiya qilishda kutilmagan xato: {str(e)}"},
+                {"error": f"Ovoz generatsiya qilishda xato: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
