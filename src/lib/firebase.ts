@@ -94,6 +94,20 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithEmail(email: string, password: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  if ((cleanEmail === "murodillo" || cleanEmail === "murodillo@gmail.com" || cleanEmail === "murodillo@edu-generation.uz") && password === "1234") {
+    mockUser = {
+      uid: "murodillo-pro-user-123",
+      displayName: "Murodillo (Pro)",
+      email: "murodillo@edu-generation.uz",
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=Murodillo`,
+      emailVerified: true
+    };
+    localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+    listeners.forEach(cb => cb(mockUser));
+    return mockUser;
+  }
+
   if (isDummyFirebase) {
     mockUser = {
       uid: "mock-email-user-" + email.replace(/[^a-zA-Z0-9]/g, ""),

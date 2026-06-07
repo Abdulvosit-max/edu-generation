@@ -182,7 +182,14 @@ export default function Account() {
                 {user?.displayName?.charAt(0) || 'U'}
               </div>
             )}
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{user?.displayName || "Foydalanuvchi"}</h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
+              {user?.displayName || "Foydalanuvchi"}
+              {(user?.displayName?.includes("(Pro)") || user?.email === "murodillo@edu-generation.uz") && (
+                <span className="bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0 shadow-sm shadow-amber-500/20">
+                  PRO
+                </span>
+              )}
+             </h2>
             <div className="flex items-center justify-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 mt-2">
               <Mail size={14} />
               {user?.email}
