@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://fibot.pythonanywhere.com/api";
 
 export interface Resource {
   id?: string | number;
