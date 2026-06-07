@@ -423,18 +423,18 @@ export default function SlideGen() {
                       ) : currentSlide.layoutType === "comparison" && currentSlide.comparisonData ? (
                         <div className="h-full flex flex-col">
                            <h2 className="text-3xl md:text-4xl font-black text-white mb-8 drop-shadow-md">{currentSlide.title}</h2>
-                           <div className="flex-1 grid grid-cols-2 gap-6">
-                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20">
+                           <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
+                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20 flex flex-col min-h-0">
                                  <h3 className="text-xl font-bold text-white mb-4 text-center border-b border-white/10 pb-2">{currentSlide.comparisonData.leftTitle}</h3>
-                                 <ul className="space-y-2 text-white/90">
+                                 <ul className="space-y-2 text-white/90 overflow-y-auto max-h-[220px] md:max-h-[285px] pr-2 custom-scrollbar flex-1">
                                     {currentSlide.comparisonData.left.map((item, idx) => (
                                       <li key={idx} className="flex items-start gap-2 text-sm"><Icons.CheckCircle size={16} className="shrink-0 mt-1" /> {item}</li>
                                     ))}
                                  </ul>
                               </div>
-                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20">
+                              <div className="bg-white/10 backdrop-blur-xl rounded-[32px] p-6 border border-white/20 flex flex-col min-h-0">
                                  <h3 className="text-xl font-bold text-white mb-4 text-center border-b border-white/10 pb-2">{currentSlide.comparisonData.rightTitle}</h3>
-                                 <ul className="space-y-2 text-white/90">
+                                 <ul className="space-y-2 text-white/90 overflow-y-auto max-h-[220px] md:max-h-[285px] pr-2 custom-scrollbar flex-1">
                                     {currentSlide.comparisonData.right.map((item, idx) => (
                                       <li key={idx} className="flex items-start gap-2 text-sm"><Icons.CheckCircle size={16} className="shrink-0 mt-1" /> {item}</li>
                                     ))}
@@ -462,8 +462,8 @@ export default function SlideGen() {
                           </div>
                         )}
 
-                        <div className="flex flex-col md:flex-row gap-8 flex-1">
-                          <div className="flex-1 prose prose-lg prose-invert max-w-none text-white/90">
+                        <div className="flex flex-col md:flex-row gap-8 flex-1 min-h-0">
+                          <div className="flex-1 prose prose-sm md:prose-base prose-invert max-w-none text-white/90 overflow-y-auto max-h-[300px] md:max-h-[350px] pr-2 custom-scrollbar">
                              <Markdown>{Array.isArray(currentSlide.content) ? currentSlide.content.join("\n") : String(currentSlide.content)}</Markdown>
                           </div>
                           

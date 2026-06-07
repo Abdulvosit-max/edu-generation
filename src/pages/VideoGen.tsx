@@ -1091,12 +1091,12 @@ export default function VideoGen() {
                   
                   {/* Premium glassmorphic animated subtitles overlay (Karaoke word-by-word highlight) */}
                   {showSubtitles && (
-                    <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none select-none">
+                    <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-auto select-text">
                       <motion.div 
                         key={activeFrameIdx + "-" + isPlayingSim}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-black/75 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-white text-xs md:text-sm font-black tracking-wide text-center shadow-lg max-w-[95%] leading-relaxed"
+                        className="bg-black/75 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 text-white text-xs md:text-sm font-black tracking-wide text-center shadow-lg max-w-[95%] leading-relaxed max-h-[85px] md:max-h-[100px] overflow-y-auto custom-scrollbar"
                       >
                         <span className="text-pink-500 font-extrabold mr-1.5 uppercase text-[9px] tracking-wider block mb-1 text-center flex items-center justify-center gap-1">
                           {isSpeaking ? (
@@ -1278,7 +1278,7 @@ export default function VideoGen() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.18 }}
-                    className="p-5 bg-indigo-50/10 dark:bg-indigo-950/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/30 space-y-2"
+                    className="p-5 bg-indigo-50/10 dark:bg-indigo-950/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/30 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
                   >
                     <span className="font-extrabold text-indigo-600 dark:text-indigo-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
                       <span>📖</span> Batafsil Mavzu Tushuntirishi:
@@ -1296,7 +1296,7 @@ export default function VideoGen() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.18 }}
-                    className="p-5 bg-emerald-50/10 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-950/20 space-y-2"
+                    className="p-5 bg-emerald-50/10 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-950/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
                   >
                     <span className="font-extrabold text-emerald-600 dark:text-emerald-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
                       <span>🔑</span> Tayanch Atamalar va Ibora Ta'riflari:
@@ -1314,7 +1314,7 @@ export default function VideoGen() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.18 }}
-                    className="p-5 bg-pink-50/10 dark:bg-pink-950/10 rounded-2xl border border-pink-100/40 dark:border-pink-950/20 space-y-2"
+                    className="p-5 bg-pink-50/10 dark:bg-pink-950/10 rounded-2xl border border-pink-100/40 dark:border-pink-950/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
                   >
                     <span className="font-extrabold text-pink-650 dark:text-pink-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
                       <span>🙋</span> O'quvchilar uchun Interfaol Savol / Topshiriq:
@@ -1332,7 +1332,7 @@ export default function VideoGen() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.18 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[200px] overflow-y-auto custom-scrollbar"
                   >
                     <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
                       <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider flex items-center gap-1">

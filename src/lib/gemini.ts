@@ -395,21 +395,25 @@ export async function generateEducationalSlides(
 
   const prompt = `Siz professional prezentatsiya dizaynerisiz.
 Mavzu: "${topic}".
-Vazifa: 8-10 ta slayddan iborat mukammal dars ishlanmasi yarating.
+Vazifa: 8-12 ta slayddan iborat mukammal va juda batafsil dars ishlanmasi taqdimotini yarating.
 
 Har bir slayd uchun mos 'layoutType' tanlang:
 1. "intro_title": Faqat birinchi slayd uchun. Katta sarlavha.
 2. "text_icon": Matn va bitta Lucide iconName.
-3. "process_diagram": Jarayon yoki qadamlar. 'diagramSteps' (3-4 ta qisqa matn).
+3. "process_diagram": Jarayon yoki qadamlar. 'diagramSteps' (3-5 ta batafsil qadam matni).
 4. "3d_illustration": Murakkab tushuncha uchun 'imagePrompt' (inglizcha 3d isometric prompt).
 5. "comparison": Ikki narsani solishtirish. 'comparisonData' ({leftTitle, rightTitle, left:[], right:[]}) bering.
 6. "statistics_highlight": Muhim raqamni ko'rsatish. 'statValue' (masalan: "90%") va 'statDesc' bering.
 
 Har bir slayd uchun JSON maydonlari:
-- title, content, speakerNotes, layoutType, colorScheme ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky", "navy", "slate").
-- Layoutga qarab: iconName, diagramSteps, imagePrompt, comparisonData, statValue, statDesc.
+- title: Slayd sarlavhasi.
+- content: Slaydning asosiy ta'limiy matni. MUHIM: Har bir slayd uchun matn juda qisqa bo'lmasin. Kamida 4-5 ta qatordan iborat, mavzuni chuqur yorituvchi faktlar, ta'riflar va batafsil tushuntirishlarni Markdown formatida (masalan, ro'yxatlar, qalin matnlar bilan) yozing.
+- speakerNotes: Slaydni tushuntirishda o'qituvchi aytishi kerak bo'lgan juda batafsil va uzun nutq matni (kamida 3-4 ta to'liq gap).
+- layoutType: Layout turi.
+- colorScheme: Rang sxemasi ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky", "navy", "slate").
+- Layoutga qarab kerakli qo'shimcha maydonlar (iconName, diagramSteps, imagePrompt, comparisonData, statValue, statDesc).
 
-Muhim Yo'riqnoma: ${themeInstruction}. Ranglar va layoutlarni turli xil qiling.
+Muhim Yo'riqnoma: ${themeInstruction}. Ranglar va layoutlarni turli xil qiling. Barcha ma'lumotlar o'ta batafsil va ilmiy jihatdan mukammal bo'lishi shart.
 
 JSON formatida qaytaring:
 {"slides":[...]}`;
@@ -556,7 +560,7 @@ Fan: "${subject}"
 O'quvchilar yoshi/guruhi: "${ageGroup}"
 Animatsiya uslubi: "${style}"
 
-Vazifa: Ushbu mavzuni bosqichma-bosqich tushuntiruvchi 4 tadan 6 tagacha kadrdan iborat ssenariy storyboardini ishlab chiqing.
+Vazifa: Ushbu mavzuni bosqichma-bosqich tushuntiruvchi 6 tadan 8 tagacha kadrdan iborat professional ssenariy storyboardini ishlab chiqing.
 Har bir kadr uchun rasm visual tasviri (visualDescription) ingliz tilida batafsil va ravshan prompt sifatida yozilsin (chunki AI tasvirlash vositalari faqat inglizchani yaxshi tushunadi). Audio ssenariy matni (scriptText), sarlavhalar, pedagogik maqsad va metodik yo'riqnomalar esa ${langText} bolalar yoki o'quvchilarga qaratilgan qilib yozilsin.
 
 Quyidagi JSON formatida qaytaring (hamma matnlar ${langText}, faqat visualDescription inglizcha bo'lsin):
@@ -580,12 +584,12 @@ Quyidagi JSON formatida qaytaring (hamma matnlar ${langText}, faqat visualDescri
       "frameNumber": 1,
       "title": "[1-kadr sarlavhasi]",
       "visualDescription": "[Batafsil inglizcha tasvir tavsifi rasm chizish uchun, masalan: 'isometric 3D model of water cycle, cloud raining over a mountain, vector illustration, white background']",
-      "scriptText": "[Kadr uchun audio matn yoki o'qituvchi aytadigan so'zlar]",
+      "scriptText": "[Kadr uchun audio matn yoki o'qituvchi aytadigan so'zlar. Ushbu so'zlar juda batafsil, qiziqarli va mavzuni to'liq ochib beruvchi bo'lishi shart (kamida 4-5 ta to'liq va jozibali gaplar)]",
       "animationDescription": "[Kadrda nimalar harakatlanishi yoki qanday animatsiya effekti bo'lishi]",
       "pedagogicalValue": "[Ushbu kadr darsda qanday pedagogik ahamiyatga ega]",
-      "detailedExplanation": "[Kadrda tasvirlangan ilmiy mavzuning to'liq va batafsil tushuntirishi (kamida 3-4 ta to'liq gapdan iborat bo'lsin)]",
-      "keyTerms": "[Kadrga oid muhim tayanch atamalar va ularning qisqacha ta'riflari, masalan: 'Termin 1 - Ta'rif 1, Termin 2 - Ta'rif 2']",
-      "studentActivity": "[O'quvchilar uchun kadr bo'yicha beriladigan interfaol savol, aqliy hujum yoki topshiriq]"
+      "detailedExplanation": "[Kadrda tasvirlangan ilmiy mavzuning juda to'liq, batafsil va o'ta ilmiy tushuntirishi (kamida 5-6 ta to'liq ilmiy gapdan iborat bo'lsin)]",
+      "keyTerms": "[Kadrga oid muhim tayanch atamalar va ularning batafsil ta'riflari (kamida 3-4 ta termin va ularning ta'riflari)]",
+      "studentActivity": "[O'quvchilar uchun kadr bo'yicha beriladigan o'ta qiziqarli interfaol savol, aqliy hujum yoki topshiriq]"
     }
   ]
 }`;
