@@ -23,9 +23,9 @@ function PageLoader() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <ErrorBoundary>
-          <AuthOverlay>
+      <ErrorBoundary>
+        <AuthOverlay>
+          <Layout>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Feed />} />
@@ -37,9 +37,9 @@ export default function App() {
                 <Route path="/account" element={<Account />} />
               </Routes>
             </Suspense>
-          </AuthOverlay>
-        </ErrorBoundary>
-      </Layout>
+          </Layout>
+        </AuthOverlay>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
