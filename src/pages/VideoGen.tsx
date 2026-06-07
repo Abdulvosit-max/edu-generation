@@ -53,6 +53,7 @@ export default function VideoGen() {
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [speechLanguage, setSpeechLanguage] = useState<"uz" | "ru" | "en">("uz");
   const [showSubtitles, setShowSubtitles] = useState(true);
+  const [activeDetailTab, setActiveDetailTab] = useState<"explanation" | "terms" | "activity" | "script">("explanation");
 
   // Text-To-Speech / Audio States
   const [isSpeaking, setIsSpeaking] = useState(false);
