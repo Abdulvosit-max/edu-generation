@@ -509,16 +509,16 @@ export default function Home() {
             <img 
               src={dashboardPreview} 
               alt="EduGen Dashboard Mockup" 
-              className="w-full h-auto object-cover select-none pointer-events-none"
+              className="w-full h-auto object-cover select-none pointer-events-none dark:brightness-[0.82] dark:contrast-[1.05] dark:opacity-[0.92] transition-all duration-300"
               loading="lazy"
             />
           </div>
         </motion.div>
       </section>
 
-      {/* Detailed Feature Showcase (One-by-One Section) */}
+      {/* Detailed Feature Showcase (Interactive Tabs Section) */}
       <section className="max-w-6xl mx-auto px-6 py-20 border-t border-slate-200/50 dark:border-slate-800/50">
-        <div className="text-center mb-20">
+        <div className="text-center mb-12">
           <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full mb-3 inline-block">
             🔍 Barcha Imkoniyatlar
           </span>
@@ -530,275 +530,222 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="space-y-32">
-          {/* Row 1: AI Chat & Pedagogical Assistant */}
-          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
-            <div className="flex-1 space-y-6 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm shadow-blue-500/5">
-                <MessageSquare size={22} />
-              </div>
-              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
-                {t.featuresDetail[0].title}
-              </h3>
-              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {t.featuresDetail[0].desc}
-              </p>
-              <div className="inline-block bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
-                {t.featuresDetail[0].costInfo}
-              </div>
-            </div>
-            
-            <div className="flex-1 w-full max-w-md">
-              {/* Chat Mockup */}
-              <div className="bg-slate-950 text-slate-100 rounded-[32px] p-6 border border-slate-800 shadow-2xl font-mono text-left relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                <div className="flex items-center gap-2 mb-6 border-b border-slate-900 pb-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                  <span className="text-[9px] text-slate-600 ml-2 font-black font-sans tracking-widest uppercase">EduGen AI Chatbot</span>
+        {/* Tab Controls */}
+        <div className="flex flex-wrap justify-center gap-2.5 mb-10">
+          {showcaseTabs.map((tab) => {
+            const IconComponent = tab.icon;
+            const isActive = activeTab === tab.id;
+            const tabTitle = tab.title[language as Language] || tab.title.uz;
+            let activeStyle = "";
+            if (tab.color === "blue") activeStyle = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30";
+            if (tab.color === "indigo") activeStyle = "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30";
+            if (tab.color === "pink") activeStyle = "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30";
+            if (tab.color === "emerald") activeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+            if (tab.color === "orange") activeStyle = "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30";
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
+                  isActive
+                    ? `${activeStyle} shadow-xs font-black`
+                    : "border-slate-200/40 dark:border-slate-800/60 bg-white/40 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <IconComponent size={13} />
+                <span>{tabTitle}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Tab Panel */}
+        <div className="relative min-h-[440px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-10 lg:gap-16"
+            >
+              {/* Left Side: Content */}
+              <div className="flex-1 space-y-6 text-left">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-xs border ${
+                  activeTab === 0 ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
+                  activeTab === 1 ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" :
+                  activeTab === 2 ? "bg-pink-500/10 text-pink-600 border-pink-500/20" :
+                  activeTab === 3 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                  "bg-orange-500/10 text-orange-600 border-orange-500/20"
+                }`}>
+                  {activeTab === 0 && <MessageSquare size={22} />}
+                  {activeTab === 1 && <Presentation size={22} />}
+                  {activeTab === 2 && <Video size={22} />}
+                  {activeTab === 3 && <FileText size={22} />}
+                  {activeTab === 4 && <ImageIcon size={22} />}
                 </div>
-                <div className="space-y-4 text-[10px]">
-                  <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[85%] font-sans">
-                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
-                    Dars rejasini boyitish yoki pedagogik metodlar tanlashda qanday mavzu bo'yicha yordam beray?
+
+                <h3 className="text-lg lg:text-xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                  {t.featuresDetail[activeTab].title}
+                </h3>
+                
+                <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {t.featuresDetail[activeTab].desc}
+                </p>
+
+                <div className={`inline-block px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase ${
+                  activeTab === 0 ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" :
+                  activeTab === 1 ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400" :
+                  activeTab === 2 ? "bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400" :
+                  activeTab === 3 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
+                  "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                }`}>
+                  {t.featuresDetail[activeTab].costInfo}
+                </div>
+              </div>
+
+              {/* Right Side: Mockup Preview */}
+              <div className="flex-1 w-full flex items-center justify-center">
+                {activeTab === 0 && (
+                  <div className="w-full max-w-md bg-slate-950 text-slate-100 rounded-[32px] p-6 border border-slate-800 shadow-2xl font-mono text-left relative overflow-hidden">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="flex items-center gap-2 mb-6 border-b border-slate-900 pb-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                      <span className="text-[9px] text-slate-600 ml-2 font-black font-sans tracking-widest uppercase">EduGen AI Chatbot</span>
+                    </div>
+                    <div className="space-y-4 text-[10px]">
+                      <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[85%] font-sans">
+                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                        Dars rejasini boyitish yoki pedagogik metodlar tanlashda qanday mavzu bo'yicha yordam beray?
+                      </div>
+                      <div className="bg-blue-600/15 text-blue-200 p-3.5 rounded-2xl rounded-tr-none border border-blue-500/20 max-w-[85%] ml-auto text-right font-sans">
+                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">O'qituvchi:</span>
+                        Fotosintez barglarning nafas olishi darsiga interaktiv faollik taklif qil
+                      </div>
+                      <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[90%] font-sans animate-pulse-slow">
+                        <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                        <strong>Sinf tajribasi:</strong> Barglarni bankaga solib, karbonat angidrid to'planishini ko'rsatish. O'quvchilarni visual storyboard yordamida guruhlarga bo'lish...
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-blue-600/15 text-blue-200 p-3.5 rounded-2xl rounded-tr-none border border-blue-500/20 max-w-[85%] ml-auto text-right font-sans">
-                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">O'qituvchi:</span>
-                    Fotosintez barglarning nafas olishi darsiga interaktiv faollik taklif qil
+                )}
+
+                {activeTab === 1 && (
+                  <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 relative overflow-hidden text-left">
+                    <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="flex justify-between items-center text-[9px] font-black text-slate-400 tracking-wider">
+                      <span className="uppercase">TAQDIMOT SLAYDI</span>
+                      <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-lg">SLAYD #3</span>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-6 aspect-video flex flex-col justify-between shadow-lg relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+                      <h4 className="text-xs lg:text-sm font-black tracking-tight leading-tight z-10">Fotosintez: Xloroplastlar vazifasi</h4>
+                      <div className="space-y-1.5 text-[8px] font-semibold text-indigo-100 z-10">
+                        <p className="flex items-center gap-1">🟢 Xlorofill donachalari yorug'likni yutadi.</p>
+                        <p className="flex items-center gap-1">🟢 Suv va CO₂ dan glyukoza hosil bo'ladi.</p>
+                        <p className="flex items-center gap-1">🟢 Kislorod havoga nojo'ya mahsulot sifatida chiqadi.</p>
+                      </div>
+                      <span className="text-[5px] opacity-65 tracking-widest font-black uppercase z-10">EDUGEN PRESENTATION BUILDER</span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                      <span className="text-slate-700 dark:text-slate-200 font-black block mb-0.5 uppercase tracking-wider text-[7px] text-indigo-500">🗣️ O'qituvchi uchun izoh (Speaker Notes):</span>
+                      Sinfga xloroplast donachasining mikroskop ostidagi ko'rinishini slayd bilan birga tushuntiring.
+                    </div>
                   </div>
-                  <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-800 max-w-[90%] font-sans animate-pulse-slow">
-                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
-                    <strong>Sinf tajribasi:</strong> Barglarni bankaga solib, karbonat angidrid to'planishini ko'rsatish. O'quvchilarni visual storyboard yordamida guruhlarga bo'lish...
+                )}
+
+                {activeTab === 2 && (
+                  <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-3 relative overflow-hidden text-left">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Storyboard Multimedia (Kadr #1)</span>
+                    <div className="relative rounded-2xl overflow-hidden aspect-video border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center group cursor-pointer shadow-inner">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                      
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-600 blur-md opacity-30 animate-pulse"></div>
+                        <div className="w-16 h-16 rounded-full border border-dashed border-pink-500/30 animate-spin-slow"></div>
+                      </div>
+                      
+                      <div className="absolute bottom-3 left-3 z-25 text-white text-[9px] font-black uppercase tracking-wide">1. Atom yadrosi va elektronlar</div>
+                      <div className="absolute z-25 w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 group-hover:scale-105 group-hover:bg-white/20 transition-all shadow-md">
+                        <svg className="w-4 h-4 fill-current ml-0.5 text-pink-400" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-100 dark:border-slate-850">
+                      <span className="font-black text-slate-700 dark:text-slate-200 block uppercase tracking-wider text-[7px] text-pink-550 mb-0.5">🗣️ Dars Narratsiyasi (Ssenariy):</span>
+                      "Tasavvur qiling, har bir moddaning asosi bo'lgan atom markazida musbat yadro, uning atrofida esa sayyoralardek elektronlar aylanadi..."
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                )}
 
-          {/* Row 2: Automated Slide Builder */}
-          <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
-            <div className="flex-1 space-y-6 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/5">
-                <Presentation size={22} />
-              </div>
-              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
-                {t.featuresDetail[1].title}
-              </h3>
-              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {t.featuresDetail[1].desc}
-              </p>
-              <div className="inline-block bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
-                {t.featuresDetail[1].costInfo}
-              </div>
-            </div>
-
-            <div className="flex-1 w-full max-w-md">
-              {/* Slide Mockup */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto relative overflow-hidden">
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                <div className="flex justify-between items-center text-[9px] font-black text-slate-400 tracking-wider">
-                  <span className="uppercase">TAQDIMOT SLAYDI</span>
-                  <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-lg">SLAYD #3</span>
-                </div>
-                <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-6 aspect-video flex flex-col justify-between shadow-lg relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]"></div>
-                  <h4 className="text-xs lg:text-sm font-black tracking-tight leading-tight z-10">Fotosintez: Xloroplastlar vazifasi</h4>
-                  <div className="space-y-1.5 text-[8px] font-semibold text-indigo-100 z-10">
-                    <p className="flex items-center gap-1">🟢 Xlorofill donachalari yorug'likni yutadi.</p>
-                    <p className="flex items-center gap-1">🟢 Suv va CO₂ dan glyukoza hosil bo'ladi.</p>
-                    <p className="flex items-center gap-1">🟢 Kislorod havoga nojo'ya mahsulot sifatida chiqadi.</p>
+                {activeTab === 3 && (
+                  <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 text-left relative overflow-hidden">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Interfaol Test Simulyatori (Demo)</span>
+                    <h4 className="text-[11px] font-black text-slate-800 dark:text-white leading-normal">
+                      Moddalar tarkibidagi atomlar bir-biri bilan qanday bog'lanadi?
+                    </h4>
+                    <div className="space-y-2">
+                      {[
+                        { id: 1, text: "A) Gravitatsion kuchlar orqali", correct: false },
+                        { id: 2, text: "B) Kimyoviy bog'lanishlar (kovalent/ion)", correct: true },
+                        { id: 3, text: "C) Mexanik ishqalanish yordamida", correct: false }
+                      ].map((opt) => {
+                        let style = "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300";
+                        if (quizSelected !== null) {
+                          if (opt.id === quizSelected) {
+                            style = opt.correct 
+                              ? "border-emerald-500 bg-emerald-50/20 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 ring-1 ring-emerald-500"
+                              : "border-rose-500 bg-rose-50/20 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 ring-1 ring-rose-500";
+                          } else if (opt.correct) {
+                            style = "border-emerald-500 bg-emerald-50/10 text-emerald-600 dark:bg-emerald-950/10 dark:text-emerald-400";
+                          }
+                        }
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => setQuizSelected(opt.id)}
+                            className={`w-full p-3.5 rounded-xl border text-[9px] font-bold transition-all text-left flex justify-between items-center cursor-pointer active:scale-99 ${style}`}
+                          >
+                            <span>{opt.text}</span>
+                            {quizSelected !== null && opt.id === quizSelected && (
+                              <span className="text-[8px] font-black uppercase tracking-wider">{opt.correct ? "✓ To'g'ri" : "✗ Noto'g'ri"}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <span className="text-[5px] opacity-65 tracking-widest font-black uppercase z-10">EDUGEN PRESENTATION BUILDER</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-                  <span className="text-slate-700 dark:text-slate-200 font-black block mb-0.5 uppercase tracking-wider text-[7px] text-indigo-500">🗣️ O'qituvchi uchun izoh (Speaker Notes):</span>
-                  Sinfga xloroplast donachasining mikroskop ostidagi ko'rinishini slayd bilan birga tushuntiring.
-                </div>
-              </div>
-            </div>
-          </div>
+                )}
 
-          {/* Row 3: Storyboard & Multimedia Storyboard */}
-          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
-            <div className="flex-1 space-y-6 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 shadow-sm shadow-pink-500/5">
-                <Video size={22} />
-              </div>
-              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
-                {t.featuresDetail[2].title}
-              </h3>
-              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
-                {t.featuresDetail[2].desc}
-              </p>
-              <div className="inline-block bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
-                {t.featuresDetail[2].costInfo}
-              </div>
-            </div>
-
-            <div className="flex-1 w-full max-w-md">
-              {/* Storyboard Mockup */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-3 max-w-sm mx-auto relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Storyboard Multimedia (Kadr #1)</span>
-                <div className="relative rounded-2xl overflow-hidden aspect-video border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center group cursor-pointer shadow-inner">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-                  
-                  {/* Glowing atomic visual representation */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-600 blur-md opacity-30 animate-pulse"></div>
-                    <div className="w-16 h-16 rounded-full border border-dashed border-pink-500/30 animate-spin-slow"></div>
+                {activeTab === 4 && (
+                  <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 relative overflow-hidden text-left">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="flex justify-between items-center text-[9px] font-black text-slate-400">
+                      <span className="uppercase tracking-wider">TA'LIMIY DIAGRAMMA</span>
+                      <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 px-2.5 py-0.5 rounded-lg">3D USLUB</span>
+                    </div>
+                    <div className="relative aspect-square max-w-[180px] mx-auto rounded-full flex items-center justify-center border-4 border-slate-100 dark:border-slate-800/60 shadow-xl overflow-hidden p-6 bg-slate-50 dark:bg-slate-950">
+                      <div className="absolute w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-red-600 flex items-center justify-center text-white text-[7px] font-black shadow-md shadow-orange-500/40 animate-pulse">YADRO</div>
+                      <div className="absolute w-20 h-20 rounded-full border border-dashed border-slate-300 dark:border-slate-700 animate-spin-slow"></div>
+                      <div className="absolute w-32 h-32 rounded-full border border-dashed border-slate-200/80 animate-spin-reverse"></div>
+                      <div className="absolute top-8 left-8 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md animate-bounce"></div>
+                      <div className="absolute bottom-10 right-6 w-2 h-2 rounded-full bg-emerald-500 shadow-md animate-ping"></div>
+                    </div>
+                    <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">
+                      Mavzu: Kislorod Atom tuzilishi (Diagramma)
+                    </div>
                   </div>
-                  
-                  <div className="absolute bottom-3 left-3 z-25 text-white text-[9px] font-black uppercase tracking-wide">1. Atom yadrosi va elektronlar</div>
-                  <div className="absolute z-25 w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 group-hover:scale-105 group-hover:bg-white/20 transition-all shadow-md">
-                    <svg className="w-4 h-4 fill-current ml-0.5 text-pink-400" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                  </div>
-                </div>
-                <div className="text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-100 dark:border-slate-850">
-                  <span className="font-black text-slate-700 dark:text-slate-200 block uppercase tracking-wider text-[7px] text-pink-500 mb-0.5">🗣️ Dars Narratsiyasi (Ssenariy):</span>
-                  "Tasavvur qiling, har bir moddaning asosi bo'lgan atom markazida musbat yadro, uning atrofida esa sayyoralardek elektronlar aylanadi..."
-                </div>
+                )}
               </div>
-            </div>
-          </div>
-
-          {/* Row 4: Interactive Quizzes Generator */}
-          <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
-            <div className="flex-1 space-y-6 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/5">
-                <FileText size={22} />
-              </div>
-              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
-                {t.featuresDetail[3].title}
-              </h3>
-              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {t.featuresDetail[3].desc}
-              </p>
-              <div className="inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
-                {t.featuresDetail[3].costInfo}
-              </div>
-            </div>
-
-            <div className="flex-1 w-full max-w-md">
-              {/* Interactive Quiz Simulator */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto text-left relative overflow-hidden">
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Interfaol Test Simulyatori (Demo)</span>
-                <h4 className="text-[11px] font-black text-slate-800 dark:text-white leading-normal">
-                  Moddalar tarkibidagi atomlar bir-biri bilan qanday bog'lanadi?
-                </h4>
-                <div className="space-y-2">
-                  {[
-                    { id: 1, text: "A) Gravitatsion kuchlar orqali", correct: false },
-                    { id: 2, text: "B) Kimyoviy bog'lanishlar (kovalent/ion)", correct: true },
-                    { id: 3, text: "C) Mexanik ishqalanish yordamida", correct: false }
-                  ].map((opt) => {
-                    let style = "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300";
-                    if (quizSelected !== null) {
-                      if (opt.id === quizSelected) {
-                        style = opt.correct 
-                          ? "border-emerald-500 bg-emerald-50/20 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 ring-1 ring-emerald-500"
-                          : "border-rose-500 bg-rose-50/20 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 ring-1 ring-rose-500";
-                      } else if (opt.correct) {
-                        style = "border-emerald-500 bg-emerald-50/10 text-emerald-600 dark:bg-emerald-950/10 dark:text-emerald-400";
-                      }
-                    }
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => setQuizSelected(opt.id)}
-                        className={`w-full p-3.5 rounded-xl border text-[9px] font-bold transition-all text-left flex justify-between items-center cursor-pointer active:scale-99 ${style}`}
-                      >
-                        <span>{opt.text}</span>
-                        {quizSelected !== null && opt.id === quizSelected && (
-                          <span className="text-[8px] font-black uppercase tracking-wider">{opt.correct ? "✓ To'g'ri" : "✗ Noto'g'ri"}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 5: Educational Image Creator */}
-          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
-            <div className="flex-1 space-y-6 text-left">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-400 shadow-sm shadow-orange-500/5">
-                <ImageIcon size={22} />
-              </div>
-              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
-                {t.featuresDetail[4].title}
-              </h3>
-              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {t.featuresDetail[4].desc}
-              </p>
-              <div className="inline-block bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
-                {t.featuresDetail[4].costInfo}
-              </div>
-            </div>
-
-            <div className="flex-1 w-full max-w-md">
-              {/* Image Generator Mockup Canvas */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                <div className="flex justify-between items-center text-[9px] font-black text-slate-400">
-                  <span className="uppercase tracking-wider">TA'LIMIY DIAGRAMMA</span>
-                  <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 px-2.5 py-0.5 rounded-lg">3D USLUB</span>
-                </div>
-                <div className="relative aspect-square max-w-[180px] mx-auto rounded-full flex items-center justify-center border-4 border-slate-100 dark:border-slate-800/60 shadow-xl overflow-hidden p-6 bg-slate-50 dark:bg-slate-950">
-                  {/* Molecule atom composition animated */}
-                  <div className="absolute w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-red-600 flex items-center justify-center text-white text-[7px] font-black shadow-md shadow-orange-500/40 animate-pulse">YADRO</div>
-                  <div className="absolute w-20 h-20 rounded-full border border-dashed border-slate-300 dark:border-slate-700 animate-spin-slow"></div>
-                  <div className="absolute w-32 h-32 rounded-full border border-dashed border-slate-200/80 animate-spin-reverse"></div>
-                  <div className="absolute top-8 left-8 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md animate-bounce"></div>
-                  <div className="absolute bottom-10 right-6 w-2 h-2 rounded-full bg-emerald-500 shadow-md animate-ping"></div>
-                </div>
-                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">
-                  Mavzu: Kislorod Atom tuzilishi (Diagramma)
-                </div>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
-
-      {/* Credit cost breakdown (Tangacha sarfi) */}
-      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-slate-200/50 dark:border-slate-800/50">
-        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
-            <div className="flex-1 space-y-4 text-left">
-              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-full inline-block">
-                🪙 {t.coinsTitle}
-              </span>
-              <h3 className="text-xl md:text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-                {t.coinsTableTitle}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                {t.coinsDesc}
-              </p>
-            </div>
-            
-            <div className="flex-1 w-full space-y-2.5">
-              {t.coinCosts && t.coinCosts.map((item: any, idx: number) => (
-                <div 
-                  key={idx} 
-                  className="flex items-center justify-between p-3.5 bg-white/70 dark:bg-slate-950/70 border border-slate-200/50 dark:border-slate-900/50 rounded-2xl shadow-xs hover:border-slate-300 dark:hover:border-slate-800 transition-colors"
-                >
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{item.name}</span>
-                  <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1 rounded-lg">
-                    {item.cost}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Plans Grid */}
       <section className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
@@ -857,6 +804,54 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        {/* Sleek Accordion for Coin Costs (Tangacha Sarfi) */}
+        <div className="mt-12 max-w-xl mx-auto">
+          <div className="border border-slate-200/50 dark:border-slate-800/80 rounded-[24px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-md">
+            <button
+              onClick={() => setShowCoinsTable(!showCoinsTable)}
+              className="w-full px-6 py-4 flex items-center justify-between text-left cursor-pointer focus:outline-none"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  🪙 {t.coinsTitle} (Tushuntirish)
+                </span>
+              </div>
+              <span className="text-slate-500">
+                {showCoinsTable ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </span>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {showCoinsTable && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div className="px-6 pb-6 pt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/50 space-y-4">
+                    <p className="font-bold text-slate-650 dark:text-slate-350">{t.coinsDesc}</p>
+                    <div className="space-y-2">
+                      {t.coinCosts && t.coinCosts.map((item: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-950/60 border border-slate-150 dark:border-slate-900/60 rounded-xl transition-colors"
+                        >
+                          <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{item.name}</span>
+                          <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1 rounded-lg">
+                            {item.cost}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
       </section>
 
       {/* Accordion FAQ Section */}

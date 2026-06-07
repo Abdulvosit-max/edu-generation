@@ -75,7 +75,7 @@ export async function signInWithGoogle() {
   if (isDummyFirebase) {
     mockUser = {
       uid: "mock-google-user-123",
-      displayName: "Abdulvosit (Pro)",
+      displayName: "Abdulvosit (Max)",
       email: "zokirjonovabdulvosit002@gmail.com",
       photoURL: "https://api.dicebear.com/7.x/initials/svg?seed=Abdulvosit",
       emailVerified: true
@@ -137,7 +137,7 @@ export async function signUpWithEmail(email: string, password: string, displayNa
   const { email: transformedEmail, pass: transformedPass } = transformCredentials(email, password);
   let resolvedDisplayName = displayName || (email.includes("@") ? email.split("@")[0] : email);
   if (email.trim().toLowerCase() === "zokirjonovabdulvosit002@gmail.com" && !displayName) {
-    resolvedDisplayName = "Abdulvosit (Pro)";
+    resolvedDisplayName = "Abdulvosit (Max)";
   }
 
   if (isDummyFirebase) {

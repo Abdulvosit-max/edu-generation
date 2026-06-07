@@ -316,3 +316,43 @@ export async function fetchUserResources(): Promise<Resource[]> {
   // Backend bo'lmasa, LocalStorage-dagi foydalanuvchi resurslarini filtrlaymiz
   return getLocalResources().filter(r => r.author_id === user.uid);
 }
+
+export interface SubscriptionRequestPayload {
+  user_uid: string;
+  user_email: string;
+  user_name: string;
+  phone_number: string;
+  plan: "free" | "pro" | "max";
+  payment_method: "click" | "payme" | "card";
+  amount: number;
+  transaction_details: string;
+}
+
+export async function createSubscriptionRequest(payload: SubscriptionRequestPayload) {
+  try {
+    const response = await fetch(`${API_URL}/subscription-request/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Error creating subscription request:", error);
+  }
+  return null;
+}
+
+export async function fetchSubscriptionStatus(uid: string) {
+  try {
+    const response = await fetch(`${API_URL}/subscription-status/?uid=${uid}`);
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error("Error fetching subscription status:", error);
+  }
+  return { plan: "free", status: null };
+}
+

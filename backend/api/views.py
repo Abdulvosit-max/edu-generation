@@ -411,5 +411,56 @@ class ElevenLabsTTSView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+from .models import SubscriptionRequest
+from .serializers import SubscriptionRequestSerializer
+
+class SubscriptionRequestCreateView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SubscriptionRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SubscriptionStatusView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        user_uid = request.query_params.get('uid')
+        if not user_uid:
+            return Response(
+                {"error": "uid parametri talab qilinadi"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check latest approved request
+        approved_req = SubscriptionRequest.objects.filter(
+            user_uid=user_uid, 
+            status='approved'
+        ).order_by('-updated_at').first()
+
+        approved_plan = approved_req.plan if approved_req else "free"
+
+        # Check if there is a pending request
+        pending_req = SubscriptionRequest.objects.filter(
+            user_uid=user_uid, 
+            status='pending'
+        ).order_by('-created_at').first()
+
+        if pending_req:
+            return Response({
+                "plan": approved_plan,
+                "status": "pending",
+                "pending_plan": pending_req.plan
+            })
+
+        return Response({
+            "plan": approved_plan,
+            "status": "approved" if approved_req else None
+        })
+
+
 
 
