@@ -28,6 +28,13 @@ export default function ImageGen() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const { t } = useAppContext();
 
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" | "info" }[]>([]);
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
+
   // Promptni AI yordamida yaxshilash
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) return;
@@ -195,14 +202,32 @@ export default function ImageGen() {
     try {
       await import("../lib/db").then(m => m.togglePublic(resourceId, true));
       setIsShared(true);
-      alert("Tasvir hamjamiyatga muvaffaqiyatli qo'shildi!");
+      showToast("Tasvir hamjamiyatga ulashildi!");
     } catch (err) {
-      alert("Ulashishda xatolik yuz berdi");
+      showToast("Ulashishda xatolik yuz berdi.", "error");
     }
   };
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 pointer-events-auto ${
+              toast.type === "success"
+                ? "bg-emerald-600 text-white border-emerald-500"
+                : toast.type === "error"
+                ? "bg-rose-600 text-white border-rose-500"
+                : "bg-indigo-600 text-white border-indigo-500"
+            }`}
+          >
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
+            {toast.msg}
+          </div>
+        ))}
+      </div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">

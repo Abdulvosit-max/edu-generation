@@ -59,11 +59,24 @@ export default function VideoGen() {
   const [narrationType, setNarrationType] = useState<"google" | "native" | "azure">(
     () => (localStorage.getItem("edu_gen_narration_type") as any) || "google"
   );
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [speechPitch, setSpeechPitch] = useState(1.0);
+  const [speechVolume, setSpeechVolume] = useState(1.0);
+  const [azureKey, setAzureKey] = useState(() => localStorage.getItem("edu_gen_azure_key") || "");
+  const [azureRegion, setAzureRegion] = useState(() => localStorage.getItem("edu_gen_azure_region") || "eastus");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [simProgress, setSimProgress] = useState(0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Toast notification state
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" | "info" }[]>([]);
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
   
   // Collapsible Accordion State for Pedagogical Plan
   const [showPedagogicalPlan, setShowPedagogicalPlan] = useState(false);
@@ -123,6 +136,8 @@ export default function VideoGen() {
       const blob = await resp.blob();
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      audio.playbackRate = speechRate;
+      audio.volume = speechVolume;
       audio.onended = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
@@ -143,10 +158,9 @@ export default function VideoGen() {
     }
   };
 
-  // Asosiy naratsiya dispatcher: OpenAI TTS → Web Speech API fallback
+  // Asosiy naratsiya dispatcher — narrationType ga qarab yo'naltiradi
   const speakText = async (text: string, onEndCallback?: () => void) => {
     if (typeof window === "undefined") return;
-    // Avvalgi audioни to'xtatish
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
       activeAudioRef.current = null;
@@ -154,9 +168,14 @@ export default function VideoGen() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     if (!text) return;
 
-    // 1. OpenAI TTS (backend)
+    if (narrationType === "native") {
+      // Faqat brauzer Web Speech API
+      speakTextNative(text, onEndCallback);
+      return;
+    }
+
+    // "google" yoki "azure": OpenAI TTS → Web Speech fallback
     const openaiOk = await speakTextOpenAI(text, onEndCallback);
-    // 2. Fallback — brauzer Web Speech API
     if (!openaiOk) speakTextNative(text, onEndCallback);
   };
 
@@ -297,7 +316,7 @@ export default function VideoGen() {
       }, 200);
     } catch (e) {
       console.error("Storyboard generatsiyasida xato:", e);
-      alert("Storyboard yaratishda muammo yuz berdi. Qayta urinib ko'ring.");
+      showToast("Storyboard yaratishda muammo yuz berdi. Qayta urinib ko'ring.", "error");
     } finally {
       setLoading(false);
     }
@@ -421,7 +440,7 @@ export default function VideoGen() {
     if (!storyboard) return;
     const currentScript = storyboard.frames[activeFrameIdx].scriptText;
     navigator.clipboard.writeText(currentScript);
-    alert("Ssenariy matni buferga muvaffaqiyatli nusxalandi!");
+    showToast("Ssenariy matni buferga nusxalandi!");
   };
 
   // Download all scripts as a clean text file
@@ -477,10 +496,10 @@ export default function VideoGen() {
         })
       });
       setResourceId(id);
-      alert("Storyboard muvaffaqiyatli saqlandi!");
+      showToast("Storyboard kutubxonaga saqlandi!");
     } catch (err) {
       console.error("Saqlashda xato:", err);
-      alert("Saqlashda xatolik yuz berdi.");
+      showToast("Saqlashda xatolik yuz berdi.", "error");
     }
   };
 
@@ -490,9 +509,9 @@ export default function VideoGen() {
     try {
       await import("../lib/db").then(m => m.togglePublic(resourceId, true));
       setIsShared(true);
-      alert("Storyboard hamjamiyatga muvaffaqiyatli ulashildi!");
+      showToast("Storyboard hamjamiyatga ulashildi!");
     } catch (err) {
-      alert("Ulashishda xatolik yuz berdi");
+      showToast("Ulashishda xatolik yuz berdi.", "error");
     }
   };
 
@@ -689,7 +708,7 @@ export default function VideoGen() {
       doc.save(`${storyboard.animationTitle.replace(/\s+/g, "_")}_dars_rejasi.pdf`);
     } catch (e) {
       console.error("PDF yaratishda xato:", e);
-      alert("PDF yaratishda xatolik yuz berdi.");
+      showToast("PDF yaratishda xatolik yuz berdi.", "error");
     } finally {
       setExportingPDF(false);
     }
@@ -697,7 +716,26 @@ export default function VideoGen() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-      
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto ${
+              toast.type === "success"
+                ? "bg-emerald-600 text-white border-emerald-500"
+                : toast.type === "error"
+                ? "bg-rose-600 text-white border-rose-500"
+                : "bg-indigo-600 text-white border-indigo-500"
+            }`}
+          >
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
+            {toast.msg}
+          </div>
+        ))}
+      </div>
+
       {/* Test Rejimi Ogohlantirish Banneri */}
       <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
         <AlertCircle className="shrink-0 text-amber-600 dark:text-amber-500 mt-0.5" size={18} />

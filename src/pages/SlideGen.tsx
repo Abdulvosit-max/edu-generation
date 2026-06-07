@@ -114,7 +114,7 @@ export default function SlideGen() {
     const el = document.getElementById("presentation-container");
     if (el) {
       if (!document.fullscreenElement) {
-        el.requestFullscreen().catch(err => alert(`Xatolik: ${err.message}`));
+        el.requestFullscreen().catch(err => console.warn("Fullscreen xatoligi:", err.message));
       } else {
         document.exitFullscreen();
       }

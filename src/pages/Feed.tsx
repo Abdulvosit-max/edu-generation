@@ -141,6 +141,15 @@ export default function Feed() {
   const [exporting, setExporting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Toast va delete confirm
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" | "info" }[]>([]);
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<Resource | null>(null);
+
   // Ma'lumotlarni yuklab olish
   const loadData = async () => {
     setLoading(true);
@@ -178,26 +187,30 @@ export default function Feed() {
       if (previewItem && previewItem.id === item.id) {
         setPreviewItem(prev => prev ? { ...prev, is_public: newStatus } : null);
       }
-      alert(newStatus ? "Resurs hamjamiyatga muvaffaqiyatli ulashildi!" : "Resurs ommaviyligi bekor qilindi!");
+      showToast(newStatus ? "Resurs hamjamiyatga ulashildi!" : "Resurs yopiq qilindi!");
     } catch {
-      alert("Xatolik yuz berdi. Qayta urinib ko'ring.");
+      showToast("Xatolik yuz berdi. Qayta urinib ko'ring.", "error");
     }
   };
 
-  // Resursni o'chirish
-  const handleDelete = async (item: Resource, e: React.MouseEvent) => {
+  // Resursni o'chirish (confirm modal bilan)
+  const handleDelete = (item: Resource, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!item.id) return;
-    if (!window.confirm(t.deleteConfirm || "Haqiqatan ham bu resursni o'chirmoqchimisiz?")) return;
-    
+    setDeleteConfirmItem(item);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmItem?.id) return;
     try {
-      await deleteResource(item.id);
-      setResources(prev => prev.filter(r => r.id !== item.id));
-      if (previewItem && previewItem.id === item.id) {
-        setPreviewItem(null);
-      }
+      await deleteResource(deleteConfirmItem.id);
+      setResources(prev => prev.filter(r => r.id !== deleteConfirmItem.id));
+      if (previewItem && previewItem.id === deleteConfirmItem.id) setPreviewItem(null);
+      showToast("Resurs o'chirildi.");
     } catch {
-      alert("O'chirishda xatolik yuz berdi.");
+      showToast("O'chirishda xatolik yuz berdi.", "error");
+    } finally {
+      setDeleteConfirmItem(null);
     }
   };
 
@@ -227,7 +240,7 @@ export default function Feed() {
     try {
       slidesData = JSON.parse(item.content);
     } catch {
-      alert("Slayd kontenti buzilgan.");
+      showToast("Slayd kontenti buzilgan.", "error");
       return;
     }
     
@@ -322,7 +335,7 @@ export default function Feed() {
     try {
       testData = JSON.parse(item.content);
     } catch {
-      alert("Test kontenti xato yozilgan.");
+      showToast("Test kontenti xato yozilgan.", "error");
       return;
     }
 
@@ -364,7 +377,74 @@ export default function Feed() {
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto min-h-screen flex flex-col overflow-x-hidden relative">
-      
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 pointer-events-auto ${
+              toast.type === "success"
+                ? "bg-emerald-600 text-white border-emerald-500"
+                : toast.type === "error"
+                ? "bg-rose-600 text-white border-rose-500"
+                : "bg-indigo-600 text-white border-indigo-500"
+            }`}
+          >
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
+            {toast.msg}
+          </div>
+        ))}
+      </div>
+
+      {/* Delete Confirm Modal */}
+      <AnimatePresence>
+        {deleteConfirmItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setDeleteConfirmItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center">
+                  <Trash2 size={18} className="text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                  <p className="font-black text-slate-800 dark:text-white text-sm">Resursni o'chirish</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bu amalni qaytarib bo'lmaydi</p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                "<span className="font-black">{deleteConfirmItem.title}</span>" resursini o'chirishni tasdiqlaysizmi?
+              </p>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setDeleteConfirmItem(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition-colors"
+                >
+                  O'chirish
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
       <div className="absolute bottom-10 left-0 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
@@ -1189,7 +1269,7 @@ export default function Feed() {
                       doc.save(`${storyboardData.animationTitle.replace(/\s+/g, "_")}_dars_ishlanmasi.pdf`);
                     } catch (err) {
                       console.error("PDF yaratishda xato:", err);
-                      alert("PDF yuklashda xatolik.");
+                      showToast("PDF yuklashda xatolik.", "error");
                     }
                   };
 

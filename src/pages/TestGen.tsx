@@ -26,6 +26,13 @@ export default function TestGen() {
   const [isShared, setIsShared] = useState(false);
   const { t } = useAppContext();
 
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" }[]>([]);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
+
   useEffect(() => {
     const q = searchParams.get("q");
     if (q) setTopic(q);
@@ -53,7 +60,7 @@ export default function TestGen() {
       });
       setResourceId(id);
     } catch (e: any) {
-      alert(`Xatolik: ${e.message || t.errorOccurred}`);
+      showToast(e.message || t.errorOccurred || "Xatolik yuz berdi.", "error");
     } finally {
       setLoading(false);
     }
@@ -65,9 +72,9 @@ export default function TestGen() {
     try {
       await togglePublic(resourceId, true);
       setIsShared(true);
-      alert("Test hamjamiyatga muvaffaqiyatli qo'shildi!");
+      showToast("Test hamjamiyatga ulashildi!");
     } catch (err) {
-      alert("Ulashishda xatolik yuz berdi");
+      showToast("Ulashishda xatolik yuz berdi.", "error");
     }
   };
 
@@ -126,6 +133,22 @@ export default function TestGen() {
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto h-full flex flex-col">
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 pointer-events-auto ${
+              toast.type === "success"
+                ? "bg-emerald-600 text-white border-emerald-500"
+                : "bg-rose-600 text-white border-rose-500"
+            }`}
+          >
+            {toast.type === "success" ? "✓" : "✕"}
+            {toast.msg}
+          </div>
+        ))}
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
           <FileText className="text-blue-600 dark:text-blue-400" /> {t.testTitle}
