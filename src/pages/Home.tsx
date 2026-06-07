@@ -36,6 +36,7 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [quizSelected, setQuizSelected] = useState<number | null>(null);
 
   // Localization structure for landing page
   const landTrans = {
@@ -58,37 +59,79 @@ export default function Home() {
       guestBtn: "Mehmon bo'lib kirish",
       haveAccount: "Akkauntingiz bormi? Kirish",
       noAccount: "Akkauntingiz yo'qmi? Ro'yxatdan o'tish",
+      coinsTitle: "Tangachalar Tizimi",
+      coinsDesc: "EduGen-da har bir AI amali uchun ma'lum miqdorda tangachalar sarflanadi. Bu sizga resurslarni rejalashtirish imkonini beradi.",
+      coinsTableTitle: "Tangacha Sarf Jadvali",
+      coinCosts: [
+        { name: "Slayd Yaratish (1 sahifa)", cost: "1 tangacha" },
+        { name: "Pedagogik Tasvir (1 rasm)", cost: "2 tangacha" },
+        { name: "Storyboard & Video (1 kadr)", cost: "5 tangacha" },
+        { name: "Test Yozish (1 ta test to'plami)", cost: "3 tangacha" },
+        { name: "AI Chat Suhbat (Cheksiz savol-javob)", cost: "Cheksiz (0 tangacha)" }
+      ],
+      showcaseTitle: "Imkoniyatlarimiz haqida batafsil",
+      showcaseDesc: "Interfaol ta'lim ekotizimidagi har bir AI vositasining imkoniyatlari bilan birma-bir tanishing.",
+      featuresDetail: [
+        {
+          title: "AI Chat & Pedagogik Yordamchi",
+          desc: "Dars rejasini tuzishda, qiyin mavzularni sodda tushuntirishda va pedagogik metodikalarni tanlashda yordam beruvchi aqlli yordamchi. Savollaringizga ta'lim standartlariga mos ravishda ilmiy asoslangan javoblarni beradi.",
+          costInfo: "Ishlatilishi: Mutlaqo Bepul va Cheksiz"
+        },
+        {
+          title: "Avtomatlashtirilgan Slayd Yaratish",
+          desc: "Faqatgina dars mavzusini kiritish orqali 5-10 sahifali to'liq kontentli, rasmli va so'zlovchi izohlari (speaker notes) bilan taqdimot slaydlarini yarating. PowerPoint (PPTX) va PDF formatida yuklab oling.",
+          costInfo: "Sarfi: har bir sahifa uchun 1 tangacha"
+        },
+        {
+          title: "Storyboard & Multimediali Kadrlar",
+          desc: "Dars mavzusini tasviriy va ssenariy ko'rinishida tushuntirib beruvchi 6-8 kadrli storyboard. Har bir kadr uchun visual rasm va audio ssenariy matnlari hamda pedagogik maqsadlar avtomatik yoziladi.",
+          costInfo: "Sarfi: har bir kadr uchun 5 tangacha"
+        },
+        {
+          title: "Interaktiv Testlar Generatori",
+          desc: "Mavzu bo'yicha turli qiyinchilik darajasidagi (oson, o'rtacha, qiyin) interaktiv test savollarini yarating. Testlarni PDF ko'rinishida yuklab olish va o'quvchilarga tarqatish imkoniyati mavjud.",
+          costInfo: "Sarfi: har bir test to'plami uchun 3 tangacha"
+        },
+        {
+          title: "Pedagogik Tasvirlar Yaratish",
+          desc: "Darsdagi qiyin ilmiy mavzularni (masalan, fotosintez, atom tuzilishi) o'quvchilarga ko'rsatish uchun 3D, neon yoki chizilgan rasm formatidagi yuqori sifatli vizual diagrammalarni yarating.",
+          costInfo: "Sarfi: har bir tasvir uchun 2 tangacha"
+        }
+      ],
       plans: [
         {
-          name: "Mehmon (Free)",
+          name: "Free (Bepul)",
           price: "0",
-          desc: "Tizim imkoniyatlarini sinab ko'rish uchun bepul mehmon rejimi.",
+          desc: "Tizim imkoniyatlarini sinab ko'rish uchun bepul reja.",
           features: [
+            "20 Tangacha hisobda",
             "5 tagacha taqdimot slaydlarini yaratish",
             "Sodda AI Chat yordamchisi",
-            "Zaxira Google TTS ovozli diktori",
-            "Uch xil rasm chizish uslubi"
+            "Standard Google TTS ovozli sintez",
+            "Zaxira rasm generatoridan foydalanish"
           ]
         },
         {
-          name: "Premium (Teacher)",
-          price: "9.99",
+          name: "Pro (O'qituvchi)",
+          price: "14.99",
           desc: "Darslarni eng yuqori saviyada rejalashtiruvchi o'qituvchilar uchun.",
           features: [
+            "500 Tangacha / oyiga",
             "Cheksiz slayd va dars ishlanmalari",
-            "6-8 kadrli batafsil multimedia storyboardlari",
+            "6-8 kadrli batafsil storyboardlar",
             "Microsoft Azure Neural HD ovozli diktorlik",
-            "PPTX va PDF formatida to'liq yuklab olish",
-            "Kengaytirilgan pedagogik tahlil va baholash"
+            "Premium Imagen 3 tasvir generatsiyasi",
+            "PPTX va PDF formatida yuklab olish"
           ],
           popular: true
         },
         {
-          name: "Pro (School/Institution)",
-          price: "29.99",
-          desc: "O'quv markazlari va maktablar uchun jamoaviy reja.",
+          name: "Max (Maktablar)",
+          price: "49.99",
+          desc: "O'quv markazlari va maktablar uchun to'liq AI reja.",
           features: [
-            "Barcha Premium imkoniyatlar",
+            "2500 Tangacha / oyiga",
+            "Barcha Pro imkoniyatlar",
             "Logotipsiz toza PDF/PPTX eksportlari",
             "Ustuvor tezkor AI generatsiyasi",
             "24/7 shaxsiy metodist yordami",
@@ -124,37 +167,79 @@ export default function Home() {
       guestBtn: "Войти как гость",
       haveAccount: "Уже есть аккаунт? Войти",
       noAccount: "Нет аккаунта? Зарегистрироваться",
+      coinsTitle: "Система Монет",
+      coinsDesc: "В EduGen каждое действие ИИ расходует определенное количество монет (кредитов). Это помогает вам планировать ресурсы.",
+      coinsTableTitle: "Таблица Расхода Монет",
+      coinCosts: [
+        { name: "Создание Слайдов (1 страница)", cost: "1 монета" },
+        { name: "Педагогический Рисунок (1 картинка)", cost: "2 монеты" },
+        { name: "Storyboard & Видео (1 кадр)", cost: "5 монет" },
+        { name: "Генерация Тестов (1 пакет тестов)", cost: "3 монеты" },
+        { name: "Чат с ИИ (Безлимитные вопросы)", cost: "Бесплатно (0 монет)" }
+      ],
+      showcaseTitle: "Подробно о возможностях",
+      showcaseDesc: "Познакомьтесь поближе с каждым инструментом ИИ в нашей интерактивной экосистеме.",
+      featuresDetail: [
+        {
+          title: "Чат с ИИ и Педагогический Помощник",
+          desc: "Умный помощник для составления планов уроков, простого объяснения сложных тем и подбора методик. Дает научно обоснованные ответы в соответствии со стандартами образования.",
+          costInfo: "Использование: Полностью Бесплатно и Безлимитно"
+        },
+        {
+          title: "Автоматическое Создание Слайдов",
+          desc: "Создавайте презентации на 5-10 слайдов с полным контентом, иллюстрациями и заметками докладчика, просто введя тему урока. Скачивайте в PPTX и PDF.",
+          costInfo: "Расход: 1 монета за каждую страницу"
+        },
+        {
+          title: "Storyboard и Мультимедийные Кадры",
+          desc: "Интерактивная раскадровка из 6-8 кадров, объясняющая тему урока визуально и сценарно. Для каждого кадра создается рисунок ИИ и аудиоскрипт.",
+          costInfo: "Расход: 5 монет за каждый кадр"
+        },
+        {
+          title: "Генератор Интерактивных Тестов",
+          desc: "Создавайте тесты разной сложности (легкий, средний, сложный) по вашей теме. Удобное скачивание в PDF для раздачи ученикам на уроке.",
+          costInfo: "Расход: 3 монеты за один пакет тестов"
+        },
+        {
+          title: "Создание Педагогических Изображений",
+          desc: "Создавайте качественные иллюстрации и диаграммы в 3D или векторном формате для наглядной демонстрации сложных тем (например, фотосинтез, строение атома).",
+          costInfo: "Расход: 2 монеты за каждое изображение"
+        }
+      ],
       plans: [
         {
-          name: "Гость (Free)",
+          name: "Free (Бесплатно)",
           price: "0",
-          desc: "Бесплатный гостевой режим для тестирования возможностей системы.",
+          desc: "Бесплатный тариф для тестирования возможностей системы.",
           features: [
+            "20 Монет на балансе",
             "Создание презентаций до 5 слайдов",
             "Простой ИИ-помощник чата",
-            "Озвучка через стандартный Google TTS",
-            "Три художественных стиля генерации"
+            "Стандартная озвучка Google TTS",
+            "Доступ к резервному генератору картинок"
           ]
         },
         {
-          name: "Premium (Teacher)",
-          price: "9.99",
+          name: "Pro (Учитель)",
+          price: "14.99",
           desc: "Для учителей, планирующих уроки на высшем профессиональном уровне.",
           features: [
+            "500 Монет в месяц",
             "Безлимитные слайды и планы уроков",
             "Подробные раскадровки из 6-8 кадров",
             "Качественная озвучка Microsoft Azure Neural HD",
-            "Скачивание в форматах PPTX и PDF",
-            "Расширенный педагогический анализ ИИ"
+            "Генерация картинок через премиум Imagen 3",
+            "Скачивание в PPTX и PDF"
           ],
           popular: true
         },
         {
-          name: "Pro (School/Institution)",
-          price: "29.99",
+          name: "Max (Школы)",
+          price: "49.99",
           desc: "Групповой тариф для учебных центров и школ.",
           features: [
-            "Все функции тарифа Premium",
+            "2500 Монет в месяц",
+            "Все функции тарифа Pro",
             "Чистый экспорт PDF/PPTX без водяных знаков",
             "Приоритетная генерация контента ИИ",
             "Круглосуточная поддержка методиста",
@@ -176,8 +261,6 @@ export default function Home() {
       heroTitle: "Create the Future of Education Today",
       heroDesc: "EduGen is a smart ecosystem for teachers and educators that creates lesson plans, presentation slides, multimedia storyboards, interactive quizzes, and educational illustrations in seconds.",
       getStarted: "Start for Free",
-      featuresTitle: "Project Features",
-      featuresDesc: "AI-driven tools designed to enhance teaching quality and save your valuable time.",
       pricingTitle: "Pricing Plans",
       pricingDesc: "Choose the perfect plan to elevate your educational resources to the next level.",
       loginTitle: "Sign In",
@@ -190,37 +273,79 @@ export default function Home() {
       guestBtn: "Enter as Guest",
       haveAccount: "Already have an account? Sign In",
       noAccount: "Don't have an account? Sign Up",
+      coinsTitle: "Coin System",
+      coinsDesc: "In EduGen, every AI action consumes a specific number of coins (credits). This allows you to plan your resource usage efficiently.",
+      coinsTableTitle: "Coin Cost Table",
+      coinCosts: [
+        { name: "Slide Generation (1 page)", cost: "1 coin" },
+        { name: "Pedagogical Visual (1 image)", cost: "2 coins" },
+        { name: "Storyboard & Video (1 frame)", cost: "5 coins" },
+        { name: "Quiz Generation (1 quiz set)", cost: "3 coins" },
+        { name: "AI Chat Assistant (Unlimited QA)", cost: "Free (0 coins)" }
+      ],
+      showcaseTitle: "Detailed Features",
+      showcaseDesc: "Explore the features of each AI-powered tool in our interactive educational ecosystem.",
+      featuresDetail: [
+        {
+          title: "AI Chat & Pedagogical Assistant",
+          desc: "A smart assistant to help create lesson plans, explain complex topics simply, and choose teaching methodologies. Provides standard-aligned, scientific answers.",
+          costInfo: "Usage: Completely Free & Unlimited"
+        },
+        {
+          title: "Automated Slide Builder",
+          desc: "Create full presentation slides with rich text content, embedded diagrams, and teacher speaker notes by just entering the topic. Export to PPTX and PDF.",
+          costInfo: "Cost: 1 coin per page"
+        },
+        {
+          title: "Storyboard & Multimedia Frames",
+          desc: "A 6-8 frame storyboard visually mapping out the lesson topic. Automatically generates high-quality images, narration scripts, and pedagogical objectives.",
+          costInfo: "Cost: 5 coins per frame"
+        },
+        {
+          title: "Interactive Quiz Generator",
+          desc: "Generate quizzes at different difficulty levels (easy, medium, hard) matching your lesson topic. Instantly download as printable PDF worksheets.",
+          costInfo: "Cost: 3 coins per quiz set"
+        },
+        {
+          title: "Pedagogical Image Creator",
+          desc: "Generate scientific drawings and visual charts (e.g. photosynthesis, atomic structure) in 3D, neon, or vector styles to visually represent tough topics.",
+          costInfo: "Cost: 2 coins per image"
+        }
+      ],
       plans: [
         {
-          name: "Guest (Free)",
+          name: "Free",
           price: "0",
-          desc: "Free guest mode to test and explore the system capabilities.",
+          desc: "Free guest tier to explore platform capabilities.",
           features: [
+            "20 coins balance",
             "Generate slides up to 5 cards",
             "Basic AI Chat Assistant",
-            "Google Translate TTS fallback narration",
-            "Three visual generation styles"
+            "Standard Google TTS narration voice",
+            "Access to fallback visual generator"
           ]
         },
         {
-          name: "Premium (Teacher)",
-          price: "9.99",
-          desc: "For educators aiming to plan lessons at the highest professional level.",
+          name: "Pro (Teacher)",
+          price: "14.99",
+          desc: "For educators planning lessons at the highest professional level.",
           features: [
-            "Unlimited slides and lesson generators",
+            "500 coins / month",
+            "Unlimited slides and lesson plans",
             "Detailed 6-8 frame multimedia storyboards",
             "Microsoft Azure Neural HD voice narration",
-            "Full PPTX and PDF downloads",
-            "Advanced pedagogical AI assessment"
+            "Premium Imagen 3 visual generation",
+            "Full PPTX and PDF downloads"
           ],
           popular: true
         },
         {
-          name: "Pro (School/Institution)",
-          price: "29.99",
+          name: "Max (Schools)",
+          price: "49.99",
           desc: "Group subscription for learning centers and academic schools.",
           features: [
-            "All Premium subscription benefits",
+            "2500 coins / month",
+            "All Pro features included",
             "Clean PDF/PPTX exports with no logos",
             "Priority high-speed AI processing",
             "24/7 dedicated educator assistance",
@@ -393,34 +518,286 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Features Grid */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-950 dark:text-white mb-2">{t.featuresTitle}</h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 font-bold max-w-md mx-auto">{t.featuresDesc}</p>
+      {/* Detailed Feature Showcase (One-by-One Section) */}
+      <section className="max-w-6xl mx-auto px-6 py-20 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="text-center mb-20">
+          <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full mb-3 inline-block">
+            🔍 Barcha Imkoniyatlar
+          </span>
+          <h2 className="text-3xl md:text-4xl font-black text-slate-950 dark:text-white mb-3 tracking-tight">
+            {t.showcaseTitle}
+          </h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-bold max-w-md mx-auto">
+            {t.showcaseDesc}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            { title: t.chat, desc: t.chatDesc, icon: MessageSquare, color: "text-blue-500 bg-blue-500/5 border-blue-500/10", glow: "hover:shadow-blue-500/10 hover:border-blue-500/30 dark:hover:shadow-blue-500/5" },
-            { title: t.slideGen, desc: t.slideDesc, icon: Presentation, color: "text-indigo-500 bg-indigo-500/5 border-indigo-500/10", glow: "hover:shadow-indigo-500/10 hover:border-indigo-500/30 dark:hover:shadow-indigo-500/5" },
-            { title: t.videoGenTitle, desc: t.videoGenDesc, icon: Video, color: "text-pink-500 bg-pink-500/5 border-pink-500/10", glow: "hover:shadow-pink-500/10 hover:border-pink-500/30 dark:hover:shadow-pink-500/5" },
-            { title: t.testTitle, desc: t.testDesc, icon: FileText, color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10", glow: "hover:shadow-emerald-500/10 hover:border-emerald-500/30 dark:hover:shadow-emerald-500/5" },
-            { title: t.imageGen, desc: t.imageDesc, icon: ImageIcon, color: "text-orange-500 bg-orange-500/5 border-orange-500/10", glow: "hover:shadow-orange-500/10 hover:border-orange-500/30 dark:hover:shadow-orange-500/5" }
-          ].map((item, idx) => (
-            <div 
-              key={idx} 
-              className={`p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 shadow-xs flex flex-col gap-4 group hover:shadow-lg ${item.glow} transition-all duration-300 hover:-translate-y-1`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color} border group-hover:scale-105 transition-transform`}>
-                <item.icon size={18} />
+        <div className="space-y-32">
+          {/* Row 1: AI Chat & Pedagogical Assistant */}
+          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+            <div className="flex-1 space-y-6 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm shadow-blue-500/5">
+                <MessageSquare size={22} />
               </div>
-              <div>
-                <h3 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5 uppercase tracking-wide">{item.title}</h3>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{item.desc}</p>
+              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                {t.featuresDetail[0].title}
+              </h3>
+              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
+                {t.featuresDetail[0].desc}
+              </p>
+              <div className="inline-block bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
+                {t.featuresDetail[0].costInfo}
               </div>
             </div>
-          ))}
+            
+            <div className="flex-1 w-full max-w-md">
+              {/* Chat Mockup */}
+              <div className="bg-slate-950 text-slate-100 rounded-[32px] p-6 border border-slate-850 shadow-2xl font-mono text-left relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div className="flex items-center gap-2 mb-6 border-b border-slate-900 pb-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <span className="text-[9px] text-slate-600 ml-2 font-black font-sans tracking-widest uppercase">EduGen AI Chatbot</span>
+                </div>
+                <div className="space-y-4 text-[10px]">
+                  <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-850 max-w-[85%] font-sans">
+                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                    Dars rejasini boyitish yoki pedagogik metodlar tanlashda qanday mavzu bo'yicha yordam beray?
+                  </div>
+                  <div className="bg-blue-600/15 text-blue-200 p-3.5 rounded-2xl rounded-tr-none border border-blue-500/20 max-w-[85%] ml-auto text-right font-sans">
+                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">O'qituvchi:</span>
+                    Fotosintez barglarning nafas olishi darsiga interaktiv faollik taklif qil
+                  </div>
+                  <div className="bg-slate-900/80 p-3.5 rounded-2xl rounded-tl-none border border-slate-850 max-w-[90%] font-sans animate-pulse-slow">
+                    <span className="text-blue-400 font-black block mb-1 uppercase tracking-wider text-[8px]">EduGen AI:</span>
+                    <strong>Sinf tajribasi:</strong> Barglarni bankaga solib, karbonat angidrid to'planishini ko'rsatish. O'quvchilarni visual storyboard yordamida guruhlarga bo'lish...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Automated Slide Builder */}
+          <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
+            <div className="flex-1 space-y-6 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/5">
+                <Presentation size={22} />
+              </div>
+              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                {t.featuresDetail[1].title}
+              </h3>
+              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
+                {t.featuresDetail[1].desc}
+              </p>
+              <div className="inline-block bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
+                {t.featuresDetail[1].costInfo}
+              </div>
+            </div>
+
+            <div className="flex-1 w-full max-w-md">
+              {/* Slide Mockup */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto relative overflow-hidden">
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                <div className="flex justify-between items-center text-[9px] font-black text-slate-400 tracking-wider">
+                  <span className="uppercase">TAQDIMOT SLAYDI</span>
+                  <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-lg">SLAYD #3</span>
+                </div>
+                <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-6 aspect-video flex flex-col justify-between shadow-lg relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+                  <h4 className="text-xs lg:text-sm font-black tracking-tight leading-tight z-10">Fotosintez: Xloroplastlar vazifasi</h4>
+                  <div className="space-y-1.5 text-[8px] font-semibold text-indigo-100 z-10">
+                    <p className="flex items-center gap-1">🟢 Xlorofill donachalari yorug'likni yutadi.</p>
+                    <p className="flex items-center gap-1">🟢 Suv va CO₂ dan glyukoza hosil bo'ladi.</p>
+                    <p className="flex items-center gap-1">🟢 Kislorod havoga nojo'ya mahsulot sifatida chiqadi.</p>
+                  </div>
+                  <span className="text-[5px] opacity-65 tracking-widest font-black uppercase z-10">EDUGEN PRESENTATION BUILDER</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-850 text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <span className="text-slate-700 dark:text-slate-200 font-black block mb-0.5 uppercase tracking-wider text-[7px] text-indigo-500">🗣️ O'qituvchi uchun izoh (Speaker Notes):</span>
+                  Sinfga xloroplast donachasining mikroskop ostidagi ko'rinishini slayd bilan birga tushuntiring.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Storyboard & Multimedia Storyboard */}
+          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+            <div className="flex-1 space-y-6 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-600 dark:text-pink-400 shadow-sm shadow-pink-500/5">
+                <Video size={22} />
+              </div>
+              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                {t.featuresDetail[2].title}
+              </h3>
+              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
+                {t.featuresDetail[2].desc}
+              </p>
+              <div className="inline-block bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
+                {t.featuresDetail[2].costInfo}
+              </div>
+            </div>
+
+            <div className="flex-1 w-full max-w-md">
+              {/* Storyboard Mockup */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-3 max-w-sm mx-auto relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Storyboard Multimedia (Kadr #1)</span>
+                <div className="relative rounded-2xl overflow-hidden aspect-video border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center group cursor-pointer shadow-inner">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                  
+                  {/* Glowing atomic visual representation */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-600 blur-md opacity-30 animate-pulse"></div>
+                    <div className="w-16 h-16 rounded-full border border-dashed border-pink-500/30 animate-spin-slow"></div>
+                  </div>
+                  
+                  <div className="absolute bottom-3 left-3 z-25 text-white text-[9px] font-black uppercase tracking-wide">1. Atom yadrosi va elektronlar</div>
+                  <div className="absolute z-25 w-11 h-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 group-hover:scale-105 group-hover:bg-white/20 transition-all shadow-md">
+                    <svg className="w-4 h-4 fill-current ml-0.5 text-pink-400" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
+                </div>
+                <div className="text-[8px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-100 dark:border-slate-850">
+                  <span className="font-black text-slate-700 dark:text-slate-200 block uppercase tracking-wider text-[7px] text-pink-500 mb-0.5">🗣️ Dars Narratsiyasi (Ssenariy):</span>
+                  "Tasavvur qiling, har bir moddaning asosi bo'lgan atom markazida musbat yadro, uning atrofida esa sayyoralardek elektronlar aylanadi..."
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Interactive Quizzes Generator */}
+          <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-20">
+            <div className="flex-1 space-y-6 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/5">
+                <FileText size={22} />
+              </div>
+              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                {t.featuresDetail[3].title}
+              </h3>
+              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
+                {t.featuresDetail[3].desc}
+              </p>
+              <div className="inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
+                {t.featuresDetail[3].costInfo}
+              </div>
+            </div>
+
+            <div className="flex-1 w-full max-w-md">
+              {/* Interactive Quiz Simulator */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto text-left relative overflow-hidden">
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Interfaol Test Simulyatori (Demo)</span>
+                <h4 className="text-[11px] font-black text-slate-800 dark:text-white leading-normal">
+                  Moddalar tarkibidagi atomlar bir-biri bilan qanday bog'lanadi?
+                </h4>
+                <div className="space-y-2">
+                  {[
+                    { id: 1, text: "A) Gravitatsion kuchlar orqali", correct: false },
+                    { id: 2, text: "B) Kimyoviy bog'lanishlar (kovalent/ion)", correct: true },
+                    { id: 3, text: "C) Mexanik ishqalanish yordamida", correct: false }
+                  ].map((opt) => {
+                    let style = "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300";
+                    if (quizSelected !== null) {
+                      if (opt.id === quizSelected) {
+                        style = opt.correct 
+                          ? "border-emerald-500 bg-emerald-50/20 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 ring-1 ring-emerald-500"
+                          : "border-rose-500 bg-rose-50/20 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 ring-1 ring-rose-500";
+                      } else if (opt.correct) {
+                        style = "border-emerald-500 bg-emerald-50/10 text-emerald-600 dark:bg-emerald-950/10 dark:text-emerald-400";
+                      }
+                    }
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setQuizSelected(opt.id)}
+                        className={`w-full p-3.5 rounded-xl border text-[9px] font-bold transition-all text-left flex justify-between items-center cursor-pointer active:scale-99 ${style}`}
+                      >
+                        <span>{opt.text}</span>
+                        {quizSelected !== null && opt.id === quizSelected && (
+                          <span className="text-[8px] font-black uppercase tracking-wider">{opt.correct ? "✓ To'g'ri" : "✗ Noto'g'ri"}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 5: Educational Image Creator */}
+          <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+            <div className="flex-1 space-y-6 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-400 shadow-sm shadow-orange-500/5">
+                <ImageIcon size={22} />
+              </div>
+              <h3 className="text-xl lg:text-2xl font-black tracking-tight text-slate-950 dark:text-white uppercase">
+                {t.featuresDetail[4].title}
+              </h3>
+              <p className="text-xs lg:text-sm text-slate-550 dark:text-slate-400 leading-relaxed font-medium">
+                {t.featuresDetail[4].desc}
+              </p>
+              <div className="inline-block bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-2xl text-[10px] font-extrabold tracking-wide uppercase">
+                {t.featuresDetail[4].costInfo}
+              </div>
+            </div>
+
+            <div className="flex-1 w-full max-w-md">
+              {/* Image Generator Mockup Canvas */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-6 shadow-2xl flex flex-col gap-4 max-w-sm mx-auto relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                <div className="flex justify-between items-center text-[9px] font-black text-slate-400">
+                  <span className="uppercase tracking-wider">TA'LIMIY DIAGRAMMA</span>
+                  <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 px-2.5 py-0.5 rounded-lg">3D USLUB</span>
+                </div>
+                <div className="relative aspect-square max-w-[180px] mx-auto rounded-full flex items-center justify-center border-4 border-slate-100 dark:border-slate-800/60 shadow-xl overflow-hidden p-6 bg-slate-50 dark:bg-slate-950">
+                  {/* Molecule atom composition animated */}
+                  <div className="absolute w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-red-600 flex items-center justify-center text-white text-[7px] font-black shadow-md shadow-orange-500/40 animate-pulse">YADRO</div>
+                  <div className="absolute w-20 h-20 rounded-full border border-dashed border-slate-300 dark:border-slate-700 animate-spin-slow"></div>
+                  <div className="absolute w-32 h-32 rounded-full border border-dashed border-slate-200/80 animate-spin-reverse"></div>
+                  <div className="absolute top-8 left-8 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md animate-bounce"></div>
+                  <div className="absolute bottom-10 right-6 w-2 h-2 rounded-full bg-emerald-500 shadow-md animate-ping"></div>
+                </div>
+                <div className="text-[8px] font-black text-slate-450 uppercase tracking-widest text-center">
+                  Mavzu: Kislorod Atom tuzilishi (Diagramma)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Credit cost breakdown (Tangacha sarfi) */}
+      <section className="max-w-4xl mx-auto px-6 py-16 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 rounded-[32px] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+            <div className="flex-1 space-y-4 text-left">
+              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-full inline-block">
+                🪙 {t.coinsTitle}
+              </span>
+              <h3 className="text-xl md:text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
+                {t.coinsTableTitle}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                {t.coinsDesc}
+              </p>
+            </div>
+            
+            <div className="flex-1 w-full space-y-2.5">
+              {t.coinCosts && t.coinCosts.map((item: any, idx: number) => (
+                <div 
+                  key={idx} 
+                  className="flex items-center justify-between p-3.5 bg-white/70 dark:bg-slate-950/70 border border-slate-200/50 dark:border-slate-900/50 rounded-2xl shadow-xs hover:border-slate-350 dark:hover:border-slate-850 transition-colors"
+                >
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{item.name}</span>
+                  <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1 rounded-lg">
+                    {item.cost}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
