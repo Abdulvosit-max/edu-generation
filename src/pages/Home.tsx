@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sparkles,
   MessageSquare,
@@ -17,10 +17,13 @@ import {
   Mail,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Users,
+  Globe
 } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, signInAsDemo } from "../lib/firebase";
+import { fetchResources, Resource } from "../lib/db";
 import { Language } from "../lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -379,6 +382,16 @@ export default function Home() {
     { id: 4, icon: ImageIcon,     color: "orange",  title: { uz: "Rasmlar",    ru: "Изображения", en: "Images"   } },
   ];
 
+  const [communityItems, setCommunityItems] = useState<Resource[]>([]);
+  const [communityLoading, setCommunityLoading] = useState(true);
+
+  useEffect(() => {
+    fetchResources(6).then(data => {
+      setCommunityItems(data);
+      setCommunityLoading(false);
+    }).catch(() => setCommunityLoading(false));
+  }, []);
+
   const openAuth = () => {
     setErrorMsg(null);
     setShowAuthModal(true);
@@ -488,7 +501,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-6 pt-16 pb-12 text-center flex flex-col items-center">
         <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full mb-6">
-          🌟 AI Education Ecosystem
+          🌟 AI Education Ecosystem — Murodillo Musajonov
         </span>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-slate-950 dark:text-white max-w-3xl mb-6">
           {t.heroTitle}
@@ -496,12 +509,19 @@ export default function Home() {
         <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mb-8 font-medium">
           {t.heroDesc}
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-3 justify-center">
           <button
             onClick={openAuth}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all cursor-pointer active:scale-98 text-xs uppercase tracking-wider animate-pulse-slow"
           >
             {t.getStarted} <ArrowRight size={14} />
+          </button>
+          <button
+            onClick={handleGuestLogin}
+            disabled={loading}
+            className="px-8 py-4 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-black rounded-2xl flex items-center gap-2 transition-all cursor-pointer active:scale-98 text-xs uppercase tracking-wider shadow-sm disabled:opacity-50"
+          >
+            {loading ? "Kirilmoqda..." : "▶ Demo kirish"}
           </button>
         </div>
 
@@ -612,6 +632,112 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* Community Works Section */}
+      <section className="max-w-6xl mx-auto px-6 py-16 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Users size={16} className="text-blue-600" />
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Hamjamiyat</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">O'qituvchilar yaratgan ishlar</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Hamjamiyat a'zolari ulashgan eng yaxshi ta'lim materiallari</p>
+          </div>
+          <button
+            onClick={handleGuestLogin}
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+          >
+            <Globe size={14} /> Barchasini ko'rish
+          </button>
+        </div>
+
+        {communityLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-36 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            ))}
+          </div>
+        ) : communityItems.length === 0 ? (
+          <div className="py-16 text-center text-slate-400 dark:text-slate-600">
+            <Users size={32} className="mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Hali ulashilgan ishlar yo'q</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {communityItems.map((item, i) => {
+              const typeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
+                slide:   { icon: <Presentation size={18} />, color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20", label: "Slayd" },
+                video:   { icon: <Video size={18} />,        color: "text-pink-600 bg-pink-50 dark:bg-pink-900/20",       label: "Video" },
+                test:    { icon: <FileText size={18} />,     color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20", label: "Test" },
+                image:   { icon: <ImageIcon size={18} />,   color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20", label: "Rasm" },
+                chat:    { icon: <MessageSquare size={18} />,color: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",       label: "Chat" },
+              };
+              const cfg = typeConfig[item.type] || typeConfig.chat;
+
+              // If image type, try to parse the content as image URL
+              let previewUrl: string | null = null;
+              if (item.type === "image") {
+                try {
+                  const parsed = JSON.parse(item.content);
+                  previewUrl = parsed.url || parsed.imageUrl || null;
+                } catch {
+                  if (item.content.startsWith("http")) previewUrl = item.content;
+                }
+              }
+              if (item.type === "slide") {
+                try {
+                  const parsed = JSON.parse(item.content);
+                  const firstSlide = parsed.slides?.[0] || parsed[0];
+                  previewUrl = firstSlide?.imageUrl || firstSlide?.image || null;
+                } catch { /* no preview */ }
+              }
+
+              return (
+                <motion.div
+                  key={item.id ?? i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={handleGuestLogin}
+                  className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all"
+                >
+                  {/* Preview or icon */}
+                  <div className={`h-24 flex items-center justify-center ${previewUrl ? "" : cfg.color}`}>
+                    {previewUrl ? (
+                      <img src={previewUrl} alt={item.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className={`${cfg.color} p-3 rounded-xl`}>{cfg.icon}</div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-2.5">
+                    <p className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 truncate leading-tight">{item.title}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate mt-0.5 flex items-center gap-1">
+                      <User size={9} /> {item.author_name || "Foydalanuvchi"}
+                    </p>
+                  </div>
+
+                  {/* Type badge */}
+                  <span className={`absolute top-2 left-2 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${cfg.color}`}>
+                    {cfg.label}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-6 sm:hidden text-center">
+          <button
+            onClick={handleGuestLogin}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg"
+          >
+            <Globe size={14} /> Barchasini ko'rish
+          </button>
+        </div>
       </section>
 
       {/* Detailed Feature Showcase (Interactive Tabs Section) */}

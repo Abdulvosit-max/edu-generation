@@ -209,361 +209,222 @@ export default function ImageGen() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto">
-      {/* Toast Notifications */}
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Toasts */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 pointer-events-auto ${
-              toast.type === "success"
-                ? "bg-emerald-600 text-white border-emerald-500"
-                : toast.type === "error"
-                ? "bg-rose-600 text-white border-rose-500"
-                : "bg-indigo-600 text-white border-indigo-500"
-            }`}
-          >
-            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
-            {toast.msg}
+          <div key={toast.id} className={`px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto ${toast.type === "success" ? "bg-green-600 text-white" : toast.type === "error" ? "bg-red-600 text-white" : "bg-blue-600 text-white"}`}>
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"} {toast.msg}
           </div>
         ))}
       </div>
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
-          <ImageIcon className="text-blue-600 dark:text-blue-400" /> EduVisual Image Studio
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">
-          Dars mavzusi va fan parametrlarini kiriting, AI esa darsingiz uchun professional va pedagogik jihatdan baholangan tasvir resurslarini yaratib beradi.
-        </p>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Ta'lim rasmi yaratish</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mavzu kiriting — AI pedagogik baholangan rasm yaratadi</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Input & Customization Panel */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-[28px] shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-            <h3 className="text-base font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-              <GraduationCap className="text-blue-600" size={20} /> Metodik Parametrlar
-            </h3>
-
-            {/* Selectors */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  {t.selectSubject}
-                </label>
-                <select
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300"
-                >
-                  {["Biologiya", "Fizika", "Kimyo", "Informatika", "Matematika", "Tarix", "Geografiya", "Boshlang'ich ta'lim", "Kasbiy fanlar"].map(sub => (
-                    <option key={sub} value={sub}>{sub}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  {t.selectAge}
-                </label>
-                <select
-                  value={ageGroup}
-                  onChange={e => setAgeGroup(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300"
-                >
-                  {["Boshlang'ich sinf (1-4 sinflar)", "O'rta sinf (5-9 sinflar)", "Kollej / Oliy ta'lim"].map(age => (
-                    <option key={age} value={age}>{age}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    {t.selectStyle}
-                  </label>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sol panel — sozlamalar */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Parametrlar</p>
+            <div className="space-y-3">
+              {[
+                { label: t.selectSubject, value: subject, onChange: setSubject, options: ["Biologiya","Fizika","Kimyo","Informatika","Matematika","Tarix","Geografiya","Boshlang'ich ta'lim","Kasbiy fanlar"] },
+                { label: t.selectAge, value: ageGroup, onChange: setAgeGroup, options: ["Boshlang'ich sinf (1-4 sinflar)","O'rta sinf (5-9 sinflar)","Kollej / Oliy ta'lim"] },
+                { label: t.selectStyle, value: style, onChange: setStyle, options: ["3D Render","Infografik / Diagramma","Realistik","Multfilm / Illyustratsiya","Minimalizm"] },
+                { label: t.selectComplexity, value: complexity, onChange: setComplexity, options: ["Sodda","O'rtacha","Mukammal"] },
+              ].map(({ label, value, onChange, options }) => (
+                <div key={label}>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</label>
                   <select
-                    value={style}
-                    onChange={e => setStyle(e.target.value)}
-                    className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300"
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 transition-colors"
                   >
-                    {["3D Render", "Infografik / Diagramma", "Realistik", "Multfilm / Illyustratsiya", "Minimalizm"].map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    {options.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    {t.selectComplexity}
-                  </label>
-                  <select
-                    value={complexity}
-                    onChange={e => setComplexity(e.target.value)}
-                    className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 ring-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300"
-                  >
-                    {["Sodda", "O'rtacha", "Mukammal"].map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Prompt Inputs */}
-            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                Dars mavzusi va g'oyangiz
-              </label>
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dars mavzusi</label>
               <textarea
                 rows={3}
                 value={prompt}
-                onChange={e => {
-                  setPrompt(e.target.value);
-                  if (enhancedPrompt) setEnhancedPrompt("");
-                }}
+                onChange={e => { setPrompt(e.target.value); if (enhancedPrompt) setEnhancedPrompt(""); }}
                 placeholder={t.imagePlaceholder}
-                className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 ring-blue-500 transition-shadow resize-none text-xs font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 resize-none placeholder:text-gray-400 transition-colors"
               />
 
-              {/* Prompt Enhancer Button */}
               {prompt.trim() && (
                 <button
-                  type="button"
                   onClick={handleEnhancePrompt}
                   disabled={enhancing || loading}
-                  className="mt-3 w-full py-2.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black rounded-xl flex items-center justify-center gap-2 border border-blue-100 dark:border-blue-900/40 transition-colors cursor-pointer"
+                  className="mt-2 w-full py-2 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm rounded-lg flex items-center justify-center gap-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
                 >
-                  {enhancing ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={14} className="text-yellow-500 animate-pulse" />
-                  )}
+                  {enhancing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                   {enhancing ? t.enhancing : t.enhancePrompt}
                 </button>
               )}
 
-              {/* Enhanced Prompt Preview */}
               <AnimatePresence>
                 {enhancedPrompt && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="mt-4 p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/20 rounded-2xl text-[11px] text-emerald-800 dark:text-emerald-300 font-medium"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-xs text-green-800 dark:text-green-300"
                   >
-                    <span className="font-bold flex items-center gap-1.5 mb-1.5"><Sparkles size={12} className="text-emerald-500" /> AI Pedagogik Prompt:</span>
-                    <p className="italic">"{enhancedPrompt}"</p>
+                    <span className="font-medium block mb-1">AI prompt:</span>
+                    <p className="italic text-green-700 dark:text-green-400">{enhancedPrompt}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Main Generate Button */}
               <button
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
-                className="mt-6 w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 disabled:text-slate-500 dark:disabled:text-slate-400 disabled:cursor-not-allowed text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer"
+                className="mt-3 w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
-                {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                 {loading ? t.generating : t.generateImage}
               </button>
             </div>
           </div>
-
-          {/* Ethics warning */}
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-[24px] p-5 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-3">
-            <AlertCircle size={18} className="shrink-0 mt-0.5 text-amber-600" />
-            <p className="font-medium leading-relaxed">{t.safetyWarning}</p>
-          </div>
         </div>
 
-        {/* Right Output and Pedagogical Evaluation Panel */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          <div className="bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-800/50 rounded-[32px] p-6 sm:p-8 min-h-[450px] flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
-            {/* Loading Indicator for Image */}
+        {/* O'ng panel — natija */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 min-h-[400px] flex flex-col items-center justify-center p-6">
             {loading && !image && (
-              <div className="flex flex-col items-center justify-center p-8 bg-slate-900/5 dark:bg-slate-900/40 rounded-[28px] border border-blue-500/25 relative overflow-hidden backdrop-blur-md max-w-sm w-full mx-auto shadow-2xl animate-pulse">
-                {/* Glowing neon back light */}
-                <div className="absolute -inset-10 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 rounded-full blur-3xl animate-spin pointer-events-none"></div>
-                
-                <div className="relative z-10 flex flex-col items-center gap-5">
-                  <div className="relative w-20 h-20 flex items-center justify-center">
-                    <div className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-                    <div className="absolute w-12 h-12 border-4 border-indigo-500/15 border-b-indigo-500 rounded-full animate-spin [animation-direction:reverse]"></div>
-                    <ImageIcon className="text-blue-500 animate-bounce" size={24} />
-                  </div>
-                  
-                  <div className="text-center">
-                    <p className="font-black text-slate-800 dark:text-slate-100 text-sm tracking-wide mb-1">
-                      {t.generating}
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                      EduVisual AI tasvir chizmoqda...
-                    </p>
-                  </div>
-                  
-                  {/* Live Timer Counter */}
-                  <div className="px-5 py-2.5 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-ping"></span>
-                    <span className="font-mono text-base font-extrabold text-blue-600 dark:text-blue-400">
-                      {elapsedTime.toFixed(1)}s
-                    </span>
-                  </div>
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-12 h-12 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Rasm yaratilmoqda</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{elapsedTime.toFixed(1)}s</p>
                 </div>
               </div>
             )}
 
-            {imgError && (
-              <div className="flex flex-col items-center gap-4 text-rose-500">
-                <p className="font-bold text-center">Tasvir yuklashda muammo yuz berdi.</p>
-                <button onClick={handleGenerate} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">Qaytadan urinish</button>
+            {imgError && !loading && (
+              <div className="flex flex-col items-center gap-3 text-center">
+                <p className="text-sm text-red-600 dark:text-red-400">Rasm yuklashda xatolik</p>
+                <button onClick={handleGenerate} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                  Qaytadan urinish
+                </button>
               </div>
             )}
 
-            {/* Generated Image View */}
-            {image ? (
-              <div className="w-full flex flex-col items-center">
-                <div className="w-full relative group rounded-2xl overflow-hidden shadow-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+            {image && (
+              <div className="w-full">
+                <div className="relative rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
                   {imgLoading && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80">
+                      <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
                   <img
                     src={image}
-                    alt="Generated Educational Resource"
+                    alt="Generated"
                     referrerPolicy="no-referrer"
-                    onLoad={() => {
-                      setImgLoading(false);
-                      setImgError(false);
-                    }}
+                    onLoad={() => { setImgLoading(false); setImgError(false); }}
                     onError={handleImageError}
-                    className={`w-full max-h-[500px] object-contain transition-all duration-500 ${imgLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
+                    className={`w-full max-h-[500px] object-contain transition-opacity duration-300 ${imgLoading ? "opacity-0" : "opacity-100"}`}
                   />
                 </div>
-
-                {/* Actions Toolbar */}
-                <div className="mt-4 flex items-center justify-between px-2 w-full">
-                  <div className="flex gap-2">
-                    <a
-                      href={image}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 text-xs font-black rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
-                    >
-                      <Download size={14} /> Yuklab olish
-                    </a>
-                    
-                    {resourceId && !isShared && (
-                      <button
-                        onClick={handleShare}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-black rounded-xl shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all cursor-pointer"
-                      >
-                        <Share2 size={14} /> {t.share}
-                      </button>
-                    )}
-
-                    {isShared && (
-                      <div className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-5 py-2.5 text-xs font-black rounded-xl flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        Ommaviyga qo'shildi
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-center gap-2 mt-3">
+                  <a href={image} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <Download size={14} /> Yuklab olish
+                  </a>
+                  {resourceId && !isShared && (
+                    <button onClick={handleShare}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                      <Share2 size={14} /> {t.share}
+                    </button>
+                  )}
+                  {isShared && (
+                    <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Ulashildi</span>
+                  )}
                 </div>
               </div>
-            ) : !loading && (
-              <div className="text-slate-400 dark:text-slate-500 max-w-sm flex flex-col items-center">
-                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-slate-100 dark:ring-slate-800">
-                  <ImageIcon size={32} className="text-slate-300 dark:text-slate-600" />
+            )}
+
+            {!loading && !image && !imgError && (
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <ImageIcon size={24} className="text-gray-400" />
                 </div>
-                <p className="font-black text-slate-700 dark:text-slate-300 text-base">{t.noImage}</p>
-                <p className="text-xs text-center mt-2 opacity-80 leading-relaxed">{t.noImageDesc}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.noImage}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{t.noImageDesc}</p>
               </div>
             )}
           </div>
 
-          {/* AI Pedagogical Evaluation Section */}
+          {/* Pedagogik baholash */}
           <AnimatePresence>
             {(evaluating || evaluation) && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col gap-6"
+                exit={{ opacity: 0 }}
+                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5"
               >
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-4">
-                  <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <BarChart3 className="text-emerald-500" size={20} /> {t.pedEvaluation}
-                  </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{t.pedEvaluation}</p>
                   {evaluation && (
-                    <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-black text-xs px-3.5 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-1.5">
-                      {t.overallPedScore}: <span className="text-sm font-black">{evaluation.pedagogicalEvaluation?.overallScorePercentage || 92}%</span>
-                    </div>
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-full">
+                      {evaluation.pedagogicalEvaluation?.overallScorePercentage || 92}%
+                    </span>
                   )}
                 </div>
 
                 {evaluating ? (
-                  <div className="py-8 flex flex-col items-center justify-center gap-3">
-                    <Loader2 className="animate-spin text-emerald-500" size={32} />
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 animate-pulse">Pedagogik baholash va metodika generatsiya qilinmoqda...</p>
+                  <div className="flex items-center gap-2 py-4 text-gray-500">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-sm">Baholanmoqda...</span>
                   </div>
                 ) : evaluation && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Scores Progress Bars */}
-                    <div className="flex flex-col gap-4">
-                      <h4 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Baholash ko'rsatkichlari:</h4>
-                      
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
                       {[
-                        { label: "Mavzuga va fanga moslik", score: evaluation.pedagogicalEvaluation?.subjectAlignment || 5 },
-                        { label: "Ilmiy va vizual aniqlik", score: evaluation.pedagogicalEvaluation?.scientificAccuracy || 5 },
-                        { label: "O'quvchiga tushunarliligi", score: evaluation.pedagogicalEvaluation?.clarity || 4 },
-                        { label: "Yosh darajasiga muvofiqlik", score: evaluation.pedagogicalEvaluation?.ageAppropriateness || 5 }
-                      ].map((item, index) => (
-                        <div key={index} className="flex flex-col gap-1.5">
-                          <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                        { label: "Fanga moslik", score: evaluation.pedagogicalEvaluation?.subjectAlignment || 5 },
+                        { label: "Ilmiy aniqlik", score: evaluation.pedagogicalEvaluation?.scientificAccuracy || 5 },
+                        { label: "Tushunarliligi", score: evaluation.pedagogicalEvaluation?.clarity || 4 },
+                        { label: "Yosh muvofiqlik", score: evaluation.pedagogicalEvaluation?.ageAppropriateness || 5 },
+                      ].map((item, i) => (
+                        <div key={i}>
+                          <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                             <span>{item.label}</span>
-                            <span>{item.score} / 5</span>
+                            <span>{item.score}/5</span>
                           </div>
-                          <div className="w-full h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${(item.score / 5) * 100}%` }}
-                              transition={{ duration: 0.8, delay: index * 0.1 }}
-                              className="h-full bg-emerald-500 rounded-full"
+                              transition={{ duration: 0.6, delay: i * 0.1 }}
+                              className="h-full bg-blue-500 rounded-full"
                             />
                           </div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Lesson Integration Plan */}
-                    <div className="flex flex-col gap-4 bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                        <CheckCircle size={14} className="text-emerald-500" /> Darsga Integratsiya Rejasi:
-                      </h4>
-
-                      <div className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
-                        <div>
-                          <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block mb-0.5">{t.pedagogicalGoal}:</span>
-                          <p className="font-medium text-slate-800 dark:text-slate-200">{evaluation.pedagogicalGoal || "Mavzuni vizual o'rganish."}</p>
-                        </div>
-
-                        <div>
-                          <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block mb-0.5">{t.lessonStage}:</span>
-                          <p className="font-bold text-blue-600 dark:text-blue-400">{evaluation.lessonIntegration?.stage || "Mavzuni mustahkamlash"}</p>
-                        </div>
-
-                        <div>
-                          <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block mb-0.5">{t.teachingMethod}:</span>
-                          <p className="font-bold text-indigo-600 dark:text-indigo-400">{evaluation.lessonIntegration?.method || "Suhbat rejasi"}</p>
-                        </div>
-
-                        <div>
-                          <span className="font-bold text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider block mb-0.5">{t.teacherInstructions}:</span>
-                          <p className="italic font-medium text-slate-700 dark:text-slate-300">"{evaluation.lessonIntegration?.teacherInstructions || "Tasvirni o'quvchilar bilan muhokama qiling."}"</p>
-                        </div>
+                    <div className="space-y-3 text-xs text-gray-600 dark:text-gray-400">
+                      <div>
+                        <p className="text-gray-400 dark:text-gray-500 mb-0.5">Pedagogik maqsad</p>
+                        <p className="text-gray-800 dark:text-gray-200">{evaluation.pedagogicalGoal}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 dark:text-gray-500 mb-0.5">Dars bosqichi</p>
+                        <p className="text-blue-600 dark:text-blue-400 font-medium">{evaluation.lessonIntegration?.stage}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 dark:text-gray-500 mb-0.5">Metod</p>
+                        <p className="text-gray-800 dark:text-gray-200">{evaluation.lessonIntegration?.method}</p>
                       </div>
                     </div>
                   </div>

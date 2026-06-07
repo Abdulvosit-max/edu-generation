@@ -24,7 +24,8 @@ import {
   Play,
   Video,
   Volume2,
-  GraduationCap
+  GraduationCap,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -101,12 +102,12 @@ function SlideImage({ src, alt, isPrompt = false }: { src: string; alt: string; 
   return (
     <div className="w-full h-full min-h-[160px] rounded-3xl overflow-hidden bg-white/10 flex items-center justify-center relative border border-white/20">
       {status === "error" ? (
-        <div className="flex flex-col items-center gap-2 text-white/50 p-4"><Icons.ImageIcon size={32} /></div>
+        <div className="flex flex-col items-center gap-2 text-white/50 p-4"><ImageIcon size={32} /></div>
       ) : (
         <>
           {status === "loading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm gap-2">
-              <Icons.Loader2 size={24} className="animate-spin text-white" />
+              <Loader2 size={24} className="animate-spin text-white" />
               <span className="font-mono text-xs font-bold text-white/80">{elapsedTime.toFixed(1)}s</span>
             </div>
           )}
@@ -376,23 +377,13 @@ export default function Feed() {
   };
 
   return (
-    <div className="p-4 md:p-10 max-w-7xl mx-auto min-h-screen flex flex-col overflow-x-hidden relative">
+    <div className="p-6 max-w-7xl mx-auto flex flex-col overflow-x-hidden">
 
-      {/* Toast Notifications */}
+      {/* Toasts */}
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
         {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 pointer-events-auto ${
-              toast.type === "success"
-                ? "bg-emerald-600 text-white border-emerald-500"
-                : toast.type === "error"
-                ? "bg-rose-600 text-white border-rose-500"
-                : "bg-indigo-600 text-white border-indigo-500"
-            }`}
-          >
-            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
-            {toast.msg}
+          <div key={toast.id} className={`px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto ${toast.type === "success" ? "bg-green-600 text-white" : toast.type === "error" ? "bg-red-600 text-white" : "bg-blue-600 text-white"}`}>
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"} {toast.msg}
           </div>
         ))}
       </div>
@@ -404,38 +395,38 @@ export default function Feed() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4"
             onClick={() => setDeleteConfirmItem(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4"
+              className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-sm w-full shadow-xl border border-gray-200 dark:border-gray-700 space-y-4"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center">
-                  <Trash2 size={18} className="text-rose-600 dark:text-rose-400" />
+                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <Trash2 size={18} className="text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <p className="font-black text-slate-800 dark:text-white text-sm">Resursni o'chirish</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bu amalni qaytarib bo'lmaydi</p>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">Resursni o'chirish</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
-                "<span className="font-black">{deleteConfirmItem.title}</span>" resursini o'chirishni tasdiqlaysizmi?
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                "<span className="font-medium">{deleteConfirmItem.title}</span>" ni o'chirmoqchimisiz?
               </p>
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => setDeleteConfirmItem(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Bekor qilish
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition-colors"
+                  className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
                 >
                   O'chirish
                 </button>
@@ -445,41 +436,34 @@ export default function Feed() {
         )}
       </AnimatePresence>
 
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
-      <div className="absolute bottom-10 left-0 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
-
       {/* Header and Tab Selector */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
-             <Globe className="text-blue-600 dark:text-blue-500" /> {activeTab === "community" ? t.feedTitle : t.myLibrary}
-          </h1>
-          <p className="text-slate-500 text-sm mt-2">{t.feedDesc}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {activeTab === "community" ? t.feedTitle : t.myLibrary}
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t.feedDesc}</p>
         </div>
 
-        {/* Tab switch buttons */}
-        <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm relative overflow-hidden">
-          <button 
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+          <button
             onClick={() => setActiveTab("community")}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === "community" ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-800"}`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "community" ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"}`}
           >
-            <Globe size={16} /> Hamjamiyat ishlari
+            <Globe size={15} /> Hamjamiyat
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("library")}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === "library" ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-800"}`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "library" ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"}`}
           >
-            <FolderHeart size={16} /> Mening kutubxonam
+            <FolderHeart size={15} /> Kutubxonam
           </button>
         </div>
       </div>
 
-      {/* Filters & Search Control Bar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl p-4 rounded-[24px] border border-slate-200/50 dark:border-slate-800/50 shadow-sm mb-8">
-        
-        {/* Type Buttons */}
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+      {/* Filters & Search */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center mb-6">
+        <div className="flex flex-wrap gap-1.5">
           {[
             { id: "all", label: "Barchasi" },
             { id: "slide", label: "Slaydlar" },
@@ -490,7 +474,7 @@ export default function Feed() {
             <button
               key={type.id}
               onClick={() => setSelectedType(type.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedType === type.id ? "bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-slate-800 hover:bg-slate-50"}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedType === type.id ? "bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-white dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"}`}
             >
               {type.label}
             </button>
@@ -504,25 +488,25 @@ export default function Feed() {
             placeholder="Mavzuni qidirish..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-xl outline-none text-xs font-medium focus:ring-2 ring-blue-500 transition-all text-slate-700 dark:text-slate-200"
+            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm outline-none focus:border-blue-500 transition-colors text-gray-800 dark:text-gray-200 placeholder:text-gray-400"
           />
-          <Search size={16} className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+          <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
         </div>
       </div>
 
       {/* Resources Feed Content */}
       {loading ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-24">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-lg"></div>
-          <p className="mt-4 font-bold text-slate-500 dark:text-slate-400">{t.loading}</p>
+        <div className="flex flex-col items-center justify-center py-24">
+          <div className="w-8 h-8 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{t.loading}</p>
         </div>
       ) : filteredResources.length === 0 ? (
-        <div className="flex-1 bg-white/40 dark:bg-slate-800/30 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-[32px] py-24 px-6 text-center shadow-inner flex flex-col items-center justify-center">
-          <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6">
-            <HelpCircle size={36} className="text-slate-300 dark:text-slate-600" />
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <HelpCircle size={28} className="text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">{t.noResources}</h3>
-          <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">{t.noResourcesDesc}</p>
+          <p className="text-base font-medium text-gray-700 dark:text-gray-300">{t.noResources}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 max-w-sm">{t.noResourcesDesc}</p>
         </div>
       ) : (
         <motion.div 
@@ -574,17 +558,17 @@ export default function Feed() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   onClick={() => setPreviewItem(item)}
-                  className="group bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/50 dark:border-slate-700/50 hover:border-blue-500/50 dark:hover:border-blue-500/40 p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer transform hover:-translate-y-1"
+                  className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-600 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     {/* Card Top Information */}
                     <div className="flex items-center justify-between mb-4">
-                      <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${typeColor}`}>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${typeColor}`}>
                         {typeLabel}
                       </span>
                       {countInfo && (
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                          <Clock size={10} /> {countInfo}
+                        <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                          <Clock size={11} /> {countInfo}
                         </span>
                       )}
                     </div>
@@ -659,56 +643,48 @@ export default function Feed() {
                     )}
 
                     {/* Title */}
-                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 mt-3 mb-1">
                       {item.title}
                     </h3>
-                    
-                    {/* Prompt info */}
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 mb-4 font-semibold italic">
+
+                    <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-1 mb-3 italic">
                       "{item.prompt}"
                     </p>
                   </div>
 
                   <div>
                     {/* Card Bottom - Author and Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700/60 mt-auto">
-                      
-                      {/* Author */}
-                      <div className="flex items-center gap-2 max-w-[60%]">
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+
+                      <div className="flex items-center gap-1.5 max-w-[60%]">
                         {item.author_photo ? (
-                          <img src={item.author_photo} alt={item.author_name} className="w-6 h-6 rounded-full border border-slate-200" />
+                          <img src={item.author_photo} alt={item.author_name} className="w-5 h-5 rounded-full" />
                         ) : (
-                          <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-[10px] font-black">
+                          <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-[9px] font-semibold">
                             {item.author_name.charAt(0)}
                           </div>
                         )}
-                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 truncate">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {item.author_name}
                         </span>
                       </div>
 
-                      {/* Action buttons */}
                       <div className="flex gap-1">
-                        
-                        {/* Share status / toggle button inside library */}
                         {activeTab === "library" && (
                           <button
                             onClick={(e) => handleToggleShare(item, e)}
-                            title={item.is_public ? "Hamjamiyatga ulashilgan (Ommaviy)" : "Shaxsiy (Faqat sizga ko'rinadi)"}
-                            className={`p-2 rounded-xl border transition-all hover:scale-105 ${item.is_public ? "bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-900 dark:border-slate-800"}`}
+                            title={item.is_public ? "Ommaviy" : "Shaxsiy"}
+                            className={`p-1.5 rounded-lg border transition-colors ${item.is_public ? "bg-green-50 border-green-200 text-green-600 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400" : "bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700"}`}
                           >
-                            {item.is_public ? <Unlock size={14} /> : <Lock size={14} />}
+                            {item.is_public ? <Unlock size={13} /> : <Lock size={13} />}
                           </button>
                         )}
 
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewItem(item);
-                          }}
-                          className="p-2 bg-slate-50 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 text-slate-500 dark:text-slate-400 rounded-xl hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPreviewItem(item); }}
+                          className="p-1.5 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-500 dark:text-gray-400 rounded-lg hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
-                          <Eye size={14} />
+                          <Eye size={13} />
                         </button>
 
                         {activeTab === "library" && (
@@ -739,32 +715,32 @@ export default function Feed() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closePreview}
-              className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
+              className="fixed inset-0 bg-black/50"
             />
 
             {/* Modal Content Box */}
             <motion.div
               layoutId={`card-${previewItem.id}`}
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 w-full max-w-5xl shadow-2xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
+              exit={{ opacity: 0, scale: 0.97 }}
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 w-full max-w-5xl shadow-xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
             >
-              
+
               {/* Modal Header */}
-              <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0 bg-white dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                    {previewItem.type === "slide" && <Presentation size={18} />}
-                    {previewItem.type === "test" && <FileText size={18} />}
-                    {previewItem.type === "image" && <ImageIcon size={18} />}
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    {previewItem.type === "slide" && <Presentation size={16} />}
+                    {previewItem.type === "test" && <FileText size={16} />}
+                    {previewItem.type === "image" && <ImageIcon size={16} />}
                   </div>
                   <div>
-                    <h2 className="text-sm md:text-base font-black text-slate-800 dark:text-slate-100 truncate max-w-[280px] md:max-w-md">
+                    <h2 className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[280px] md:max-w-md">
                       {previewItem.title}
                     </h2>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                      Muallif: {previewItem.author_name}
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      {previewItem.author_name}
                     </p>
                   </div>
                 </div>
@@ -776,36 +752,35 @@ export default function Feed() {
                     <button
                       onClick={() => downloadPPTX(previewItem)}
                       disabled={exporting}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-colors"
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
                     >
                       {exporting ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Download size={14} />}
-                      PPTX Yuklash
+                      PPTX
                     </button>
                   )}
 
                   {previewItem.type === "test" && (
                     <button
                       onClick={() => downloadPDF(previewItem)}
-                      className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-colors"
+                      className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1.5 hover:bg-blue-700 transition-colors"
                     >
-                      <Download size={14} /> PDF Yuklash
+                      <Download size={14} /> PDF
                     </button>
                   )}
 
-                  {/* Share button in My Library */}
                   {activeTab === "library" && (
                     <button
                       onClick={(e) => handleToggleShare(previewItem, e)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${previewItem.is_public ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+                      className={`px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors ${previewItem.is_public ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800" : "bg-blue-600 text-white hover:bg-blue-700"}`}
                     >
                       <Share2 size={14} />
-                      {previewItem.is_public ? "Ulashilgan" : "Hamjamiyatga chiqarish"}
+                      {previewItem.is_public ? "Ulashilgan" : "Ulashish"}
                     </button>
                   )}
 
                   <button 
                     onClick={closePreview}
-                    className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                   >
                     <X size={18} />
                   </button>
@@ -813,7 +788,7 @@ export default function Feed() {
               </div>
 
               {/* Modal Body (Responsive and Interactive Content Viewer) */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-10 min-h-0 bg-slate-50/20 dark:bg-slate-900/20">
+              <div className="flex-1 overflow-y-auto p-6 min-h-0 bg-gray-50 dark:bg-gray-950">
                 
                 {/* 1. SLIDE VIEWER */}
                 {previewItem.type === "slide" && (() => {
@@ -900,27 +875,27 @@ export default function Feed() {
                       </div>
 
                       {/* Notes & Controls bar */}
-                      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                      <div className="flex items-center justify-between bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
                         <div className="flex-1 pr-6">
-                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Ma'ruzachi nutqi matni</span>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 italic line-clamp-3">{activeSlide.speakerNotes || "Izohlar yo'q."}</p>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Ma'ruzachi matni</span>
+                          <p className="text-xs text-gray-700 dark:text-gray-300 italic line-clamp-2">{activeSlide.speakerNotes || "Izohlar yo'q."}</p>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-xs font-black text-slate-400">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm text-gray-500">
                             {slideIdx + 1} / {slides.length}
                           </span>
-                          <div className="flex gap-1.5">
-                            <button 
+                          <div className="flex gap-1">
+                            <button
                               onClick={() => setSlideIdx(p => Math.max(0, p - 1))}
-                              className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-200 transition-colors"
+                              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300 transition-colors"
                             >
-                              <ChevronLeft size={16} />
+                              <ChevronLeft size={15} />
                             </button>
-                            <button 
+                            <button
                               onClick={() => setSlideIdx(p => Math.min(slides.length - 1, p + 1))}
-                              className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-200 transition-colors"
+                              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300 transition-colors"
                             >
-                              <ChevronRight size={16} />
+                              <ChevronRight size={15} />
                             </button>
                           </div>
                         </div>

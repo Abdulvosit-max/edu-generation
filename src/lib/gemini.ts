@@ -356,7 +356,7 @@ export async function generateEducationalImage(prompt: string, style = "", forma
 }
 
 export async function getSlideImageUrl(imagePrompt: string) {
-  return await generateEducationalImage(imagePrompt, "3D Render", "1:1");
+  return await generateEducationalImage(imagePrompt, "3D Render", "16:9");
 }
 
 
@@ -411,7 +411,8 @@ Har bir slayd uchun JSON maydonlari:
 - speakerNotes: Slaydni tushuntirishda o'qituvchi aytishi kerak bo'lgan juda batafsil va uzun nutq matni (kamida 3-4 ta to'liq gap).
 - layoutType: Layout turi.
 - colorScheme: Rang sxemasi ("blue", "emerald", "rose", "amber", "indigo", "purple", "cyan", "sky", "navy", "slate").
-- Layoutga qarab kerakli qo'shimcha maydonlar (iconName, diagramSteps, imagePrompt, comparisonData, statValue, statDesc).
+- imagePrompt: BARCHA slaydlar uchun MAJBURIY. Wide-format (16:9) landscape educational background image. Ingliz tilida, juda batafsil (masalan: "photorealistic 3d render of DNA double helix floating in blue light, laboratory background, isometric, high quality, 8k"). Matn overlay uchun fon sifatida ishlatiladi.
+- Layoutga qarab kerakli qo'shimcha maydonlar (iconName, diagramSteps, comparisonData, statValue, statDesc).
 
 Muhim Yo'riqnoma: ${themeInstruction}. Ranglar va layoutlarni turli xil qiling. Barcha ma'lumotlar o'ta batafsil va ilmiy jihatdan mukammal bo'lishi shart.
 

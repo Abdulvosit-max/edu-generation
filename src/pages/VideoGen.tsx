@@ -717,73 +717,37 @@ export default function VideoGen() {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
 
-      {/* Toast Notifications */}
+      {/* Toasts */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-2xl shadow-lg border text-xs font-black flex items-center gap-2 animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto ${
-              toast.type === "success"
-                ? "bg-emerald-600 text-white border-emerald-500"
-                : toast.type === "error"
-                ? "bg-rose-600 text-white border-rose-500"
-                : "bg-indigo-600 text-white border-indigo-500"
-            }`}
-          >
-            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
-            {toast.msg}
+          <div key={toast.id} className={`px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto ${toast.type === "success" ? "bg-green-600 text-white" : toast.type === "error" ? "bg-red-600 text-white" : "bg-blue-600 text-white"}`}>
+            {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"} {toast.msg}
           </div>
         ))}
       </div>
 
-      {/* Test Rejimi Ogohlantirish Banneri */}
-      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
-        <AlertCircle className="shrink-0 text-amber-600 dark:text-amber-500 mt-0.5" size={18} />
-        <div>
-          <span className="font-extrabold text-[10px] text-amber-800 dark:text-amber-400 tracking-wider uppercase block">Test Rejimi / Test Mode:</span>
-          <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 leading-relaxed mt-0.5">
-            Storyboardlar hozirda test rejimida ishlamoqda. Sun'iy intellekt modellarining yuklamasi yoki ulanish tezligi sababli kadr rasmlarining chizilishi yoki yuklanishida ba'zi kechikishlar hamda kutilmagan xatoliklar yuz berishi mumkin.
-          </p>
-        </div>
-      </div>
-      
+
       {/* ----------------- STATE A: CONFIGURATION FORM ----------------- */}
       {!storyboard && !loading && (
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Header Panel */}
-          <div className="relative p-6 md:p-8 bg-gradient-to-r from-slate-50 via-indigo-50/50 to-slate-50 dark:from-slate-900 dark:via-indigo-950/40 dark:to-slate-900 rounded-[32px] border border-slate-200/80 dark:border-indigo-500/10 shadow-sm text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-pink-600 dark:text-pink-500 font-extrabold text-[10px] tracking-widest uppercase">
-              <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
-              EDUVISUAL STORYBOARD STUDIO
-            </div>
-            <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center justify-center gap-2">
-              <Video className="text-pink-600 dark:text-pink-500" size={24} /> Storyboard Yaratish
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium max-w-md mx-auto leading-relaxed">
-              Darsingiz uchun kadrlar ketma-ketligi, qadamli animatsiyalar va audio ssenariylarni bir zumda chizib oling.
-            </p>
+          {/* Header */}
+          <div className="text-center space-y-1">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Storyboard yaratish</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Dars mavzusi bo'yicha kadrlar ketma-ketligi va audio ssenariy</p>
           </div>
 
           {/* Form Card */}
-          <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[28px] border border-slate-200/60 dark:border-slate-700/60 shadow-sm space-y-6">
-            <div className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-700">
-              <GraduationCap className="text-pink-600 dark:text-pink-500" size={22} />
-              <div>
-                <h3 className="text-sm font-black text-slate-800 dark:text-white">Metodik shartlar</h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Loyiha ssenariysi parametrlari</p>
-              </div>
-            </div>
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800 space-y-4">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Parametrlar</p>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
-                    Ta'lim Fani:
-                  </label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ta'lim fani</label>
                   <select
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-pink-500 text-xs font-bold text-slate-850 dark:text-slate-200 transition-colors"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 transition-colors"
                   >
                     {["Biologiya", "Fizika", "Kimyo", "Informatika", "Matematika", "Tarix", "Geografiya", "Boshlang'ich ta'lim", "Kasbiy fanlar"].map(sub => (
                       <option key={sub} value={sub}>{sub}</option>
@@ -792,13 +756,11 @@ export default function VideoGen() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
-                    Mo'ljallangan Sinf / Yosh:
-                  </label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Sinf / Yosh</label>
                   <select
                     value={ageGroup}
                     onChange={e => setAgeGroup(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-pink-500 text-xs font-bold text-slate-850 dark:text-slate-200 transition-colors"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 transition-colors"
                   >
                     {["Boshlang'ich sinf (1-4 sinflar)", "O'rta sinf (5-9 sinflar)", "Kollej / Oliy ta'lim"].map(age => (
                       <option key={age} value={age}>{age}</option>
@@ -807,15 +769,13 @@ export default function VideoGen() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
-                    Visual Uslub:
-                  </label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Visual uslub</label>
                   <select
                     value={style}
                     onChange={e => setStyle(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-pink-500 text-xs font-bold text-slate-850 dark:text-slate-200 transition-colors"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 transition-colors"
                   >
                     {["3D Render", "Infografik / Diagramma", "Realistik", "Multfilm / Illyustratsiya", "Minimalizm"].map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -824,13 +784,11 @@ export default function VideoGen() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
-                    Murakkablik:
-                  </label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Murakkablik</label>
                   <select
                     value={complexity}
                     onChange={e => setComplexity(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-pink-500 text-xs font-bold text-slate-850 dark:text-slate-200 transition-colors"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-blue-500 transition-colors"
                   >
                     {["Sodda", "O'rtacha", "Mukammal"].map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -840,15 +798,15 @@ export default function VideoGen() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
-                  Dars mavzusi yoki Ssenariy g'oyasi:
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Dars mavzusi
                 </label>
                 <textarea
                   rows={4}
                   value={topic}
                   onChange={e => setTopic(e.target.value)}
-                  placeholder="Masalan: Quyosh atrofida sayyoralarning aylanishi va tortishish kuchi..."
-                  className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:border-pink-500 transition-colors resize-none text-xs font-medium text-slate-805 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  placeholder="Masalan: Quyosh atrofida sayyoralarning aylanishi..."
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-500 transition-colors resize-none text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -856,32 +814,26 @@ export default function VideoGen() {
             <button
               onClick={handleCreateStoryboard}
               disabled={loading || !topic.trim()}
-              className="w-full py-4 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 disabled:from-slate-100 disabled:to-slate-100 dark:disabled:from-slate-800 dark:disabled:to-slate-800 disabled:text-slate-400 dark:disabled:text-slate-655 disabled:cursor-not-allowed text-white font-extrabold text-xs tracking-wider uppercase rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <Wand2 size={16} />
               Storyboard Yaratish
             </button>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-50 to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/30 p-5 rounded-[24px] border border-slate-200/60 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 space-y-2 text-center">
-            <span className="font-extrabold text-pink-650 dark:text-pink-500 text-[10px] tracking-wider uppercase">Nima uchun storyboard?</span>
-            <p className="leading-relaxed max-w-md mx-auto">
-              Storyboard ta'limiy animatsion resursning bosqichma-bosqich rejasidir. U orqali o'qituvchi vizual elementlarni dars rejasi va metodik yo'riqnomalar bilan qulay bog'lay oladi.
-            </p>
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300 text-center">
+            <p>Storyboard — dars uchun vizual kadrlar va audio ssenariy rejasi</p>
           </div>
         </div>
       )}
 
       {/* ----------------- STATE B: LOADING SCREEN ----------------- */}
       {loading && (
-        <div className="bg-white dark:bg-slate-800 p-12 min-h-[450px] rounded-[32px] border border-slate-200/60 dark:border-slate-700/60 flex flex-col items-center justify-center text-center shadow-sm space-y-4 max-w-2xl mx-auto">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full" />
-            <div className="absolute inset-0 border-4 border-t-pink-600 rounded-full animate-spin" />
-          </div>
+        <div className="bg-white dark:bg-gray-900 p-12 min-h-[350px] rounded-xl border border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center text-center space-y-4 max-w-2xl mx-auto">
+          <div className="w-10 h-10 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
           <div className="space-y-1.5">
-            <h3 className="font-black text-slate-800 dark:text-white text-base tracking-wide animate-pulse">Loyiha ssenariysi tuzilmoqda...</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed mx-auto">
+            <h3 className="font-medium text-gray-800 dark:text-white text-base">Storyboard tuzilmoqda...</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
               Sun'iy intellekt dars mavzusini chuqur tahlil qilib, dars rejasi, audio matnlar va kadr animatsiyalarini tayyorlamoqda.
             </p>
           </div>
@@ -896,7 +848,7 @@ export default function VideoGen() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-black transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
+              className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
             >
               <ArrowLeft size={14} />
               Mavzuni o'zgartirish (Orqaga)
@@ -906,7 +858,7 @@ export default function VideoGen() {
               <button
                 onClick={handleDownloadPDF}
                 disabled={exportingPDF}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 shadow-sm"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400"
               >
                 {exportingPDF ? <Loader2 size={13} className="animate-spin" /> : <FileDown size={13} />}
                 Dars Rejasini (PDF) Yuklash
@@ -914,7 +866,7 @@ export default function VideoGen() {
 
               <button
                 onClick={handleSaveStoryboard}
-                className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
+                className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
                 title="Kutubxonaga saqlash"
               >
                 <Download size={14} />
@@ -923,7 +875,7 @@ export default function VideoGen() {
               {resourceId && !isShared && (
                 <button
                   onClick={handleShare}
-                  className="p-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl transition-colors cursor-pointer"
+                  className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer"
                   title="Hamjamiyatga ulashish"
                 >
                   <Share2 size={14} />
@@ -933,14 +885,12 @@ export default function VideoGen() {
           </div>
 
           {/* Title block */}
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
-            <span className="text-[8px] font-black text-pink-600 dark:text-pink-500 uppercase tracking-widest block mb-0.5">Storyboard Ssenariysi:</span>
-            <h2 className="text-lg font-black text-slate-850 dark:text-white leading-tight">{storyboard.animationTitle}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                Baholash: {storyboard.pedagogicalEvaluation.overallScorePercentage}% Pedagogik muvofiqlik
-              </span>
-            </div>
+          <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Storyboard</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{storyboard.animationTitle}</h2>
+            <span className="inline-block mt-1.5 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
+              {storyboard.pedagogicalEvaluation.overallScorePercentage}% pedagogik muvofiqlik
+            </span>
           </div>
 
           {/* Timeline dots / Selector */}
@@ -957,10 +907,10 @@ export default function VideoGen() {
                     setActiveFrameIdx(idx);
                     stopSpeaking();
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 border ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 border ${
                     isCurrent
-                      ? "bg-pink-600 border-pink-600 text-white shadow-sm"
-                      : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50"
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
                   <span>Kadr #{idx + 1}</span>
@@ -975,7 +925,7 @@ export default function VideoGen() {
           </div>
 
           {/* Simple Spacious Cinema Player Layout (Single Column / 16:9 aspect) */}
-          <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200/60 dark:border-slate-700/60 overflow-hidden shadow-sm flex flex-col items-center p-6 space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col items-center p-6 space-y-6">
             
             {/* Widescreen Cinema Screen (16:9 Aspect Video container) */}
             <div className="w-full max-w-3xl aspect-video bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-900 shadow-md flex items-center justify-center group/screen">
@@ -1087,19 +1037,11 @@ export default function VideoGen() {
                 <div className="p-6 text-center text-slate-500 flex flex-col items-center gap-3">
                   {!!generatingFrames[activeFrameIdx] ? (
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 size={32} className="animate-spin text-pink-500" />
-                      <p className="text-[10px] font-black text-slate-400 animate-pulse">Tasvir chizilmoqda...</p>
-                      <div className="px-3 py-1 bg-pink-500/10 border border-pink-500/30 rounded-xl">
-                        <span className="font-mono text-xs font-black text-pink-500 dark:text-pink-400">
-                          {(frameElapsedTimes[activeFrameIdx] || 0.0).toFixed(1)}s
-                        </span>
-                      </div>
+                      <Loader2 size={24} className="animate-spin text-blue-500" />
+                      <p className="text-xs text-gray-400">{(frameElapsedTimes[activeFrameIdx] || 0.0).toFixed(1)}s</p>
                     </div>
                   ) : (
-                    <>
-                      <Sparkles size={20} className="text-slate-700 animate-pulse" />
-                      <p className="text-[10px] text-slate-500 font-extrabold">Tasvir fonda tayyorlanmoqda...</p>
-                    </>
+                    <p className="text-xs text-gray-500">Tasvir tayyorlanmoqda...</p>
                   )}
                 </div>
               )}
@@ -1111,32 +1053,26 @@ export default function VideoGen() {
             </div>
 
             {/* Utility Action Buttons (Toggle Subtitles, Download Image, Copy Script, Download Full Script) */}
-            <div className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 text-xs font-bold text-slate-655 dark:text-slate-350 shadow-xs">
-              <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-400 font-extrabold">
-                🛠️ Kadr Boshqaruvi:
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => setShowSubtitles(prev => !prev)}
-                  className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
-                    showSubtitles 
-                      ? "border-pink-200 bg-pink-50/20 text-pink-600 dark:border-pink-900/30 dark:text-pink-400" 
-                      : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950"
-                  }`}
-                  title="Subtitrlarni ko'rsatish/yashirish"
-                >
-                  {showSubtitles ? <span className="text-pink-500">👁️ Subtitrlar Yoqilgan</span> : <span>👁️‍Dars Subtitrlari Yashirilgan</span>}
-                </button>
+            <div className="w-full max-w-3xl flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-900/60 rounded-lg border border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setShowSubtitles(prev => !prev)}
+                className={`px-3 py-1.5 rounded-lg border text-sm flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  showSubtitles
+                    ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                    : "border-gray-200 bg-white text-gray-500 dark:border-gray-700 dark:bg-gray-900"
+                }`}
+              >
+                {showSubtitles ? "Subtitrlar yoqiq" : "Subtitrlar o'chiq"}
+              </button>
 
-                <button
-                  onClick={handleDownloadImage}
-                  disabled={!frameImages[activeFrameIdx]}
-                  className="px-3 py-1.5 bg-white hover:bg-slate-105 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-40"
-                  title="Kadr tasvirini kompyuterga yuklab olish"
-                >
-                  <Download size={13} />
-                  Tasvirni Yuklash
-                </button>
+              <button
+                onClick={handleDownloadImage}
+                disabled={!frameImages[activeFrameIdx]}
+                className="px-3 py-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700 text-sm flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                <Download size={13} />
+                Tasvirni yuklash
+              </button>
 
                 <button
                   onClick={handleCopyScript}
@@ -1154,48 +1090,43 @@ export default function VideoGen() {
                   <span>📄</span> To'liq Ssenariy (.txt)
                 </button>
               </div>
-            </div>
 
             {/* Script card under the screen */}
-            <div className="w-full max-w-3xl p-5 bg-pink-50/30 dark:bg-pink-950/20 border border-pink-100/50 dark:border-pink-900/20 rounded-2xl space-y-1.5 relative overflow-hidden">
-              <span className="text-[8px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest block mb-0.5 flex items-center justify-between">
-                <span className="flex items-center gap-0.5">
-                  <Volume2 size={10} /> Ssenariy / Ovoz Nutqi:
+            <div className="w-full max-w-3xl p-4 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-lg relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <Volume2 size={12} /> Ssenariy nutqi
                 </span>
-                <span className="bg-pink-500/10 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded text-[8px] font-extrabold flex items-center gap-0.5">
-                  <Languages size={8} /> {speechLanguage === "uz" ? "🇺🇿 UZ" : speechLanguage === "ru" ? "🇷🇺 RU" : "🇬🇧 EN"} talaffuzi
-                </span>
-              </span>
-              <p className="text-xs md:text-sm font-semibold text-slate-800 dark:text-pink-100 leading-relaxed italic text-center relative z-10">
+                <span className="text-xs text-gray-400">{speechLanguage.toUpperCase()}</span>
+              </div>
+              <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed italic">
                 "{storyboard.frames[activeFrameIdx].scriptText}"
               </p>
-              {/* Progress bar overlay at bottom of script card during simulation */}
               {isPlayingSim && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-slate-800/50">
-                  <div 
-                    className="h-full bg-pink-500 transition-all duration-100 ease-linear"
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-100 ease-linear"
                     style={{ width: `${simProgress}%` }}
                   />
                 </div>
               )}
             </div>
 
-            {/* Sub-details (Actions and Pedagogical details stacked cleanly) */}
-            {/* Beautiful Tab Bar for Frame details */}
-            <div className="w-full max-w-3xl border-b border-slate-200 dark:border-slate-700 flex gap-2 overflow-x-auto pb-px">
+            {/* Tab Bar */}
+            <div className="w-full max-w-3xl border-b border-gray-200 dark:border-gray-700 flex gap-1 overflow-x-auto pb-px">
               {[
-                { id: "explanation", label: "📖 Batafsil Tahlil", activeColor: "border-indigo-500 text-indigo-650 dark:text-indigo-400" },
-                { id: "terms", label: "🔑 Tayanch Atamalar", activeColor: "border-emerald-500 text-emerald-600 dark:text-emerald-400" },
-                { id: "activity", label: "🙋 Interfaol Topshiriq", activeColor: "border-pink-500 text-pink-600 dark:text-pink-400" },
-                { id: "script", label: "🎬 Ssenariy & Animatsiya", activeColor: "border-amber-500 text-amber-600 dark:text-amber-400" }
+                { id: "explanation", label: "Tahlil" },
+                { id: "terms", label: "Atamalar" },
+                { id: "activity", label: "Topshiriq" },
+                { id: "script", label: "Animatsiya" }
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveDetailTab(tab.id as any)}
-                  className={`px-4 py-2.5 text-xs font-black border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
                     activeDetailTab === tab.id
-                      ? `${tab.activeColor} scale-102`
-                      : "border-transparent text-slate-400 hover:text-slate-655 dark:hover:text-slate-350"
+                      ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
                   }`}
                 >
                   {tab.label}
@@ -1203,87 +1134,51 @@ export default function VideoGen() {
               ))}
             </div>
 
-            {/* Sub-details Tab Contents with beautiful slide/fade-in transitions */}
-            <div className="w-full max-w-3xl min-h-[140px] text-xs">
+            <div className="w-full max-w-3xl min-h-[120px] text-sm">
               <AnimatePresence mode="wait">
                 {activeDetailTab === "explanation" && (
                   <motion.div
                     key="explanation"
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    className="p-5 bg-indigo-50/10 dark:bg-indigo-950/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/30 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 max-h-[200px] overflow-y-auto"
                   >
-                    <span className="font-extrabold text-indigo-600 dark:text-indigo-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-                      <span>📖</span> Batafsil Mavzu Tushuntirishi:
-                    </span>
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-xs md:text-sm font-semibold">
-                      {storyboard.frames[activeFrameIdx].detailedExplanation || "Ushbu kadr uchun batafsil tushuntirish mavjud emas."}
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {storyboard.frames[activeFrameIdx].detailedExplanation || "Batafsil tushuntirish mavjud emas."}
                     </p>
                   </motion.div>
                 )}
 
                 {activeDetailTab === "terms" && (
-                  <motion.div
-                    key="terms"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    className="p-5 bg-emerald-50/10 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/40 dark:border-emerald-950/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
-                  >
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-                      <span>🔑</span> Tayanch Atamalar va Ibora Ta'riflari:
-                    </span>
-                    <p className="text-slate-750 dark:text-emerald-250 leading-relaxed text-xs md:text-sm font-bold whitespace-pre-line">
-                      {storyboard.frames[activeFrameIdx].keyTerms || "Ushbu kadr uchun tayanch atamalar mavjud emas."}
+                  <motion.div key="terms" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                    className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 max-h-[200px] overflow-y-auto">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                      {storyboard.frames[activeFrameIdx].keyTerms || "Tayanch atamalar mavjud emas."}
                     </p>
                   </motion.div>
                 )}
 
                 {activeDetailTab === "activity" && (
-                  <motion.div
-                    key="activity"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    className="p-5 bg-pink-50/10 dark:bg-pink-950/10 rounded-2xl border border-pink-100/40 dark:border-pink-950/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar"
-                  >
-                    <span className="font-extrabold text-pink-650 dark:text-pink-400 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-                      <span>🙋</span> O'quvchilar uchun Interfaol Savol / Topshiriq:
-                    </span>
-                    <p className="text-slate-755 dark:text-pink-250 leading-relaxed text-xs md:text-sm italic font-semibold">
-                      {storyboard.frames[activeFrameIdx].studentActivity || "Ushbu kadr uchun topshiriqlar mavjud emas."}
+                  <motion.div key="activity" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                    className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 max-h-[200px] overflow-y-auto">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                      {storyboard.frames[activeFrameIdx].studentActivity || "Topshiriqlar mavjud emas."}
                     </p>
                   </motion.div>
                 )}
 
                 {activeDetailTab === "script" && (
-                  <motion.div
-                    key="script"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.18 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[200px] overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
-                      <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-                        <span>🎬</span> Animatsiya Harakati (Kadrda):
-                      </span>
-                      <p className="text-slate-700 dark:text-slate-350 leading-relaxed font-medium">
-                        {storyboard.frames[activeFrameIdx].animationDescription}
-                      </p>
+                  <motion.div key="script" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Animatsiya harakati</p>
+                      <p className="text-gray-700 dark:text-gray-300">{storyboard.frames[activeFrameIdx].animationDescription}</p>
                     </div>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-850/50 space-y-1">
-                      <span className="font-extrabold text-slate-450 dark:text-slate-550 block text-[9px] uppercase tracking-wider flex items-center gap-1">
-                        <span>💡</span> Pedagogik Qiymat (O'quvchiga):
-                      </span>
-                      <p className="text-slate-700 dark:text-slate-350 leading-relaxed font-medium">
-                        {storyboard.frames[activeFrameIdx].pedagogicalValue}
-                      </p>
+                    <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Pedagogik qiymat</p>
+                      <p className="text-gray-700 dark:text-gray-300">{storyboard.frames[activeFrameIdx].pedagogicalValue}</p>
                     </div>
                   </motion.div>
                 )}
@@ -1291,66 +1186,48 @@ export default function VideoGen() {
             </div>
 
             {/* Playback Controls & Voice selection row */}
-            <div className="w-full max-w-3xl pt-5 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-              
-              {/* Voice and Sim Buttons */}
+            <div className="w-full max-w-3xl pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => {
-                    if (isSpeaking) {
-                      stopSpeaking();
-                    } else {
-                      speakText(storyboard.frames[activeFrameIdx].scriptText);
-                    }
-                  }}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                    isSpeaking 
-                      ? "bg-amber-600 text-white shadow-sm" 
-                      : "bg-slate-105 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-850"
+                  onClick={() => { if (isSpeaking) stopSpeaking(); else speakText(storyboard.frames[activeFrameIdx].scriptText); }}
+                  className={`px-3 py-2 rounded-lg text-sm flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                    isSpeaking
+                      ? "bg-orange-600 text-white border-orange-600"
+                      : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >
                   {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                  {isSpeaking ? "Ovozni to'xtatish" : "Kadrni ovozli eshitish"}
+                  {isSpeaking ? "To'xtatish" : "Ovozli eshitish"}
                 </button>
 
                 <button
-                  onClick={() => {
-                    if (isPlayingSim) {
-                      setIsPlayingSim(false);
-                      stopSpeaking();
-                    } else {
-                      setIsPlayingSim(true);
-                      setActiveFrameIdx(0);
-                    }
-                  }}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                    isPlayingSim 
-                      ? "bg-rose-600 text-white animate-pulse" 
-                      : "bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white shadow-sm"
+                  onClick={() => { if (isPlayingSim) { setIsPlayingSim(false); stopSpeaking(); } else { setIsPlayingSim(true); setActiveFrameIdx(0); } }}
+                  className={`px-3 py-2 rounded-lg text-sm flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    isPlayingSim
+                      ? "bg-red-600 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  {isPlayingSim ? <Square size={11} /> : <Play size={11} />}
-                  {isPlayingSim ? "To'xtatish" : "Avtomatik Simulyatsiya"}
+                  {isPlayingSim ? <Square size={13} /> : <Play size={13} />}
+                  {isPlayingSim ? "To'xtatish" : "Simulyatsiya"}
                 </button>
 
-                {/* Animated Resource Toggle Switch */}
                 <button
                   onClick={() => setAnimationMode(prev => !prev)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                    animationMode 
-                      ? "bg-indigo-50 border border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900/30 dark:text-indigo-400" 
-                      : "bg-slate-105 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-850"
+                  className={`px-3 py-2 rounded-lg text-sm flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                    animationMode
+                      ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+                      : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500"
                   }`}
-                  title="Ken Burns kameraning siljishi va Canvas animatsiya effektlarini yoqish/o'chirish"
                 >
-                  <Sparkles size={13} className={animationMode ? "text-pink-500 animate-spin" : "text-slate-400"} />
-                  Animatsiya Rejimi
+                  <Sparkles size={13} />
+                  Animatsiya
                 </button>
               </div>
 
-              {/* Language Selector */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850">
-                <span className="text-[8px] font-black text-slate-450 dark:text-slate-600 uppercase tracking-widest pl-1">Talaffuz:</span>
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">Til:</span>
                 {[
                   { code: "uz", flag: "🇺🇿", label: "UZ" },
                   { code: "ru", flag: "🇷🇺", label: "RU" },
@@ -1364,10 +1241,10 @@ export default function VideoGen() {
                         speakText(storyboard.frames[activeFrameIdx].scriptText);
                       }
                     }}
-                    className={`px-2 py-1 rounded-lg text-[9px] font-extrabold flex items-center gap-1 transition-all cursor-pointer ${
-                      speechLanguage === langObj.code 
-                        ? "bg-indigo-600 text-white shadow-xs" 
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200"
+                    className={`px-2 py-1 rounded-md text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer ${
+                      speechLanguage === langObj.code
+                        ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                     }`}
                   >
                     <span>{langObj.flag}</span>
@@ -1386,7 +1263,7 @@ export default function VideoGen() {
                     }
                   }}
                   disabled={activeFrameIdx === 0}
-                  className="p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-slate-655 dark:text-slate-400 border border-slate-200 dark:border-slate-850 transition-colors"
+                  className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-gray-600 dark:text-gray-400 transition-colors"
                 >
                   <ChevronLeft size={14} />
                 </button>
@@ -1398,7 +1275,7 @@ export default function VideoGen() {
                     }
                   }}
                   disabled={activeFrameIdx === storyboard.frames.length - 1}
-                  className="p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-slate-655 dark:text-slate-400 border border-slate-200 dark:border-slate-850 transition-colors"
+                  className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-gray-600 dark:text-gray-400 transition-colors"
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -1407,33 +1284,29 @@ export default function VideoGen() {
             </div>
 
             {/* Ovoz sozlamalari (Tezlik, Ton va Balandlik + Azure Config) */}
-            <div className="w-full max-w-3xl p-5 bg-slate-50 dark:bg-slate-900/60 rounded-3xl border border-slate-150 dark:border-slate-800/80 space-y-4 text-xs font-semibold text-slate-700 dark:text-slate-350">
-              
-              {/* Narration System Toggle */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/50 dark:border-slate-800/50">
-                <div className="flex items-center gap-2">
-                  <Volume2 size={14} className="text-pink-650 dark:text-pink-500 animate-pulse" />
-                  <span className="font-extrabold">Nutq Tizimi (TTS Speech System):</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-850">
+            <div className="w-full max-w-3xl p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 space-y-3 text-sm">
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                  <Volume2 size={14} /> Nutq tizimi
+                </span>
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                   {[
-                    { id: "google", label: "Google (Free)" },
-                    { id: "native", label: "Local Speech" },
-                    { id: "azure", label: "Azure Neural (HD)" }
+                    { id: "google", label: "OpenAI TTS" },
+                    { id: "native", label: "Local" },
+                    { id: "azure", label: "Azure" }
                   ].map(sys => (
                     <button
                       key={sys.id}
                       onClick={() => {
                         setNarrationType(sys.id as any);
                         localStorage.setItem("edu_gen_narration_type", sys.id);
-                        if (isSpeaking) {
-                          speakText(storyboard.frames[activeFrameIdx].scriptText);
-                        }
+                        if (isSpeaking) speakText(storyboard.frames[activeFrameIdx].scriptText);
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                         narrationType === sys.id
-                          ? "bg-pink-600 text-white shadow-xs"
-                          : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+                          ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                       }`}
                     >
                       {sys.label}
