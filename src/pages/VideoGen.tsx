@@ -26,6 +26,7 @@ import { saveResource } from "../lib/db";
 import { useAppContext } from "../lib/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
+import pptxgen from "pptxgenjs";
 
 // ParticleOverlay component removed as it was unused and distracted from clean storyboard visuals
 
@@ -85,6 +86,9 @@ export default function VideoGen() {
   const [resourceId, setResourceId] = useState<string | number | null>(null);
   const [isShared, setIsShared] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [exportingPPT, setExportingPPT] = useState(false);
+  const [exportingVideo, setExportingVideo] = useState(false);
+  const [videoProgress, setVideoProgress] = useState<{ step: string; current: number; total: number } | null>(null);
 
   // Initialize Speech Voices
   useEffect(() => {
@@ -482,7 +486,296 @@ export default function VideoGen() {
     }
   };
 
-  // Storyboardni saqlash
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const loadImageEl = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("img load failed"));
+      img.src = url + (url.includes("?") ? "&" : "?") + "_nc=" + Date.now();
+    });
+
+  // Blob → base64 data URL
+  const blobToBase64 = (blob: Blob): Promise<string> =>
+    new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
+  // Canvas-ga ko'p qatorli matn yozish (wrap)
+  const wrapText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+    const words = text.split(" ");
+    let line = "";
+    let currentY = y;
+    for (const word of words) {
+      const test = line + word + " ";
+      if (ctx.measureText(test).width > maxWidth && line !== "") {
+        ctx.fillText(line.trim(), x, currentY);
+        line = word + " ";
+        currentY += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    if (line.trim()) ctx.fillText(line.trim(), x, currentY);
+    return currentY;
+  };
+
+  // ── PPT Export ────────────────────────────────────────────────────────────
+  const handleDownloadPPT = async () => {
+    if (!storyboard) return;
+    setExportingPPT(true);
+    showToast("PPT tayyorlanmoqda...", "info");
+    try {
+      const pptx = new pptxgen();
+      pptx.layout = "LAYOUT_WIDE"; // 16:9
+
+      for (let i = 0; i < storyboard.frames.length; i++) {
+        const frame = storyboard.frames[i];
+        const slide = pptx.addSlide();
+        slide.background = { color: "0F172A" };
+
+        // Background image
+        const imgUrl = frameImages[i];
+        if (imgUrl) {
+          try {
+            const resp = await fetch(imgUrl);
+            if (resp.ok) {
+              const blob = await resp.blob();
+              const b64 = await blobToBase64(blob);
+              slide.addImage({ data: b64, x: 0, y: 0, w: "100%", h: "100%",
+                sizing: { type: "cover", w: 13.33, h: 7.5 } });
+              // dark overlay
+              slide.addShape(pptx.ShapeType.rect, {
+                x: 0, y: 0, w: "100%", h: "100%",
+                fill: { color: "000000", transparency: 45 }
+              });
+            }
+          } catch { /* no image — dark bg only */ }
+        }
+
+        // Top gradient bar
+        slide.addShape(pptx.ShapeType.rect, {
+          x: 0, y: 0, w: "100%", h: 0.06,
+          fill: { color: "3B82F6", transparency: 0 }
+        });
+
+        // Frame label
+        slide.addText(`Kadr ${frame.frameNumber} / ${storyboard.frames.length}`, {
+          x: 0.3, y: 0.15, w: 3, h: 0.35,
+          fontSize: 11, color: "FFFFFF", transparency: 40, fontFace: "Arial"
+        });
+
+        // Title
+        slide.addText(frame.title, {
+          x: 0.3, y: 0.6, w: 12.7, h: 1.2,
+          fontSize: 32, bold: true, color: "FFFFFF", fontFace: "Arial",
+          shadow: { type: "outer", blur: 8, offset: 2, angle: 45, color: "000000" }
+        });
+
+        // Subtitle area (bottom caption)
+        slide.addShape(pptx.ShapeType.rect, {
+          x: 0, y: 5.9, w: "100%", h: 1.6,
+          fill: { color: "000000", transparency: 30 }
+        });
+        slide.addText(frame.scriptText, {
+          x: 0.4, y: 6.0, w: 12.5, h: 1.4,
+          fontSize: 16, color: "FFFFFF", italic: true,
+          fontFace: "Arial", valign: "middle", wrap: true
+        });
+
+        // Speaker notes
+        slide.addNotes(`${frame.scriptText}\n\nBatafsil: ${frame.detailedExplanation || ""}\nAtamalar: ${frame.keyTerms || ""}`);
+      }
+
+      await pptx.writeFile({ fileName: `${storyboard.animationTitle.replace(/\s+/g, "_")}_Storyboard.pptx` });
+      showToast("PPTX muvaffaqiyatli yuklandi!");
+    } catch (err) {
+      showToast("PPT yaratishda xatolik yuz berdi.", "error");
+      console.error(err);
+    } finally {
+      setExportingPPT(false);
+    }
+  };
+
+  // ── Video (WebM) Export ────────────────────────────────────────────────────
+  const handleDownloadVideo = async () => {
+    if (!storyboard) return;
+
+    if (!window.MediaRecorder) {
+      showToast("Brauzeringiz video yozishni qo'llab-quvvatlamaydi.", "error");
+      return;
+    }
+
+    setExportingVideo(true);
+    setVideoProgress({ step: "Tayyorlanmoqda...", current: 0, total: storyboard.frames.length });
+    showToast("Video yaratilmoqda. Bu 1-2 daqiqa olishi mumkin.", "info");
+
+    const W = 1280, H = 720;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d")!;
+
+    // Audio context for mixing TTS
+    const audioCtx = new AudioContext();
+    const audioDest = audioCtx.createMediaStreamDestination();
+
+    const videoStream = canvas.captureStream(30);
+    const combined = new MediaStream([
+      ...videoStream.getVideoTracks(),
+      ...audioDest.stream.getAudioTracks()
+    ]);
+
+    const mimeType = ["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"]
+      .find(t => MediaRecorder.isTypeSupported(t)) || "video/webm";
+
+    const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 4_000_000 });
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.start(200);
+
+    const API_URL = import.meta.env.VITE_API_URL || "https://fibot.pythonanywhere.com/api";
+
+    // Intro frame
+    ctx.fillStyle = "#0F172A";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#3B82F6";
+    ctx.fillRect(0, 0, W, 4);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 52px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(storyboard.animationTitle, W / 2, H / 2 - 20);
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillText("EduGen · AI Ta'lim Platformasi", W / 2, H / 2 + 40);
+    await sleep(2000);
+
+    for (let i = 0; i < storyboard.frames.length; i++) {
+      const frame = storyboard.frames[i];
+      setVideoProgress({ step: `Kadr #${i + 1} ovoz yuklanmoqda...`, current: i + 1, total: storyboard.frames.length });
+
+      // Load image
+      let imgEl: HTMLImageElement | null = null;
+      const imgUrl = frameImages[i];
+      if (imgUrl) {
+        try { imgEl = await loadImageEl(imgUrl); } catch { /* no image */ }
+      }
+
+      // Get TTS audio
+      let frameDurationMs = Math.max(3500, frame.scriptText.length * 65);
+      try {
+        const ttsResp = await fetch(`${API_URL}/ai/tts/`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: frame.scriptText, voice: speechLanguage === "ru" ? "echo" : "nova", speed: 1.0 })
+        });
+        if (ttsResp.ok) {
+          const ttsBlob = await ttsResp.blob();
+          const arrayBuf = await ttsBlob.arrayBuffer();
+          const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+          frameDurationMs = (audioBuf.duration + 0.5) * 1000;
+          const src = audioCtx.createBufferSource();
+          src.buffer = audioBuf;
+          src.connect(audioDest);
+          src.start(audioCtx.currentTime);
+        }
+      } catch { /* fallback to text-length duration */ }
+
+      setVideoProgress({ step: `Kadr #${i + 1} yozilmoqda...`, current: i + 1, total: storyboard.frames.length });
+
+      // Draw frame continuously
+      const drawFn = () => {
+        // Background
+        if (imgEl) {
+          // Scale to cover
+          const scale = Math.max(W / imgEl.width, H / imgEl.height);
+          const sw = imgEl.width * scale, sh = imgEl.height * scale;
+          ctx.drawImage(imgEl, (W - sw) / 2, (H - sh) / 2, sw, sh);
+        } else {
+          ctx.fillStyle = "#1E293B";
+          ctx.fillRect(0, 0, W, H);
+        }
+        // Dark overlay
+        ctx.fillStyle = "rgba(0,0,0,0.52)";
+        ctx.fillRect(0, 0, W, H);
+        // Top blue bar
+        ctx.fillStyle = "#3B82F6";
+        ctx.fillRect(0, 0, W, 4);
+        // Frame counter (top-left)
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(`Kadr ${frame.frameNumber} / ${storyboard.frames.length}`, 30, 35);
+        // Title
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 42px Arial";
+        ctx.textAlign = "left";
+        ctx.shadowColor = "rgba(0,0,0,0.6)";
+        ctx.shadowBlur = 12;
+        ctx.fillText(frame.title, 40, 110);
+        ctx.shadowBlur = 0;
+        // Subtitle bar
+        const subBarH = 110;
+        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        ctx.fillRect(0, H - subBarH, W, subBarH);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        wrapText(ctx, frame.scriptText, W / 2, H - subBarH + 28, W - 80, 28);
+      };
+
+      const intervalId = setInterval(drawFn, 33);
+      await sleep(frameDurationMs);
+      clearInterval(intervalId);
+
+      // Brief black between frames
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, W, H);
+      await sleep(300);
+    }
+
+    // Outro
+    ctx.fillStyle = "#0F172A";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#3B82F6";
+    ctx.fillRect(0, 0, W, 4);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 36px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("EduGen tomonidan yaratildi", W / 2, H / 2 - 10);
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillText("edu-generation.vercel.app", W / 2, H / 2 + 35);
+    await sleep(2000);
+
+    recorder.stop();
+    setVideoProgress({ step: "Fayl saqlanmoqda...", current: storyboard.frames.length, total: storyboard.frames.length });
+
+    await new Promise<void>(resolve => {
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${storyboard!.animationTitle.replace(/\s+/g, "_")}_EduGen.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+    });
+
+    audioCtx.close();
+    setExportingVideo(false);
+    setVideoProgress(null);
+    showToast("Video muvaffaqiyatli yuklandi!");
+  };
+
+  // ── Storyboardni saqlash
   const handleSaveStoryboard = async () => {
     if (!storyboard) return;
     try {
@@ -854,14 +1147,34 @@ export default function VideoGen() {
               Mavzuni o'zgartirish (Orqaga)
             </button>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleDownloadPDF}
                 disabled={exportingPDF}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400"
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 border border-gray-200 dark:border-gray-700"
               >
                 {exportingPDF ? <Loader2 size={13} className="animate-spin" /> : <FileDown size={13} />}
-                Dars Rejasini (PDF) Yuklash
+                PDF
+              </button>
+
+              <button
+                onClick={handleDownloadPPT}
+                disabled={exportingPPT}
+                className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                title="PowerPoint slayd sifatida yuklab olish"
+              >
+                {exportingPPT ? <Loader2 size={13} className="animate-spin" /> : <FileDown size={13} />}
+                PPTX
+              </button>
+
+              <button
+                onClick={handleDownloadVideo}
+                disabled={exportingVideo}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                title="TTS ovoz bilan video (WebM) yuklab olish"
+              >
+                {exportingVideo ? <Loader2 size={13} className="animate-spin" /> : <Video size={13} />}
+                {exportingVideo && videoProgress ? videoProgress.step : "Video (WebM)"}
               </button>
 
               <button
@@ -882,6 +1195,16 @@ export default function VideoGen() {
                 </button>
               )}
             </div>
+
+            {/* Video export progress bar */}
+            {exportingVideo && videoProgress && (
+              <div className="w-full mt-2 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-500 rounded-full"
+                  style={{ width: `${(videoProgress.current / videoProgress.total) * 100}%` }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Title block */}
