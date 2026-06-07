@@ -136,7 +136,11 @@ class AIGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        gemini_key: str = os.getenv("GEMINI_API_KEY", "")
+        gemini_keys = [
+            os.getenv("GEMINI_API_KEY", "").strip(),
+            os.getenv("GEMINI_API_KEY_2", "").strip()
+        ]
+        gemini_keys = [k for k in gemini_keys if k]
         groq_key: str = os.getenv("GROQ_API_KEY", "")
 
         # Payload Gemini formatida
@@ -149,23 +153,23 @@ class AIGenerateView(APIView):
         )
         gemini_payload = {"contents": contents, "generationConfig": generation_config}
 
-        # 1) Gemini modellarini ketma-ket sinash
-        if gemini_key:
-            last_err = None
-            for model in GEMINI_MODELS:
-                try:
-                    result = _call_gemini(gemini_payload, model, gemini_key)
-                    return Response({"result": result})
-                except RuntimeError as e:
-                    last_err = str(e)
-                    # Agar rate limit bo'lsa yoki API kalit xato bo'lsa, boshqa modellarni sinash ma'nosiz.
-                    # Shuning uchun darhol Groq fallbackiga o'tamiz.
-                    if "rate_limit" in str(e) or "API kalit" in str(e) or "quota" in str(e).lower():
-                        break
-                    continue
-                except Exception as e:
-                    last_err = str(e)
-                    continue
+        # 1) Gemini modellarini va kalitlarini ketma-ket sinash
+        if gemini_keys:
+            for g_key in gemini_keys:
+                last_err = None
+                for model in GEMINI_MODELS:
+                    try:
+                        result = _call_gemini(gemini_payload, model, g_key)
+                        return Response({"result": result})
+                    except RuntimeError as e:
+                        last_err = str(e)
+                        # Agar rate limit, API kalit xatosi yoki quota xatosi bo'lsa, keyingi kalitga o'tamiz
+                        if "rate_limit" in str(e) or "API kalit" in str(e) or "quota" in str(e).lower():
+                            break
+                        continue
+                    except Exception as e:
+                        last_err = str(e)
+                        continue
 
         # 2) Groq fallback
         if groq_key:
@@ -232,7 +236,11 @@ class ImageGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        gemini_key: str = os.getenv("GEMINI_API_KEY", "")
+        gemini_keys = [
+            os.getenv("GEMINI_API_KEY", "").strip(),
+            os.getenv("GEMINI_API_KEY_2", "").strip()
+        ]
+        gemini_keys = [k for k in gemini_keys if k]
 
         # Format / Aspect Ratio xaritalash
         aspect_ratio_map = {
@@ -261,39 +269,40 @@ class ImageGenerateView(APIView):
         full_prompt = f"{prompt}{style_prompt}, high quality educational material, clear focus"
 
         # 1) Google AI Studio Imagen 4 orqali tasvir yaratish
-        if gemini_key:
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={gemini_key}"
-                payload = {
-                    "instances": [
-                        {
-                            "prompt": full_prompt
+        if gemini_keys:
+            for g_key in gemini_keys:
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={g_key}"
+                    payload = {
+                        "instances": [
+                            {
+                                "prompt": full_prompt
+                            }
+                        ],
+                        "parameters": {
+                            "sampleCount": 1,
+                            "aspectRatio": aspect_ratio,
+                            "outputMimeType": "image/jpeg"
                         }
-                    ],
-                    "parameters": {
-                        "sampleCount": 1,
-                        "aspectRatio": aspect_ratio,
-                        "outputMimeType": "image/jpeg"
                     }
-                }
-                headers = {"Content-Type": "application/json"}
-                resp = req_lib.post(url, json=payload, headers=headers, timeout=30)
-                
-                if resp.ok:
-                    data = resp.json()
-                    predictions = data.get("predictions", [])
-                    if predictions and "bytesBase64Encoded" in predictions[0]:
-                        b64_data = predictions[0]["bytesBase64Encoded"]
-                        return Response({
-                            "image_url": f"data:image/jpeg;base64,{b64_data}",
-                            "source": "gemini-imagen"
-                        })
+                    headers = {"Content-Type": "application/json"}
+                    resp = req_lib.post(url, json=payload, headers=headers, timeout=30)
+                    
+                    if resp.ok:
+                        data = resp.json()
+                        predictions = data.get("predictions", [])
+                        if predictions and "bytesBase64Encoded" in predictions[0]:
+                            b64_data = predictions[0]["bytesBase64Encoded"]
+                            return Response({
+                                "image_url": f"data:image/jpeg;base64,{b64_data}",
+                                "source": "gemini-imagen"
+                            })
+                        else:
+                            print("Imagen 4 prediction output format mismatch:", data)
                     else:
-                        print("Imagen 4 prediction output format mismatch:", data)
-                else:
-                    print(f"Imagen 4 API returned HTTP {resp.status_code}: {resp.text}")
-            except Exception as e:
-                print(f"Google AI Studio Imagen 4 generatsiyasida xatolik: {e}")
+                        print(f"Imagen 4 API returned HTTP {resp.status_code} for key: {resp.text}")
+                except Exception as e:
+                    print(f"Google AI Studio Imagen 4 (key loop) generatsiyasida xatolik: {e}")
 
         # 2) Fallback: Pollinations AI
         try:
