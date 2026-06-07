@@ -310,81 +310,19 @@ class ImageGenerateView(APIView):
             except Exception as e:
                 print(f"DALL-E 3 xatolik: {e}")
 
-        # 2) Google AI Studio Imagen 4 — Fallback
-        if gemini_keys:
-            for g_key in gemini_keys:
-                try:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={g_key}"
-                    payload = {
-                        "instances": [
-                            {
-                                "prompt": full_prompt
-                            }
-                        ],
-                        "parameters": {
-                            "sampleCount": 1,
-                            "aspectRatio": aspect_ratio,
-                            "outputMimeType": "image/jpeg"
-                        }
-                    }
-                    headers = {"Content-Type": "application/json"}
-                    resp = req_lib.post(url, json=payload, headers=headers, timeout=30)
-                    
-                    if resp.ok:
-                        data = resp.json()
-                        predictions = data.get("predictions", [])
-                        if predictions and "bytesBase64Encoded" in predictions[0]:
-                            b64_data = predictions[0]["bytesBase64Encoded"]
-                            return Response({
-                                "image_url": f"data:image/jpeg;base64,{b64_data}",
-                                "source": "gemini-imagen"
-                            })
-                        else:
-                            print("Imagen 4 prediction output format mismatch:", data)
-                    else:
-                        print(f"Imagen 4 API returned HTTP {resp.status_code} for key: {resp.text}")
-                except Exception as e:
-                    print(f"Google AI Studio Imagen 4 (key loop) generatsiyasida xatolik: {e}")
-
-        # 2) Fallback: Pollinations AI
-        try:
-            # Pollinations AI orqali rasmni backendda yuklab olib, Base64 formatga o'tkazish
-            import base64
-            import urllib.parse
-            encoded_prompt = urllib.parse.quote(full_prompt)
-            seed = int(os.urandom(4).hex(), 16) % 9999999
-            
-            pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&model=flux"
-            
-            img_resp = req_lib.get(pollinations_url, timeout=20)
-            if img_resp.ok:
-                b64_data = base64.b64encode(img_resp.content).decode("utf-8")
-                return Response({
-                    "image_url": f"data:image/jpeg;base64,{b64_data}",
-                    "source": "pollinations-fallback"
-                })
-        except Exception as e:
-            print(f"Pollinations fallbackda xatolik: {e}")
-
-        # 3) Oxirgi fallback: Picsum statik rasmlari
-        try:
-            import base64
-            import urllib.parse
-            picsum_url = f"https://picsum.photos/seed/{urllib.parse.quote(prompt[:30])}/1024/1024"
-            img_resp = req_lib.get(picsum_url, timeout=15)
-            if img_resp.ok:
-                b64_data = base64.b64encode(img_resp.content).decode("utf-8")
-                return Response({
-                    "image_url": f"data:image/jpeg;base64,{b64_data}",
-                    "source": "picsum-fallback"
-                })
-        except Exception as e:
-            print(f"Picsum fallbackda xatolik: {e}")
+        # DALL-E 3 ishlamasa — aniq xabar qaytarish
+        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if not openai_key:
+            return Response(
+                {"error": "OpenAI API kaliti serverda sozlanmagan."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response(
-            {"error": "Rasm generatsiya qilish tizimi vaqtincha ishlamayapti."},
+            {"error": "DALL-E 3 rasm generatsiya qilishda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
+
 
 
 class ElevenLabsTTSView(APIView):
