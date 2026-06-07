@@ -1,4 +1,4 @@
-import { Settings, Mail, Shield, LogOut, Key, Eye, EyeOff, CheckCircle, LogIn, Sparkles } from "lucide-react";
+import { Settings, Mail, Shield, LogOut, LogIn, Sparkles } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { auth, logout, signInWithGoogle } from "../lib/firebase";
 import { useState, useEffect } from "react";
@@ -27,111 +27,11 @@ export default function Account() {
     }
   };
 
-  // AI keys states
-  const [geminiKey, setGeminiKey] = useState("");
-  const [groqKey, setGroqKey] = useState("");
-  const [showGemini, setShowGemini] = useState(false);
-  const [showGroq, setShowGroq] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
 
-  useEffect(() => {
-    setGeminiKey(localStorage.getItem("edu_gen_custom_gemini_key") || "");
-    setGroqKey(localStorage.getItem("edu_gen_custom_groq_key") || "");
-  }, []);
-
-  const handleSaveKeys = () => {
-    if (geminiKey.trim()) {
-      localStorage.setItem("edu_gen_custom_gemini_key", geminiKey.trim());
-    } else {
-      localStorage.removeItem("edu_gen_custom_gemini_key");
-    }
-
-    if (groqKey.trim()) {
-      localStorage.setItem("edu_gen_custom_groq_key", groqKey.trim());
-    } else {
-      localStorage.removeItem("edu_gen_custom_groq_key");
-    }
-
-    const msg = 
-      language === "uz" ? "AI kalitlari muvaffaqiyatli saqlandi!" :
-      language === "ru" ? "ИИ ключи успешно сохранены!" :
-      "AI Keys saved successfully!";
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3000);
-  };
-
-  const handleClearKeys = () => {
-    localStorage.removeItem("edu_gen_custom_gemini_key");
-    localStorage.removeItem("edu_gen_custom_groq_key");
-    setGeminiKey("");
-    setGroqKey("");
-
-    const msg = 
-      language === "uz" ? "Kalitlar tozalandi." :
-      language === "ru" ? "Ключи очищены." :
-      "Keys cleared.";
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3000);
-  };
-
-  // Localized texts for API key section
-  const texts = {
-    uz: {
-      aiSettingsTitle: "Shaxsiy AI Kalitlari (API Keys)",
-      aiSettingsDesc: "Loyiha doimiy va cheklovlarsiz ishlashi uchun o'zingizning bepul Gemini yoki Groq API kalitingizni kiriting.",
-      geminiLabel: "Gemini API kaliti (Tavsiya etiladi)",
-      groqLabel: "Groq API kaliti (Zaxira uchun)",
-      placeholder: "Kalitni kiriting...",
-      saveKeys: "Kalitlarni saqlash",
-      clearKeys: "Tozalash",
-      securityNote: "Ushbu kalitlar faqat sizning brauzeringizda saqlanadi (localStorage) va hech qachon serverlarga uzatilmaydi.",
-      getApiKey: "Bepul kalit olish:"
-    },
-    ru: {
-      aiSettingsTitle: "Персональные ключи ИИ (API Keys)",
-      aiSettingsDesc: "Чтобы проект работал стабильно и без ограничений, введите свой бесплатный ключ API Gemini или Groq.",
-      geminiLabel: "Ключ Gemini API (Рекомендуется)",
-      groqLabel: "Ключ Groq API (Резерв)",
-      placeholder: "Введите ключ...",
-      saveKeys: "Сохранить ключи",
-      clearKeys: "Очистить",
-      securityNote: "Эти ключи сохраняются исключительно в вашем браузере (localStorage) и никогда не передаются на сторонние серверы.",
-      getApiKey: "Получить бесплатный ключ:"
-    },
-    en: {
-      aiSettingsTitle: "Personal AI Keys (API Keys)",
-      aiSettingsDesc: "To ensure the platform runs permanently and without limits, enter your own free Gemini or Groq API key.",
-      geminiLabel: "Gemini API Key (Recommended)",
-      groqLabel: "Groq API Key (Backup)",
-      placeholder: "Enter key...",
-      saveKeys: "Save Keys",
-      clearKeys: "Clear",
-      securityNote: "These keys are securely stored locally in your browser (localStorage) and are never sent to external servers.",
-      getApiKey: "Get free key:"
-    }
-  }[language] || {
-    uz: {
-      aiSettingsTitle: "Shaxsiy AI Kalitlari (API Keys)",
-      aiSettingsDesc: "Loyiha doimiy va cheklovlarsiz ishlashi uchun o'zingizning bepul Gemini yoki Groq API kalitingizni kiriting.",
-      geminiLabel: "Gemini API kaliti (Tavsiya etiladi)",
-      groqLabel: "Groq API kaliti (Zaxira uchun)",
-      placeholder: "Kalitni kiriting...",
-      saveKeys: "Kalitlarni saqlash",
-      clearKeys: "Tozalash",
-      securityNote: "Ushbu kalitlar faqat sizning brauzeringizda saqlanadi (localStorage) va hech qachon serverlarga uzatilmaydi.",
-      getApiKey: "Bepul kalit olish:"
-    }
-  }["uz"];
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto h-full flex flex-col">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 py-3.5 px-6 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-800 dark:border-slate-200 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle size={18} className="text-emerald-500" />
-          <span className="font-semibold text-sm">{toastMessage}</span>
-        </div>
-      )}
+
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-3">
@@ -184,7 +84,9 @@ export default function Account() {
             )}
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
               {user?.displayName || "Foydalanuvchi"}
-              {(user?.displayName?.includes("(Pro)") || user?.email === "murodillo@edu-generation.uz") && (
+              {(user?.displayName?.includes("(Pro)") || 
+                user?.email === "murodillo@edu-generation.uz" || 
+                user?.email === "zokirjonovabdulvosit002@gmail.com") && (
                 <span className="bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shrink-0 shadow-sm shadow-amber-500/20">
                   PRO
                 </span>
@@ -251,107 +153,6 @@ export default function Account() {
                   <option value="ru">Русский (RU)</option>
                   <option value="en">English (EN)</option>
                 </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Shaxsiy AI Kalitlari (API Keys) */}
-          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2 pb-2 flex items-center gap-2">
-              <Key size={18} className="text-indigo-500" />
-              {texts.aiSettingsTitle}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-              {texts.aiSettingsDesc}
-            </p>
-
-            <div className="space-y-6">
-              {/* Gemini Key Input */}
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {texts.geminiLabel}
-                  </label>
-                  <a 
-                    href="https://aistudio.google.com/" 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="text-xs text-indigo-500 hover:text-indigo-600 hover:underline font-medium"
-                  >
-                    {texts.getApiKey} Google AI Studio
-                  </a>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showGemini ? "text" : "password"}
-                    value={geminiKey}
-                    onChange={(e) => setGeminiKey(e.target.value)}
-                    placeholder={texts.placeholder}
-                    className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl outline-none focus:ring-2 font-medium focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGemini(!showGemini)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    {showGemini ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Groq Key Input */}
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {texts.groqLabel}
-                  </label>
-                  <a 
-                    href="https://console.groq.com/keys" 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="text-xs text-indigo-500 hover:text-indigo-600 hover:underline font-medium"
-                  >
-                    {texts.getApiKey} Groq Console
-                  </a>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showGroq ? "text" : "password"}
-                    value={groqKey}
-                    onChange={(e) => setGroqKey(e.target.value)}
-                    placeholder={texts.placeholder}
-                    className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl outline-none focus:ring-2 font-medium focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGroq(!showGroq)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    {showGroq ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Security Warning */}
-              <div className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 leading-relaxed flex items-start gap-2.5">
-                <span className="text-amber-500 font-bold">⚠️</span>
-                <span>{texts.securityNote}</span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-2">
-                <button
-                  onClick={handleSaveKeys}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all text-sm flex justify-center items-center cursor-pointer active:scale-98"
-                >
-                  {texts.saveKeys}
-                </button>
-                <button
-                  onClick={handleClearKeys}
-                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-3.5 px-6 rounded-2xl transition-all text-sm cursor-pointer active:scale-98"
-                >
-                  {texts.clearKeys}
-                </button>
               </div>
             </div>
           </div>

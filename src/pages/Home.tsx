@@ -51,8 +51,8 @@ export default function Home() {
       pricingDesc: "O'zingizga mos tarifni tanlang va ta'lim sifatini yangi bosqichga olib chiqing.",
       loginTitle: "Tizimga Kirish",
       registerTitle: "Ro'yxatdan O'tish",
-      emailPlaceholder: "Email manzilingiz",
-      passwordPlaceholder: "Parol (kamida 6 ta belgi)",
+      emailPlaceholder: "Login yoki Email manzilingiz",
+      passwordPlaceholder: "Parol",
       namePlaceholder: "Ismingiz",
       orText: "yoki",
       googleBtn: "Google orqali kirish",
@@ -159,8 +159,8 @@ export default function Home() {
       pricingDesc: "Выберите подходящий тариф и поднимите качество образования на новый уровень.",
       loginTitle: "Вход в Систему",
       registerTitle: "Регистрация",
-      emailPlaceholder: "Ваш email",
-      passwordPlaceholder: "Пароль (минимум 6 символов)",
+      emailPlaceholder: "Логин или Email",
+      passwordPlaceholder: "Пароль",
       namePlaceholder: "Ваше имя",
       orText: "или",
       googleBtn: "Войти через Google",
@@ -265,8 +265,8 @@ export default function Home() {
       pricingDesc: "Choose the perfect plan to elevate your educational resources to the next level.",
       loginTitle: "Sign In",
       registerTitle: "Sign Up",
-      emailPlaceholder: "Your email address",
-      passwordPlaceholder: "Password (min 6 characters)",
+      emailPlaceholder: "Login or Email address",
+      passwordPlaceholder: "Password",
       namePlaceholder: "Your name",
       orText: "or",
       googleBtn: "Sign in with Google",
@@ -406,12 +406,6 @@ export default function Home() {
     
     if (!email.trim() || !password.trim()) {
       setErrorMsg("Iltimos barcha maydonlarni to'ldiring.");
-      return;
-    }
-    const isMurodilloBypass = (email.trim().toLowerCase() === "murodillo" || email.trim().toLowerCase() === "murodillo@gmail.com" || email.trim().toLowerCase() === "murodillo@edu-generation.uz") && password === "1234";
-    
-    if (!isMurodilloBypass && password.length < 6) {
-      setErrorMsg("Parol kamida 6 ta belgidan iborat bo'lishi kerak.");
       return;
     }
     

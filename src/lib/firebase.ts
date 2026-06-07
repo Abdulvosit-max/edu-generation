@@ -75,9 +75,9 @@ export async function signInWithGoogle() {
   if (isDummyFirebase) {
     mockUser = {
       uid: "mock-google-user-123",
-      displayName: "Google Foydalanuvchi (Mock)",
-      email: "google.user@edu-generation.uz",
-      photoURL: "https://api.dicebear.com/7.x/bottts/svg?seed=google",
+      displayName: "Abdulvosit (Pro)",
+      email: "zokirjonovabdulvosit002@gmail.com",
+      photoURL: "https://api.dicebear.com/7.x/initials/svg?seed=Abdulvosit",
       emailVerified: true
     };
     localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
@@ -91,6 +91,13 @@ export async function signInWithGoogle() {
     console.error("Kirishda xatolik:", error);
     throw error;
   }
+}
+
+function transformCredentials(emailOrUsername: string, pass: string): { email: string; pass: string } {
+  const clean = emailOrUsername.trim().toLowerCase();
+  const transformedEmail = clean.includes("@") ? clean : `${clean}@edu-generation.uz`;
+  const transformedPass = pass.length < 6 ? `${pass}_edu_gen_pass` : pass;
+  return { email: transformedEmail, pass: transformedPass };
 }
 
 export async function signInWithEmail(email: string, password: string) {
@@ -108,37 +115,45 @@ export async function signInWithEmail(email: string, password: string) {
     return mockUser;
   }
 
+  const { email: transformedEmail, pass: transformedPass } = transformCredentials(email, password);
+
   if (isDummyFirebase) {
     mockUser = {
-      uid: "mock-email-user-" + email.replace(/[^a-zA-Z0-9]/g, ""),
-      displayName: email.split("@")[0],
-      email: email,
-      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${email.split("@")[0]}`,
+      uid: "mock-email-user-" + transformedEmail.replace(/[^a-zA-Z0-9]/g, ""),
+      displayName: email.includes("@") ? email.split("@")[0] : email,
+      email: transformedEmail,
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${email.includes("@") ? email.split("@")[0] : email}`,
       emailVerified: true
     };
     localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
     listeners.forEach(cb => cb(mockUser));
     return mockUser;
   }
-  const result = await signInWithEmailAndPassword(originalAuth, email, password);
+  const result = await signInWithEmailAndPassword(originalAuth, transformedEmail, transformedPass);
   return result.user;
 }
 
 export async function signUpWithEmail(email: string, password: string, displayName: string) {
+  const { email: transformedEmail, pass: transformedPass } = transformCredentials(email, password);
+  let resolvedDisplayName = displayName || (email.includes("@") ? email.split("@")[0] : email);
+  if (email.trim().toLowerCase() === "zokirjonovabdulvosit002@gmail.com" && !displayName) {
+    resolvedDisplayName = "Abdulvosit (Pro)";
+  }
+
   if (isDummyFirebase) {
     mockUser = {
-      uid: "mock-email-user-" + email.replace(/[^a-zA-Z0-9]/g, ""),
-      displayName: displayName || email.split("@")[0],
-      email: email,
-      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${displayName || email.split("@")[0]}`,
+      uid: "mock-email-user-" + transformedEmail.replace(/[^a-zA-Z0-9]/g, ""),
+      displayName: resolvedDisplayName,
+      email: transformedEmail,
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${resolvedDisplayName}`,
       emailVerified: true
     };
     localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
     listeners.forEach(cb => cb(mockUser));
     return mockUser;
   }
-  const result = await createUserWithEmailAndPassword(originalAuth, email, password);
-  await updateProfile(result.user, { displayName });
+  const result = await createUserWithEmailAndPassword(originalAuth, transformedEmail, transformedPass);
+  await updateProfile(result.user, { displayName: resolvedDisplayName });
   return result.user;
 }
 
