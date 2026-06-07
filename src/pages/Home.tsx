@@ -14,15 +14,18 @@ import {
   User,
   Lock,
   Mail,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useAppContext } from "../lib/AppContext";
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, signInAsDemo } from "../lib/firebase";
 import { Language } from "../lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
+import dashboardPreview from "../assets/edu_gen_dashboard_preview.png";
 
 export default function Home() {
-  const { theme, setTheme, language, setLanguage } = useAppContext();
+  const { theme, setTheme, language, setLanguage, t: globalT } = useAppContext();
   
   // Auth Modal states
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -32,6 +35,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Localization structure for landing page
   const landTrans = {
@@ -91,6 +95,14 @@ export default function Home() {
             "Jamoaviy ulashish kutubxonasi"
           ]
         }
+      ],
+      faqTitle: "Ko'p so'raladigan savollar",
+      faqDesc: "Platforma va uning ishlash tizimi haqida eng ko'p beriladigan savollarga javoblar.",
+      faqs: [
+        { q: "EduGen qanday ishlaydi?", a: "EduGen sun'iy intellekt (Gemini va Imagen) yordamida bir necha soniyada dars ishlanmalari, slaydlar, multimedia storyboardlar, testlar va rasmlarni yaratadi. Buning uchun siz faqat dars mavzusini yozishingiz kifoya." },
+        { q: "AI API kalitlari qayerda saqlanadi?", a: "Siz Account bo'limida kiritgan shaxsiy API kalitingiz faqat brauzeringizning ichki xotirasida (localStorage) saqlanadi va xavfsiz holatda bevosita AI modellariga yuboriladi. Hech qachon bizning yoki boshqa serverlarga uzatilmaydi." },
+        { q: "Mehmon rejimi (Guest Mode) nima va u bepulmi?", a: "Ha, Mehmon rejimi 100% bepul. Platformaning barcha imkoniyatlarini ro'yxatdan o'tmasdan turib sinab ko'rish imkonini beradi. Biroq, yaratilgan loyihalaringiz bulutda saqlanmaydi va slayd sahifalari sonida biroz cheklovlar bo'ladi." },
+        { q: "Microsoft Azure va Google TTS ovozlari orasida qanday farq bor?", a: "Premium tarifda ishlaydigan Microsoft Azure Neural HD ovozlari juda tabiiy, dars tushuntirayotgan haqiqiy o'qituvchidek eshitiladi. Google TTS esa standart sintezator ovozi bo'lib, zaxira sifatida ishlatiladi." }
       ]
     },
     ru: {
@@ -149,6 +161,14 @@ export default function Home() {
             "Общая библиотека для преподавателей"
           ]
         }
+      ],
+      faqTitle: "Часто задаваемые вопросы",
+      faqDesc: "Ответы на самые популярные вопросы о платформе и ее возможностях.",
+      faqs: [
+        { q: "Как работает EduGen?", a: "EduGen использует передовые модели ИИ (Gemini и Imagen) для генерации учебных планов, слайдов, мультимедийных раскадровок, тестов и изображений за секунды. Вам нужно лишь ввести тему урока." },
+        { q: "Где хранятся персональные API-ключи?", a: "Введенные вами API-ключи в разделе Аккаунт сохраняются исключительно в локальном хранилище вашего браузера (localStorage) и передаются напрямую к моделям. Они никогда не передаются на сторонние серверы." },
+        { q: "Что такое гостевой режим (Guest Mode) и бесплатен ли он?", a: "Да, гостевой режим полностью бесплатен. Он позволяет протестировать функции платформы без регистрации. При этом проекты хранятся локально в вашем браузере, а количество слайдов ограничено." },
+        { q: "В чем разница между голосами Microsoft Azure и Google TTS?", a: "Нейросети Microsoft Azure Neural HD создают естественное звучание, похожее на голос настоящего учителя. Google TTS — это стандартный синтезатор речи, используемый в качестве резервного варианта." }
       ]
     },
     en: {
@@ -207,11 +227,22 @@ export default function Home() {
             "Shared collaboration libraries"
           ]
         }
+      ],
+      faqTitle: "Frequently Asked Questions",
+      faqDesc: "Find answers to the most common questions about the platform and its operations.",
+      faqs: [
+        { q: "How does EduGen work?", a: "EduGen uses state-of-the-art AI models (Gemini and Imagen) to generate lesson plans, slides, multimedia storyboards, quizzes, and diagrams in seconds. You only need to type in your lesson topic." },
+        { q: "Where are my personal API keys stored?", a: "Personal API keys entered in the Account settings are stored strictly in your browser's localStorage and sent directly to the AI models. They are never sent to or stored on our servers." },
+        { q: "What is Guest Mode and is it free?", a: "Yes, Guest Mode is 100% free. It allows you to try and test the platform's capabilities without registering. However, your projects won't sync in the cloud and slides have slight limits." },
+        { q: "What is the difference between Microsoft Azure and Google TTS voices?", a: "Microsoft Azure Narration offers natural, lifelike teacher speech. Google TTS is a standard fallback speech synthesizer used for fallback situations." }
       ]
     }
   };
 
-  const t = landTrans[language as Language] || landTrans.uz;
+  const t = {
+    ...globalT,
+    ...(landTrans[language as Language] || landTrans.uz)
+  };
 
   const openAuth = () => {
     setErrorMsg(null);
@@ -335,11 +366,31 @@ export default function Home() {
         <div className="flex gap-4">
           <button
             onClick={openAuth}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all cursor-pointer active:scale-98 text-xs uppercase tracking-wider"
+            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all cursor-pointer active:scale-98 text-xs uppercase tracking-wider animate-pulse-slow"
           >
             {t.getStarted} <ArrowRight size={14} />
           </button>
         </div>
+
+        {/* Dashboard Preview Mockup Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-16 relative w-full max-w-5xl mx-auto rounded-[32px] overflow-hidden border border-slate-200/50 dark:border-slate-800/80 bg-white/30 dark:bg-slate-900/30 backdrop-blur-md p-3 shadow-2xl"
+        >
+          {/* Background Glow */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-purple-500/10 to-indigo-500/10 blur-2xl opacity-80 pointer-events-none -z-10" />
+          
+          <div className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-inner">
+            <img 
+              src={dashboardPreview} 
+              alt="EduGen Dashboard Mockup" 
+              className="w-full h-auto object-cover select-none pointer-events-none"
+              loading="lazy"
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* Features Grid */}
@@ -351,22 +402,22 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { title: t.chat, desc: t.chatDesc, icon: MessageSquare, color: "text-blue-500 bg-blue-500/5 border-blue-500/10" },
-            { title: t.slideGen, desc: t.slideDesc, icon: Presentation, color: "text-indigo-500 bg-indigo-500/5 border-indigo-500/10" },
-            { title: t.videoGenTitle, desc: t.videoGenDesc, icon: Video, color: "text-pink-500 bg-pink-500/5 border-pink-500/10" },
-            { title: t.testTitle, desc: t.testDesc, icon: FileText, color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10" },
-            { title: t.imageGen, desc: t.imageDesc, icon: ImageIcon, color: "text-orange-500 bg-orange-500/5 border-orange-500/10" }
+            { title: t.chat, desc: t.chatDesc, icon: MessageSquare, color: "text-blue-500 bg-blue-500/5 border-blue-500/10", glow: "hover:shadow-blue-500/10 hover:border-blue-500/30 dark:hover:shadow-blue-500/5" },
+            { title: t.slideGen, desc: t.slideDesc, icon: Presentation, color: "text-indigo-500 bg-indigo-500/5 border-indigo-500/10", glow: "hover:shadow-indigo-500/10 hover:border-indigo-500/30 dark:hover:shadow-indigo-500/5" },
+            { title: t.videoGenTitle, desc: t.videoGenDesc, icon: Video, color: "text-pink-500 bg-pink-500/5 border-pink-500/10", glow: "hover:shadow-pink-500/10 hover:border-pink-500/30 dark:hover:shadow-pink-500/5" },
+            { title: t.testTitle, desc: t.testDesc, icon: FileText, color: "text-emerald-500 bg-emerald-500/5 border-emerald-500/10", glow: "hover:shadow-emerald-500/10 hover:border-emerald-500/30 dark:hover:shadow-emerald-500/5" },
+            { title: t.imageGen, desc: t.imageDesc, icon: ImageIcon, color: "text-orange-500 bg-orange-500/5 border-orange-500/10", glow: "hover:shadow-orange-500/10 hover:border-orange-500/30 dark:hover:shadow-orange-500/5" }
           ].map((item, idx) => (
             <div 
               key={idx} 
-              className={`p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 shadow-xs flex flex-col gap-4 group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 hover:shadow-md hover:-translate-y-1`}
+              className={`p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 shadow-xs flex flex-col gap-4 group hover:shadow-lg ${item.glow} transition-all duration-300 hover:-translate-y-1`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.color} border group-hover:scale-105 transition-transform`}>
                 <item.icon size={18} />
               </div>
               <div>
                 <h3 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5 uppercase tracking-wide">{item.title}</h3>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-medium">{item.desc}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -430,6 +481,51 @@ export default function Home() {
               </button>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Accordion FAQ Section */}
+      <section className="max-w-3xl mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-black text-slate-950 dark:text-white mb-2">{t.faqTitle}</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-bold max-w-md mx-auto">{t.faqDesc}</p>
+        </div>
+
+        <div className="space-y-4">
+          {t.faqs && t.faqs.map((faq: any, idx: number) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div 
+                key={idx} 
+                className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-xs hover:border-slate-350 dark:hover:border-slate-700 transition-all duration-300"
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left cursor-pointer focus:outline-none"
+                >
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">{faq.q}</span>
+                  <span className="text-slate-500">
+                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </span>
+                </button>
+                
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <div className="px-6 pb-5 pt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/50">
+                        {faq.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </section>
 
