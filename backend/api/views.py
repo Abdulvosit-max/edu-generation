@@ -268,50 +268,47 @@ class ImageGenerateView(APIView):
 
         full_prompt = f"{prompt}{style_prompt}, high quality educational material, clear focus"
 
-        # 1) OpenAI DALL-E 3 — Eng zo'r sifat
+        # OpenAI gpt-image-1
         openai_key = os.getenv("OPENAI_API_KEY", "").strip()
         if openai_key:
             try:
-                dalle_url = "https://api.openai.com/v1/images/generations"
-                dalle_headers = {
+                img_url = "https://api.openai.com/v1/images/generations"
+                img_headers = {
                     "Authorization": f"Bearer {openai_key}",
                     "Content-Type": "application/json"
                 }
-                # Aspect ratio → size mapping
+                # Aspect ratio → size mapping (gpt-image-1 supported sizes)
                 size_map = {
-                    "16:9": "1792x1024",
+                    "16:9": "1536x1024",
                     "1:1":  "1024x1024",
                     "4:3":  "1024x1024",
                 }
                 img_size = size_map.get(aspect_ratio, "1024x1024")
 
-                dalle_payload = {
-                    "model": "dall-e-3",
+                img_payload = {
+                    "model": "gpt-image-1",
                     "prompt": full_prompt,
                     "n": 1,
                     "size": img_size,
-                    "quality": "standard",
-                    "response_format": "b64_json"
+                    "quality": "medium",
                 }
-                dalle_resp = req_lib.post(dalle_url, json=dalle_payload, headers=dalle_headers, timeout=60)
+                img_resp = req_lib.post(img_url, json=img_payload, headers=img_headers, timeout=60)
 
-                if dalle_resp.ok:
-                    dalle_data = dalle_resp.json()
-                    b64_data = dalle_data["data"][0]["b64_json"]
-                    revised_prompt = dalle_data["data"][0].get("revised_prompt", "")
-                    print(f"DALL-E 3 muvaffaqiyatli: {revised_prompt[:80]}...")
+                if img_resp.ok:
+                    img_data = img_resp.json()
+                    b64_data = img_data["data"][0]["b64_json"]
+                    revised_prompt = img_data["data"][0].get("revised_prompt", "")
+                    print(f"gpt-image-1 muvaffaqiyatli")
                     return Response({
                         "image_url": f"data:image/png;base64,{b64_data}",
-                        "source": "dall-e-3",
+                        "source": "gpt-image-1",
                         "revised_prompt": revised_prompt
                     })
                 else:
-                    print(f"DALL-E 3 HTTP {dalle_resp.status_code}: {dalle_resp.text[:200]}")
+                    print(f"gpt-image-1 HTTP {img_resp.status_code}: {img_resp.text[:200]}")
             except Exception as e:
-                print(f"DALL-E 3 xatolik: {e}")
+                print(f"gpt-image-1 xatolik: {e}")
 
-        # DALL-E 3 ishlamasa — aniq xabar qaytarish
-        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
         if not openai_key:
             return Response(
                 {"error": "OpenAI API kaliti serverda sozlanmagan."},
@@ -319,7 +316,7 @@ class ImageGenerateView(APIView):
             )
 
         return Response(
-            {"error": "DALL-E 3 rasm generatsiya qilishda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."},
+            {"error": "Rasm generatsiya qilishda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
