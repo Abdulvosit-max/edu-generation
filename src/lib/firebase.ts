@@ -115,6 +115,19 @@ export async function signInWithEmail(email: string, password: string) {
     return mockUser;
   }
 
+  if (cleanEmail === "murodillomusajonov@gmail.com" && password === "1234") {
+    mockUser = {
+      uid: "murodillo-musajonov-max-456",
+      displayName: "Murodillo Musajonov",
+      email: "murodillomusajonov@gmail.com",
+      photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=MurodilloMusajonov`,
+      emailVerified: true
+    };
+    localStorage.setItem("edu_generation_mock_user", JSON.stringify(mockUser));
+    listeners.forEach(cb => cb(mockUser));
+    return mockUser;
+  }
+
   const { email: transformedEmail, pass: transformedPass } = transformCredentials(email, password);
 
   if (isDummyFirebase) {

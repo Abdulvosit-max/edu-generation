@@ -43,7 +43,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Default fallbacks (offline/mock support)
     let fallbackPlan: 'FREE' | 'PRO' | 'MAX' = 'FREE';
-    if (user.email === 'zokirjonovabdulvosit002@gmail.com') {
+    if (user.email === 'zokirjonovabdulvosit002@gmail.com' || user.email === 'murodillomusajonov@gmail.com') {
       fallbackPlan = 'MAX';
     } else if (user.email === 'murodillo@edu-generation.uz' || user.displayName?.includes('(Pro)')) {
       fallbackPlan = 'PRO';
