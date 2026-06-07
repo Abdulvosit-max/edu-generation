@@ -268,7 +268,49 @@ class ImageGenerateView(APIView):
 
         full_prompt = f"{prompt}{style_prompt}, high quality educational material, clear focus"
 
-        # 1) Google AI Studio Imagen 4 orqali tasvir yaratish
+        # 1) OpenAI DALL-E 3 — Eng zo'r sifat
+        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if openai_key:
+            try:
+                dalle_url = "https://api.openai.com/v1/images/generations"
+                dalle_headers = {
+                    "Authorization": f"Bearer {openai_key}",
+                    "Content-Type": "application/json"
+                }
+                # Aspect ratio → size mapping
+                size_map = {
+                    "16:9": "1792x1024",
+                    "1:1":  "1024x1024",
+                    "4:3":  "1024x1024",
+                }
+                img_size = size_map.get(aspect_ratio, "1024x1024")
+
+                dalle_payload = {
+                    "model": "dall-e-3",
+                    "prompt": full_prompt,
+                    "n": 1,
+                    "size": img_size,
+                    "quality": "standard",
+                    "response_format": "b64_json"
+                }
+                dalle_resp = req_lib.post(dalle_url, json=dalle_payload, headers=dalle_headers, timeout=60)
+
+                if dalle_resp.ok:
+                    dalle_data = dalle_resp.json()
+                    b64_data = dalle_data["data"][0]["b64_json"]
+                    revised_prompt = dalle_data["data"][0].get("revised_prompt", "")
+                    print(f"DALL-E 3 muvaffaqiyatli: {revised_prompt[:80]}...")
+                    return Response({
+                        "image_url": f"data:image/png;base64,{b64_data}",
+                        "source": "dall-e-3",
+                        "revised_prompt": revised_prompt
+                    })
+                else:
+                    print(f"DALL-E 3 HTTP {dalle_resp.status_code}: {dalle_resp.text[:200]}")
+            except Exception as e:
+                print(f"DALL-E 3 xatolik: {e}")
+
+        # 2) Google AI Studio Imagen 4 — Fallback
         if gemini_keys:
             for g_key in gemini_keys:
                 try:
